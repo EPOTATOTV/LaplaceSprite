@@ -1,0 +1,27 @@
+plugins {
+    id 'application'
+}
+
+dependencies {
+    implementation project(':core')
+    implementation project(':simulator')
+    implementation project(':cheats')
+    implementation project(':network')
+    implementation project(':adapters')
+    implementation project(':probes')
+    implementation project(':servers')
+    implementation project(':sandbox')
+    implementation project(':debug')
+    implementation project(':hotreload')
+    implementation project(':profile')
+    implementation project(':crashdiag')
+    implementation project(':protocol')
+    implementation project(':report')
+
+    implementation "info.picocli:picocli:${rootProject.findProperty('picocliVersion')}"
+}
+
+application {
+    applicationName = 'laplace'
+    mainClass = 'io.laplace.sprite.cli.LaplaceCli'
+}
