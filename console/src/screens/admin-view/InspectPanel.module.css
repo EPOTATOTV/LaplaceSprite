@@ -1,0 +1,161 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+/* ---------- 会话切换 ---------- */
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  padding: 7px 10px;
+  border-radius: var(--r-3);
+  border: 1px solid var(--ink-150);
+  background-color: var(--glass-chip-bg);
+  transition:
+    transform var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out),
+    background-color var(--d-2) var(--ease-out),
+    box-shadow var(--d-2) var(--ease-out);
+}
+
+.tab:hover {
+  transform: translate3d(0, -1px, 0);
+  border-color: var(--accent-line);
+}
+
+.tab:active {
+  transform: translate3d(0, 0, 0) scale(0.97);
+}
+
+.tabOn {
+  border-color: var(--accent-line);
+  background-color: var(--accent-soft);
+  box-shadow: var(--shadow-chip);
+}
+
+.tabId {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--ink-500);
+}
+
+/* ---------- 明细 ---------- */
+
+.detail {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-2) var(--s-4);
+}
+
+.detail > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.detail dt {
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+}
+
+.detail dd {
+  font-size: var(--fs-sm);
+  color: var(--ink-700);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- 分块 ---------- */
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding-top: var(--s-3);
+  border-top: 1px dashed var(--ink-150);
+}
+
+.blockLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-micro);
+  letter-spacing: 0.04em;
+  color: var(--ink-400);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.flagChip {
+  padding: 3px 9px;
+  border-radius: var(--r-2);
+  border: 1px solid var(--danger-line);
+  background-color: var(--danger-soft);
+  color: var(--danger-600);
+  font-size: var(--fs-micro);
+  animation: lc-rise var(--d-3) var(--ease-out) backwards;
+  transition: transform var(--d-2) var(--ease-out);
+}
+
+.flagChip:hover {
+  transform: translate3d(0, -1px, 0);
+}
+
+.evidence {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.evidenceItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 9px;
+  border-radius: var(--r-2);
+  border: 1px solid var(--ink-150);
+  background-color: var(--ink-050);
+  color: var(--ink-600);
+  font-size: var(--fs-micro);
+  animation: lc-rise var(--d-3) var(--ease-out) backwards;
+  transition:
+    transform var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out);
+}
+
+.evidenceItem:hover {
+  transform: translate3d(2px, 0, 0);
+  border-color: var(--accent-line);
+}
+
+.evidenceItem svg {
+  color: var(--ink-300);
+}
+
+.empty {
+  font-size: var(--fs-micro);
+  color: var(--ink-300);
+}
+                  
+
+/* 共享关键帧就地声明：CSS Modules 会把 animation 名改写成哈希名，引用全局 @keyframes 会解析不到、动画静默失效。 */
+@keyframes lc-rise {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}

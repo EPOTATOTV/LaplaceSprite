@@ -1,0 +1,276 @@
+.tile {
+  --tile-ink: #e7eaf1;
+  --tile-dim: rgba(231, 234, 241, 0.6);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--s-2);
+  aspect-ratio: 16 / 10;
+  min-height: 142px;
+  padding: var(--s-2) var(--s-3) var(--s-3);
+  border-radius: var(--r-3);
+  border: 1px solid var(--ink-700);
+  overflow: hidden;
+  text-align: left;
+  background-color: color-mix(in srgb, var(--space-800) 90%, #000);
+  animation: lc-rise var(--d-4) var(--ease-out) backwards;
+  transition:
+    transform var(--d-2) var(--ease-out),
+    box-shadow var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out);
+}
+
+.tile:hover {
+  transform: translate3d(0, -2px, 0);
+  box-shadow: var(--shadow-lift);
+}
+
+.tile:active {
+  transform: translate3d(0, 0, 0) scale(0.992);
+  transition-duration: var(--d-1);
+}
+
+.tileActive {
+  border-color: var(--accent-line);
+  box-shadow: 0 0 0 2px var(--accent-soft), var(--shadow-panel);
+}
+
+/* 非 LIVE：换成浅色"熄屏"面，文字转深色 */
+.tile[data-status='IDLE'],
+.tile[data-status='CLOSED'] {
+  --tile-ink: var(--ink-700);
+  --tile-dim: var(--ink-400);
+  background-color: color-mix(in srgb, var(--ink-100) 58%, var(--paper));
+  border-color: var(--ink-150);
+}
+
+/* ---------- 画面表面：全是渐变，没有位图 ---------- */
+
+.surface {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.layerA {
+  position: absolute;
+  inset: -14%;
+  background:
+    radial-gradient(58% 62% at 28% 30%, var(--tone-a), transparent 70%),
+    radial-gradient(56% 60% at 76% 74%, var(--tone-b), transparent 72%);
+  opacity: 0.92;
+  transform-origin: center;
+}
+
+.layerB {
+  position: absolute;
+  inset: -18%;
+  background: linear-gradient(
+    118deg,
+    transparent 34%,
+    color-mix(in srgb, var(--paper) 12%, transparent) 50%,
+    transparent 66%
+  );
+  opacity: 0.8;
+}
+
+.scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  top: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--paper) 62%, transparent),
+    transparent
+  );
+  opacity: 0.42;
+}
+
+.offline {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--ink-500) 14%, transparent) 0 6px,
+    transparent 6px 13px
+  );
+  opacity: 0;
+}
+
+.tile[data-status='IDLE'] .offline,
+.tile[data-status='CLOSED'] .offline {
+  opacity: 1;
+}
+
+.tile[data-status='IDLE'] .layerA,
+.tile[data-status='CLOSED'] .layerA {
+  opacity: 0.24;
+}
+
+.tile[data-status='IDLE'] .scan,
+.tile[data-status='CLOSED'] .scan {
+  display: none;
+}
+
+/* 只有 LIVE 才走动画 */
+.tile[data-status='LIVE'] .layerA {
+  animation: tile-drift-a 9s var(--ease-inout) infinite alternate;
+}
+
+.tile[data-status='LIVE'] .layerB {
+  animation: tile-drift-b 12s var(--ease-inout) infinite alternate;
+}
+
+.tile[data-status='LIVE'] .scan {
+  animation: tile-scan 4.6s var(--ease-inout) infinite alternate;
+}
+
+@keyframes tile-drift-a {
+  from {
+    transform: translate3d(-2%, -1%, 0) scale(1.04);
+  }
+  to {
+    transform: translate3d(2%, 1.2%, 0) scale(1.1);
+  }
+}
+
+@keyframes tile-drift-b {
+  from {
+    transform: translate3d(3%, 0, 0) rotate(0.6deg);
+  }
+  to {
+    transform: translate3d(-3%, 0, 0) rotate(-0.6deg);
+  }
+}
+
+@keyframes tile-scan {
+  from {
+    transform: translateY(-6%);
+  }
+  to {
+    transform: translateY(106%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile[data-status='LIVE'] .layerA,
+  .tile[data-status='LIVE'] .layerB,
+  .tile[data-status='LIVE'] .scan {
+    animation: none;
+  }
+}
+
+/* ---------- 覆盖信息 ---------- */
+
+.top {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  border: 1px solid transparent;
+  font-size: 9.5px;
+  font-weight: 640;
+  letter-spacing: 0.07em;
+}
+
+.badge[data-status='LIVE'] {
+  background: linear-gradient(150deg, var(--ok-500), var(--ok-600));
+  color: #ffffff;
+}
+
+.badge[data-status='CONNECTING'] {
+  background: color-mix(in srgb, var(--accent) 34%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 62%, transparent);
+  color: #ffffff;
+}
+
+.badge[data-status='IDLE'],
+.badge[data-status='CLOSED'] {
+  background: color-mix(in srgb, var(--ink-300) 38%, transparent);
+  color: var(--ink-700);
+}
+
+.budget {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--tile-dim);
+}
+
+.budget[data-ok='true'] {
+  color: #9fe3c6;
+}
+
+.budget[data-over='true'] {
+  color: #f2a9a2;
+}
+
+.meta {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.lineTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+.instance {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--tile-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.simId {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--tile-dim);
+  white-space: nowrap;
+}
+
+.lineBottom {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+.net {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--tile-dim);
+}
+
+.perfRow {
+  display: inline-flex;
+  gap: var(--s-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--tile-dim);
+}
+                  
+
+/* 共享关键帧就地声明：CSS Modules 会把 animation 名改写成哈希名，引用全局 @keyframes 会解析不到、动画静默失效。 */
+@keyframes lc-rise {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}

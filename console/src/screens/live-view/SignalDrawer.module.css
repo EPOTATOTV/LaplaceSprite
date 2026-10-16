@@ -1,0 +1,172 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.empty {
+  padding: var(--s-4);
+  text-align: center;
+  color: var(--ink-300);
+  font-size: var(--fs-xs);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.session {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  font-weight: 620;
+  color: var(--ink-800);
+}
+
+.channel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+}
+
+.toggle {
+  margin-left: auto;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--ink-150);
+  background-color: var(--glass-chip-bg);
+  color: var(--ink-500);
+  font-size: var(--fs-micro);
+  transition:
+    transform var(--d-2) var(--ease-out),
+    color var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out);
+}
+
+.toggle:hover {
+  transform: translate3d(0, -1px, 0);
+  color: var(--accent-strong);
+  border-color: var(--accent-line);
+}
+
+.toggle:active {
+  transform: translate3d(0, 0, 0) scale(0.95);
+}
+
+/* ---------- ≤3s 出画预算 ---------- */
+
+.budget {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.budgetLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+  white-space: nowrap;
+}
+
+.budgetTrack {
+  position: relative;
+  flex: 1 1 auto;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background-color: color-mix(in srgb, var(--ink-200) 40%, transparent);
+  overflow: hidden;
+}
+
+.budgetFill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  transform-origin: left center;
+  background: linear-gradient(90deg, var(--ok-500), var(--ok-600));
+  transition: transform var(--d-5) var(--ease-out);
+}
+
+.budgetOver {
+  background: linear-gradient(90deg, var(--warn-500), var(--danger-600));
+}
+
+.budgetValue {
+  min-width: 44px;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--ink-600);
+}
+
+.budgetValue[data-over='true'] {
+  color: var(--danger-600);
+  font-weight: 620;
+}
+
+/* ---------- 信令明细 ---------- */
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  animation: lc-rise var(--d-3) var(--ease-out) backwards;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-2);
+  border: 1px solid var(--ink-100);
+  background-color: var(--glass-inset-bg);
+  transition:
+    transform var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out);
+}
+
+.row:hover {
+  transform: translate3d(0, -1px, 0);
+  border-color: var(--accent-line);
+}
+
+.key {
+  font-size: var(--fs-micro);
+  letter-spacing: 0.04em;
+  color: var(--ink-400);
+}
+
+.value {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--ink-700);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.note {
+  margin-top: var(--s-1);
+  font-size: var(--fs-micro);
+  color: var(--ink-300);
+  line-height: 1.6;
+}
+                  
+
+/* 共享关键帧就地声明：CSS Modules 会把 animation 名改写成哈希名，引用全局 @keyframes 会解析不到、动画静默失效。 */
+@keyframes lc-rise {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}

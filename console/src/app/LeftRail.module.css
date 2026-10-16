@@ -1,0 +1,291 @@
+.rail {
+  position: sticky;
+  top: var(--s-4);
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - var(--s-4) * 2);
+  width: var(--rail-w);
+  padding: var(--s-5) var(--s-3) var(--s-4);
+  transition:
+    width var(--d-4) var(--ease-inout),
+    padding var(--d-4) var(--ease-inout),
+    background-color var(--d-3) var(--ease-out);
+  overflow: hidden;
+}
+
+.collapsed {
+  width: var(--rail-w-compact);
+  padding-inline: var(--s-2);
+}
+
+/* ---------- 品牌 ---------- */
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 0 var(--s-2) var(--s-5);
+  border-bottom: 1px solid var(--ink-100);
+  margin-bottom: var(--s-5);
+}
+
+.mark {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  filter: drop-shadow(0 6px 14px rgba(15, 27, 51, 0.34));
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  white-space: nowrap;
+  opacity: 1;
+  transition: opacity var(--d-2) var(--ease-out);
+}
+
+.collapsed .brandText {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.brandName {
+  font-size: var(--fs-sm);
+  font-weight: 620;
+  letter-spacing: -0.01em;
+  color: var(--ink-900);
+}
+
+.brandSub {
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+  letter-spacing: 0.02em;
+}
+
+/* ---------- 导航 ---------- */
+
+.navList {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 2px;
+}
+
+/* 共享的活动指示器：位置由 transform 过渡，切换路由时是滑动而非跳变 */
+.marker {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 3px;
+  border-radius: var(--r-pill);
+  background: linear-gradient(180deg, var(--space-400), var(--space-700));
+  box-shadow: 0 0 12px -2px rgba(43, 77, 134, 0.55);
+  transition:
+    transform var(--d-4) var(--ease-inout),
+    height var(--d-4) var(--ease-inout);
+  pointer-events: none;
+}
+
+.navSlot {
+  display: block;
+}
+
+.navItem {
+  position: relative;
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 9px var(--s-2) 9px var(--s-3);
+  border-radius: var(--r-3);
+  color: var(--ink-600);
+  transition:
+    background-color var(--d-2) var(--ease-out),
+    transform var(--d-2) var(--ease-out),
+    color var(--d-2) var(--ease-out),
+    box-shadow var(--d-2) var(--ease-out);
+}
+
+.navItem:hover {
+  background-color: color-mix(in srgb, var(--accent) 7%, transparent);
+  transform: translate3d(2px, 0, 0);
+  box-shadow: var(--shadow-chip);
+}
+
+.navItem:active {
+  transform: translate3d(1px, 0, 0) scale(0.988);
+  transition-duration: var(--d-1);
+}
+
+.navActive {
+  color: var(--space-700);
+  background-color: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+:global([data-theme='dark']) .navActive {
+  color: var(--accent-strong);
+}
+
+.navIcon {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 9px 5px 9px 5px;
+  background-color: var(--ink-050);
+  border: 1px solid var(--ink-150);
+  color: var(--ink-500);
+  transition:
+    transform var(--d-3) var(--ease-spring),
+    color var(--d-2) var(--ease-out),
+    background-color var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out);
+}
+
+.navItem:hover .navIcon {
+  transform: rotate(-4deg) scale(1.06);
+}
+
+.navActive .navIcon {
+  color: var(--paper);
+  background: linear-gradient(150deg, var(--space-500), var(--space-700));
+  border-color: transparent;
+}
+
+.navBody {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  white-space: nowrap;
+  opacity: 1;
+  transition: opacity var(--d-2) var(--ease-out);
+}
+
+.collapsed .navBody,
+.collapsed .navCode {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.navLabel {
+  font-size: var(--fs-sm);
+  font-weight: 550;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.navHint {
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.navCode {
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  color: var(--muted-600);
+  letter-spacing: 0.02em;
+  transition: opacity var(--d-2) var(--ease-out);
+}
+
+/* 未实现的屏：一个很小的缺口标记，不用 emoji */
+.navFlag {
+  position: absolute;
+  right: 6px;
+  bottom: 8px;
+  width: 4px;
+  height: 4px;
+  border-radius: var(--r-pill);
+  background-color: var(--ink-200);
+}
+
+.collapsed .navItem {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  padding-inline: 0;
+}
+
+.collapsed .navFlag {
+  right: 10px;
+  bottom: 10px;
+}
+
+/* ---------- 底部 ---------- */
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  padding: var(--s-4) var(--s-2) 0;
+  margin-top: var(--s-4);
+  border-top: 1px solid var(--ink-100);
+}
+
+.collapsed .footer {
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.sourceChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--ink-150);
+  background-color: var(--ink-050);
+  font-size: var(--fs-micro);
+  color: var(--ink-500);
+  white-space: nowrap;
+  transition: border-color var(--d-2) var(--ease-out);
+}
+
+.collapsed .sourceText {
+  display: none;
+}
+
+.sourceDot {
+  width: 5px;
+  height: 5px;
+  border-radius: var(--r-pill);
+  background-color: var(--ink-300);
+}
+
+.sourceChip[data-source='api'] .sourceDot {
+  background-color: var(--ok-500);
+}
+
+.sourceChip[data-source='fixture'] .sourceDot {
+  background-color: var(--warn-500);
+}
+
+.collapseBtn {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-2);
+  border: 1px solid transparent;
+  color: var(--ink-400);
+  transition:
+    background-color var(--d-2) var(--ease-out),
+    color var(--d-2) var(--ease-out),
+    transform var(--d-2) var(--ease-out);
+}
+
+.collapseBtn:hover {
+  background-color: var(--ink-050);
+  color: var(--ink-700);
+  transform: translate3d(0, -1px, 0);
+}
+
+.collapseBtn:active {
+  transform: translate3d(0, 0, 0) scale(0.94);
+}

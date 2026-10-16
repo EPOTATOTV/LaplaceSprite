@@ -1,0 +1,224 @@
+.canvas {
+  position: relative;
+  min-height: 468px;
+  border-radius: var(--r-3);
+  overflow: hidden;
+  border: 1px solid var(--ink-100);
+  isolation: isolate;
+}
+
+/* ---------- 天空 / 地面：两层低饱和渐变，分界线就是地平线 ---------- */
+
+.sky {
+  position: absolute;
+  inset: 0 0 57% 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--space-300) 30%, var(--paper)) 0%,
+    color-mix(in srgb, var(--space-300) 12%, var(--paper)) 100%
+  );
+}
+
+.ground {
+  position: absolute;
+  inset: 43% 0 0 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ok-500) 12%, var(--paper)) 0%,
+    color-mix(in srgb, var(--ink-200) 30%, var(--paper)) 100%
+  );
+}
+
+/* 地平线上一道极淡的高光，把两层缝起来 */
+.ground::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: var(--dispersion);
+  opacity: 0.9;
+}
+
+/* ---------- 透视网格：往下逐渐放大，用遮罩收住上边缘 ---------- */
+
+.grid {
+  position: absolute;
+  inset: 43% 0 0 0;
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--ink-500) 14%, transparent) 0 1px,
+      transparent 1px 64px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      color-mix(in srgb, var(--ink-500) 11%, transparent) 0 1px,
+      transparent 1px 42px
+    );
+  mask-image: linear-gradient(180deg, transparent 0%, #000 42%, #000 100%);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 42%, #000 100%);
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    118% 82% at 50% 26%,
+    transparent 42%,
+    color-mix(in srgb, var(--ink-800) 14%, transparent) 100%
+  );
+}
+
+/* ---------- 玩家标记 ---------- */
+
+.markers {
+  position: absolute;
+  inset: 0;
+}
+
+.marker {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 2px;
+  transform: translate(-50%, -100%);
+  border-radius: var(--r-2);
+  animation: lc-dot-in var(--d-4) var(--ease-spring) backwards;
+  transition:
+    transform var(--d-2) var(--ease-out),
+    filter var(--d-2) var(--ease-out);
+}
+
+.marker:hover {
+  transform: translate(-50%, -100%) translateY(-3px) scale(1.05);
+  filter: drop-shadow(0 6px 12px rgba(15, 27, 51, 0.28));
+}
+
+.marker:active {
+  transform: translate(-50%, -100%) scale(0.96);
+  transition-duration: var(--d-1);
+}
+
+.pin {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--player);
+  background-color: color-mix(in srgb, var(--paper) 80%, transparent);
+  transition:
+    box-shadow var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out);
+}
+
+.pin::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  width: 2px;
+  height: 7px;
+  border-radius: 2px;
+  background-color: var(--player);
+  transform: translateX(-50%);
+}
+
+.core {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--player);
+}
+
+.markerOn .pin {
+  box-shadow: 0 0 0 4px var(--player-soft);
+}
+
+.label {
+  padding: 1px 6px;
+  border-radius: var(--r-1);
+  border: 1px solid var(--player-line);
+  background-color: var(--glass-focus-bg);
+  backdrop-filter: var(--glass-chip-blur);
+  -webkit-backdrop-filter: var(--glass-chip-blur);
+  color: var(--player);
+  font-size: var(--fs-micro);
+  font-weight: 560;
+  white-space: nowrap;
+}
+
+/* ---------- 图例 ---------- */
+
+.legend {
+  position: absolute;
+  left: var(--s-3);
+  bottom: var(--s-3);
+  display: flex;
+  gap: var(--s-3);
+  padding: 5px 10px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--glass-chip-border);
+  background-color: var(--glass-focus-bg);
+  backdrop-filter: var(--glass-chip-blur);
+  -webkit-backdrop-filter: var(--glass-chip-blur);
+  box-shadow: var(--shadow-chip);
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-micro);
+  color: var(--ink-500);
+}
+
+.legendDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 2px solid var(--player);
+  background-color: color-mix(in srgb, var(--player) 24%, transparent);
+}
+
+/* 管理员用虚线描边区分 */
+.legendItem[data-type='ADMIN'] .legendDot {
+  border-style: dashed;
+}
+
+/* ---------- 语义色（--player-* 在 AdminViewScreen.module.css 上定义） ---------- */
+
+[data-type='LEGIT'] {
+  --player: var(--player-legit);
+  --player-soft: var(--player-legit-soft);
+  --player-line: var(--player-legit-line);
+}
+
+[data-type='CHEAT'] {
+  --player: var(--player-cheat);
+  --player-soft: var(--player-cheat-soft);
+  --player-line: var(--player-cheat-line);
+}
+
+[data-type='ADMIN'] {
+  --player: var(--player-admin);
+  --player-soft: var(--player-admin-soft);
+  --player-line: var(--player-admin-line);
+}
+
+/* 管理员：世界标记的描边转虚线 */
+.marker[data-type='ADMIN'] .pin {
+  border-style: dashed;
+}
+ 
+
+/* 共享关键帧就地声明：CSS Modules 会把 animation 名改写成哈希名，引用全局 @keyframes 会解析不到、动画静默失效。 */
+@keyframes lc-dot-in {
+  0% { opacity: 0; transform: scale(0.2); }
+  60% { opacity: 1; transform: scale(1.28); }
+  100% { opacity: 1; transform: scale(1); }
+}

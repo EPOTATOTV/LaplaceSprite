@@ -1,0 +1,271 @@
+/* ============================================================
+   Laplace Console · 设计令牌
+   液态玻璃：白色主调 + 近黑/深空蓝墨色，红色仅用于告警。
+   这里的每个玻璃层级用不同的模糊 / 不透明度 / 阴影，刻意不做成一套模板。
+   ============================================================ */
+
+:root {
+  color-scheme: light;
+
+  /* ---------- 墨色与中性 ---------- */
+  --ink-950: #070a12;
+  --ink-900: #0c111b;
+  --ink-800: #151c29;
+  --ink-700: #1f2839;
+  --ink-600: #364154;
+  --ink-500: #4d5a70;
+  --ink-400: #6d798f;
+  --ink-300: #98a2b5;
+  --ink-200: #c3cad7;
+  --ink-150: #d9dee8;
+  --ink-100: #e7eaf1;
+  --ink-050: #f2f4f9;
+  --paper: #ffffff;
+
+  /* ---------- 深空蓝（辅助色 / 强调） ---------- */
+  --space-800: #0f1b33;
+  --space-700: #16264a;
+  --space-600: #1f3765;
+  --space-500: #2b4d86;
+  --space-400: #3d68ac;
+  --space-300: #6a91cf;
+
+  --accent: var(--space-500);
+  --accent-strong: var(--space-600);
+  --accent-soft: rgba(43, 77, 134, 0.1);
+  --accent-line: rgba(43, 77, 134, 0.22);
+
+  /* ---------- 状态色（低饱和，红色留给危险） ---------- */
+  --ok-600: #1c6d51;
+  --ok-500: #27876a;
+  --ok-soft: rgba(39, 135, 106, 0.12);
+  --ok-line: rgba(39, 135, 106, 0.26);
+
+  --warn-600: #8a6316;
+  --warn-500: #a97c1d;
+  --warn-soft: rgba(169, 124, 29, 0.13);
+  --warn-line: rgba(169, 124, 29, 0.28);
+
+  --danger-700: #8f201a;
+  --danger-600: #ad2f27;
+  --danger-500: #c6433a;
+  --danger-soft: rgba(198, 67, 58, 0.12);
+  --danger-line: rgba(198, 67, 58, 0.3);
+
+  --muted-500: #6d798f;
+  /* 10.5px 微字号也要过 WCAG AA 的次级墨色（白底 ~5.4:1，比 ink-400 深一档） */
+  --muted-600: #55617a;
+
+  /* 热力矩阵用的底色分量（浅色主题：深空蓝） */
+  --heat-rgb: 43, 77, 134;
+
+  /* ---------- 画布：白为主，叠一层极淡色散场 ---------- */
+  --canvas: #eef1f6;
+  --canvas-field:
+    radial-gradient(120% 90% at 8% -10%, rgba(106, 145, 207, 0.16), transparent 58%),
+    radial-gradient(90% 70% at 96% 4%, rgba(255, 219, 202, 0.14), transparent 60%),
+    radial-gradient(80% 80% at 60% 108%, rgba(31, 55, 101, 0.1), transparent 62%),
+    linear-gradient(178deg, #f7f9fd 0%, #eceff6 46%, #e8ecf4 100%);
+
+  /* ---------- 玻璃层级（模糊/不透明度/边线各自不同） ---------- */
+  --glass-rail-bg: rgba(255, 255, 255, 0.58);
+  --glass-rail-blur: blur(30px) saturate(150%);
+  --glass-rail-border: rgba(255, 255, 255, 0.72);
+  --glass-rail-edge: rgba(21, 28, 41, 0.09);
+
+  --glass-panel-bg: rgba(255, 255, 255, 0.7);
+  --glass-panel-blur: blur(19px) saturate(132%);
+  --glass-panel-border: rgba(255, 255, 255, 0.78);
+  --glass-panel-edge: rgba(21, 28, 41, 0.08);
+
+  --glass-inset-bg: rgba(248, 250, 253, 0.62);
+  --glass-inset-blur: blur(11px) saturate(118%);
+  --glass-inset-border: rgba(255, 255, 255, 0.6);
+  --glass-inset-edge: rgba(21, 28, 41, 0.06);
+
+  --glass-chip-bg: rgba(255, 255, 255, 0.5);
+  --glass-chip-blur: blur(7px) saturate(112%);
+  --glass-chip-border: rgba(255, 255, 255, 0.64);
+  --glass-chip-edge: rgba(21, 28, 41, 0.05);
+
+  --glass-focus-bg: rgba(255, 255, 255, 0.88);
+  --glass-focus-blur: blur(24px) saturate(142%);
+
+  /* 顶部色散高光：白 → 冷蓝 → 暖橙 → 白，透明度极低 */
+  --dispersion: linear-gradient(
+    102deg,
+    rgba(255, 255, 255, 0.92) 0%,
+    rgba(120, 167, 255, 0.3) 26%,
+    rgba(255, 214, 196, 0.22) 52%,
+    rgba(120, 167, 255, 0.18) 78%,
+    rgba(255, 255, 255, 0.6) 100%
+  );
+  --dispersion-veil: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 62%);
+
+  /* ---------- 阴影（分层，低透明度） ---------- */
+  --shadow-rail: 0 30px 68px -34px rgba(15, 27, 51, 0.34), 0 2px 6px -2px rgba(15, 27, 51, 0.1);
+  --shadow-panel: 0 20px 46px -28px rgba(15, 27, 51, 0.3), 0 1px 2px rgba(15, 27, 51, 0.06);
+  --shadow-lift: 0 34px 76px -32px rgba(15, 27, 51, 0.4), 0 2px 4px rgba(15, 27, 51, 0.08);
+  --shadow-inset-top: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  --shadow-chip: 0 8px 20px -14px rgba(15, 27, 51, 0.28);
+
+  /* ---------- 圆角（刻意给出层级差异，不用同一档） ---------- */
+  --r-1: 4px;
+  --r-2: 7px;
+  --r-3: 11px;
+  --r-4: 16px;
+  --r-5: 22px;
+  --r-6: 30px;
+  --r-pill: 999px;
+
+  /* ---------- 间距 ---------- */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 22px;
+  --s-6: 30px;
+  --s-7: 40px;
+  --s-8: 56px;
+
+  /* ---------- 字体 ---------- */
+  --font-ui: 'Inter', 'HarmonyOS Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, -apple-system,
+    'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Cascadia Mono', 'SFMono-Regular', Consolas, 'Liberation Mono',
+    monospace;
+
+  --fs-micro: 10.5px;
+  --fs-xs: 11.5px;
+  --fs-sm: 12.5px;
+  --fs-base: 13.5px;
+  --fs-md: 15px;
+  --fs-lg: 18px;
+  --fs-xl: 23px;
+  --fs-display: 34px;
+  --fs-hero: 46px;
+
+  --lh-tight: 1.16;
+  --lh-snug: 1.34;
+  --lh-normal: 1.6;
+
+  /* ---------- 动效 ---------- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.48, 0, 0.72, 0.24);
+  --ease-inout: cubic-bezier(0.66, 0, 0.34, 1);
+  --ease-spring: cubic-bezier(0.34, 1.42, 0.5, 1);
+
+  --d-1: 120ms;
+  --d-2: 180ms;
+  --d-3: 240ms;
+  --d-4: 320ms;
+  --d-5: 420ms;
+
+  --stagger: 42ms;
+
+  --rail-w: 236px;
+  --rail-w-compact: 72px;
+  --topbar-h: 62px;
+  --content-max: 1560px;
+
+  --z-rail: 30;
+  --z-topbar: 40;
+  --z-pop: 60;
+}
+
+/* ============================================================
+   深色：同一套结构，玻璃变成"低反射深空玻璃"，仍然是低饱和
+   ============================================================ */
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --ink-950: #f4f6fb;
+  --ink-900: #e8ecf5;
+  --ink-800: #d5dbe8;
+  --ink-700: #b8c1d3;
+  --ink-600: #94a0b6;
+  --ink-500: #7a869c;
+  --ink-400: #626e83;
+  --ink-300: #4d5871;
+  --ink-200: #39435a;
+  --ink-150: #2c3548;
+  --ink-100: #232b3b;
+  --ink-050: #1a2130;
+  --paper: #0b0f18;
+
+  --space-300: #8fb0e0;
+  --accent: #6f9be0;
+  --accent-strong: #9bb8ea;
+  --accent-soft: rgba(111, 155, 224, 0.16);
+  --accent-line: rgba(111, 155, 224, 0.3);
+
+  --ok-500: #4fb493;
+  --ok-soft: rgba(79, 180, 147, 0.16);
+  --ok-line: rgba(79, 180, 147, 0.32);
+
+  --warn-500: #d3a44a;
+  --warn-soft: rgba(211, 164, 74, 0.16);
+  --warn-line: rgba(211, 164, 74, 0.32);
+
+  --danger-500: #e0726a;
+  --danger-600: #d1594f;
+  --danger-700: #b8433a;
+  --danger-soft: rgba(224, 114, 106, 0.16);
+  --danger-line: rgba(224, 114, 106, 0.34);
+
+  --muted-500: #7a869c;
+  --muted-600: #93a0b8;
+
+  --heat-rgb: 111, 155, 224;
+
+  --canvas: #080b13;
+  --canvas-field:
+    radial-gradient(120% 90% at 6% -12%, rgba(43, 77, 134, 0.4), transparent 58%),
+    radial-gradient(90% 70% at 98% 2%, rgba(140, 96, 78, 0.2), transparent 60%),
+    radial-gradient(80% 80% at 58% 108%, rgba(106, 145, 207, 0.16), transparent 62%),
+    linear-gradient(178deg, #0c111c 0%, #090d16 48%, #070a11 100%);
+
+  --glass-rail-bg: rgba(20, 26, 40, 0.62);
+  --glass-rail-border: rgba(255, 255, 255, 0.09);
+  --glass-rail-edge: rgba(0, 0, 0, 0.5);
+
+  --glass-panel-bg: rgba(24, 31, 46, 0.66);
+  --glass-panel-border: rgba(255, 255, 255, 0.075);
+  --glass-panel-edge: rgba(0, 0, 0, 0.42);
+
+  --glass-inset-bg: rgba(14, 19, 30, 0.6);
+  --glass-inset-border: rgba(255, 255, 255, 0.06);
+  --glass-inset-edge: rgba(0, 0, 0, 0.36);
+
+  --glass-chip-bg: rgba(255, 255, 255, 0.045);
+  --glass-chip-border: rgba(255, 255, 255, 0.08);
+  --glass-chip-edge: rgba(0, 0, 0, 0.3);
+
+  --glass-focus-bg: rgba(28, 36, 54, 0.86);
+
+  --dispersion: linear-gradient(
+    102deg,
+    rgba(255, 255, 255, 0.24) 0%,
+    rgba(120, 167, 255, 0.24) 28%,
+    rgba(255, 214, 196, 0.14) 54%,
+    rgba(120, 167, 255, 0.16) 80%,
+    rgba(255, 255, 255, 0.08) 100%
+  );
+  --dispersion-veil: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0) 62%);
+
+  --shadow-rail: 0 34px 74px -32px rgba(0, 0, 0, 0.78), 0 2px 6px -2px rgba(0, 0, 0, 0.6);
+  --shadow-panel: 0 22px 52px -30px rgba(0, 0, 0, 0.7), 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-lift: 0 38px 84px -34px rgba(0, 0, 0, 0.84), 0 2px 4px rgba(0, 0, 0, 0.55);
+  --shadow-inset-top: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --shadow-chip: 0 10px 24px -16px rgba(0, 0, 0, 0.7);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --d-1: 1ms;
+    --d-2: 1ms;
+    --d-3: 1ms;
+    --d-4: 1ms;
+    --d-5: 1ms;
+    --stagger: 0ms;
+  }
+}

@@ -1,0 +1,90 @@
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px 3px 7px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--ink-150);
+  background-color: rgba(255, 255, 255, 0.5);
+  font-size: var(--fs-xs);
+  font-weight: 550;
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+  white-space: nowrap;
+  color: var(--ink-600);
+  transition:
+    background-color var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out),
+    transform var(--d-2) var(--ease-out);
+}
+
+:global([data-theme='dark']) .pill {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.pill:hover {
+  transform: translate3d(0, -1px, 0);
+}
+
+.dense {
+  padding: 1px 7px 1px 6px;
+  font-size: var(--fs-micro);
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background-color: currentColor;
+  flex: none;
+  animation: lc-dot-in var(--d-4) var(--ease-spring) backwards;
+}
+
+/* RUNNING：双环，不跑脉冲 */
+.pill[data-status='RUNNING'] .dot {
+  background-color: transparent;
+  border: 1.5px solid currentColor;
+  box-shadow: 0 0 0 2px color-mix(in srgb, currentColor 22%, transparent);
+}
+
+/* FAILED / ABORTED：实心 + 外扩，作为危险状态的区别 */
+.pill[data-status='FAILED'] .dot,
+.pill[data-status='ABORTED'] .dot {
+  box-shadow: 0 0 0 2px color-mix(in srgb, currentColor 26%, transparent);
+}
+
+.accent {
+  color: var(--accent-strong);
+  border-color: var(--accent-line);
+  background-color: var(--accent-soft);
+}
+
+.ok {
+  color: var(--ok-600);
+  border-color: var(--ok-line);
+  background-color: var(--ok-soft);
+}
+
+.warn {
+  color: var(--warn-600);
+  border-color: var(--warn-line);
+  background-color: var(--warn-soft);
+}
+
+.danger {
+  color: var(--danger-600);
+  border-color: var(--danger-line);
+  background-color: var(--danger-soft);
+}
+
+.neutral {
+  color: var(--ink-500);
+}
+ 
+
+/* 共享关键帧就地声明：CSS Modules 会把 animation 名改写成哈希名，引用全局 @keyframes 会解析不到、动画静默失效。 */
+@keyframes lc-dot-in {
+  0% { opacity: 0; transform: scale(0.2); }
+  60% { opacity: 1; transform: scale(1.28); }
+  100% { opacity: 1; transform: scale(1); }
+}

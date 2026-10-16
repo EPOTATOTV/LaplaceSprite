@@ -1,0 +1,149 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  margin-bottom: var(--s-3);
+}
+
+.count {
+  font-size: var(--fs-xs);
+  color: var(--ink-400);
+}
+
+.count strong {
+  color: var(--ink-700);
+  font-weight: 620;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--ink-150);
+  background-color: var(--glass-chip-bg);
+  color: var(--ink-500);
+  font-size: var(--fs-xs);
+  transition:
+    transform var(--d-2) var(--ease-out),
+    color var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out),
+    background-color var(--d-2) var(--ease-out);
+}
+
+.toggle:hover {
+  transform: translate3d(0, -1px, 0);
+  color: var(--accent-strong);
+  border-color: var(--accent-line);
+  background-color: var(--accent-soft);
+}
+
+.toggle:active {
+  transform: translate3d(0, 0, 0) scale(0.96);
+}
+
+.scroll {
+  max-height: 468px;
+  overflow-y: auto;
+  border-radius: var(--r-3);
+  border: 1px solid var(--ink-100);
+  background-color: color-mix(in srgb, var(--paper) 46%, transparent);
+}
+
+.table {
+  font-size: var(--fs-xs);
+}
+
+.table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 9px var(--s-3);
+  text-align: left;
+  font-size: var(--fs-micro);
+  font-weight: 560;
+  letter-spacing: 0.06em;
+  color: var(--ink-400);
+  background-color: var(--glass-focus-bg);
+  backdrop-filter: var(--glass-chip-blur);
+  -webkit-backdrop-filter: var(--glass-chip-blur);
+  border-bottom: 1px solid var(--ink-150);
+  white-space: nowrap;
+}
+
+.row {
+  animation: lc-rise var(--d-3) var(--ease-out) backwards;
+  transition: background-color var(--d-2) var(--ease-out);
+}
+
+.row td {
+  padding: 9px var(--s-3);
+  border-bottom: 1px solid var(--ink-100);
+  vertical-align: middle;
+}
+
+.row:last-child td {
+  border-bottom: none;
+}
+
+.row:hover {
+  background-color: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+.num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-600);
+}
+
+.id {
+  color: var(--ink-800);
+  font-weight: 560;
+}
+
+.target {
+  display: block;
+  color: var(--ink-800);
+  font-weight: 550;
+}
+
+.sub {
+  display: block;
+  margin-top: 1px;
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+  font-family: var(--font-mono);
+}
+
+.suite {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  color: var(--ink-700);
+}
+
+.suite em {
+  font-style: normal;
+  font-size: var(--fs-micro);
+  font-family: var(--font-mono);
+  color: var(--muted-600);
+}
+
+.breach {
+  color: var(--danger-600);
+  font-weight: 620;
+}
+                  
+
+/* 共享关键帧就地声明：CSS Modules 会把 animation 名改写成哈希名，引用全局 @keyframes 会解析不到、动画静默失效。 */
+@keyframes lc-rise {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}

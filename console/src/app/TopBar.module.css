@@ -1,0 +1,184 @@
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-topbar);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--s-4);
+  height: var(--topbar-h);
+  padding: 0 var(--s-4) 0 2px;
+}
+
+/* 一条渐隐的细线，把标题区和内容区分开，比整块底边框轻 */
+.topbar::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  right: var(--s-4);
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--ink-150), var(--ink-100) 42%, transparent);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* ---------- 左：编号 + 标题 ---------- */
+
+.leading {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.code {
+  font-size: var(--fs-micro);
+  font-weight: 640;
+  letter-spacing: 0.08em;
+  color: var(--accent-strong);
+  padding: 3px 7px;
+  border-radius: var(--r-1);
+  background-color: var(--accent-soft);
+  border: 1px solid var(--accent-line);
+  transform: translateY(-1px);
+}
+
+.title {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  animation: lc-rise var(--d-3) var(--ease-out) backwards;
+}
+
+.hint {
+  font-size: var(--fs-xs);
+  color: var(--ink-400);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 1180px) {
+  .hint {
+    display: none;
+  }
+}
+
+/* ---------- 中：状态读数 ---------- */
+
+.stats {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: var(--r-2);
+  border: 1px solid var(--glass-chip-border);
+  background-color: var(--glass-chip-bg);
+  backdrop-filter: var(--glass-chip-blur);
+  -webkit-backdrop-filter: var(--glass-chip-blur);
+  color: var(--ink-500);
+  transition:
+    transform var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out);
+}
+
+.stat:hover {
+  transform: translate3d(0, -1px, 0);
+}
+
+.statLabel {
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+}
+
+.statValue {
+  font-size: var(--fs-xs);
+  font-weight: 620;
+  color: var(--ink-700);
+}
+
+.accent {
+  border-color: var(--accent-line);
+  color: var(--accent-strong);
+}
+
+.accent .statValue {
+  color: var(--accent-strong);
+}
+
+.ok {
+  border-color: var(--ok-line);
+}
+
+.ok .statValue {
+  color: var(--ok-600);
+}
+
+.danger {
+  border-color: var(--danger-line);
+}
+
+.danger .statValue {
+  color: var(--danger-600);
+}
+
+@media (max-width: 860px) {
+  .stats {
+    display: none;
+  }
+}
+
+/* ---------- 右：动作 ---------- */
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.iconBtn {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-2);
+  border: 1px solid var(--glass-chip-border);
+  background-color: var(--glass-chip-bg);
+  color: var(--ink-500);
+  transition:
+    transform var(--d-2) var(--ease-out),
+    color var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out),
+    background-color var(--d-2) var(--ease-out);
+}
+
+.iconBtn:hover:not(:disabled) {
+  transform: translate3d(0, -1px, 0);
+  color: var(--accent-strong);
+  border-color: var(--accent-line);
+  background-color: var(--accent-soft);
+}
+
+.iconBtn:active:not(:disabled) {
+  transform: translate3d(0, 0, 0) scale(0.93);
+}
+
+.iconBtn:disabled {
+  opacity: 0.45;
+  cursor: progress;
+}
+                  
+
+/* 共享关键帧就地声明：CSS Modules 会把 animation 名改写成哈希名，引用全局 @keyframes 会解析不到、动画静默失效。 */
+@keyframes lc-rise {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}

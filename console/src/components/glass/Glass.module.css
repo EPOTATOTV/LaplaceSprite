@@ -1,0 +1,112 @@
+/* 液态玻璃原语：每个层级的模糊、不透明度、边线、阴影都不一样，
+   刻意不做成一套全局 backdrop-filter 模板。 */
+
+.glass {
+  position: relative;
+  isolation: isolate;
+  border-radius: var(--r-4);
+  border: 1px solid transparent;
+  transition:
+    transform var(--d-3) var(--ease-out),
+    box-shadow var(--d-3) var(--ease-out),
+    border-color var(--d-2) var(--ease-out),
+    background-color var(--d-2) var(--ease-out);
+}
+
+/* 顶部色散高光：极淡的一道，负责"折射感" */
+.glass::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  border-radius: inherit;
+  background: var(--dispersion);
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+/* 内侧柔和反光，避免纯平面板 */
+.glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--dispersion-veil);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ---------- 层级 ---------- */
+
+.rail {
+  background-color: var(--glass-rail-bg);
+  backdrop-filter: var(--glass-rail-blur);
+  -webkit-backdrop-filter: var(--glass-rail-blur);
+  border-color: var(--glass-rail-border);
+  box-shadow: var(--shadow-rail), var(--shadow-inset-top);
+  border-radius: var(--r-5);
+}
+
+.panel {
+  background-color: var(--glass-panel-bg);
+  backdrop-filter: var(--glass-panel-blur);
+  -webkit-backdrop-filter: var(--glass-panel-blur);
+  border-color: var(--glass-panel-border);
+  box-shadow: var(--shadow-panel), var(--shadow-inset-top);
+  border-radius: var(--r-4);
+}
+
+.inset {
+  background-color: var(--glass-inset-bg);
+  backdrop-filter: var(--glass-inset-blur);
+  -webkit-backdrop-filter: var(--glass-inset-blur);
+  border-color: var(--glass-inset-border);
+  box-shadow: var(--shadow-inset-top);
+  border-radius: var(--r-3);
+}
+
+.chip {
+  background-color: var(--glass-chip-bg);
+  backdrop-filter: var(--glass-chip-blur);
+  -webkit-backdrop-filter: var(--glass-chip-blur);
+  border-color: var(--glass-chip-border);
+  box-shadow: var(--shadow-chip);
+  border-radius: var(--r-2);
+}
+
+/* ---------- 语义色：只在边线上轻描，不刷整块背景 ---------- */
+
+.accent {
+  border-color: var(--accent-line);
+}
+
+.ok {
+  border-color: var(--ok-line);
+}
+
+.warn {
+  border-color: var(--warn-line);
+}
+
+.danger {
+  border-color: var(--danger-line);
+}
+
+/* ---------- 交互：抬起 + 1px 位移 + 阴影加深 ---------- */
+
+.interactive:hover {
+  transform: translate3d(0, -1px, 0);
+  box-shadow: var(--shadow-lift), var(--shadow-inset-top);
+}
+
+.interactive:active {
+  transform: translate3d(0, 0, 0) scale(0.995);
+  box-shadow: var(--shadow-panel), var(--shadow-inset-top);
+  transition-duration: var(--d-1);
+}
+
+.interactive:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}

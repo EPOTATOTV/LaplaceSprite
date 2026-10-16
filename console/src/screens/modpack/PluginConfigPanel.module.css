@@ -1,0 +1,175 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+/* ---------- 三个开关 ---------- */
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-3);
+}
+
+.switchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-2);
+  border: 1px solid var(--ink-100);
+  background-color: var(--glass-inset-bg);
+  transition:
+    transform var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out);
+}
+
+.switchRow:hover {
+  transform: translate3d(0, -1px, 0);
+  border-color: var(--accent-line);
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--fs-xs);
+  color: var(--ink-700);
+}
+
+.label em {
+  font-style: normal;
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+}
+
+/* ---------- 阈值 / 豁免 / 日志级别 ---------- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.sliderRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.range {
+  flex: 1 1 auto;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.thresholdValue {
+  min-width: 34px;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: var(--fs-md);
+  font-weight: 620;
+  color: var(--ink-800);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  padding: 3px 9px;
+  border-radius: var(--r-2);
+  border: 1px solid var(--ink-150);
+  background-color: var(--ink-050);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--ink-500);
+  animation: lc-rise var(--d-3) var(--ease-out) backwards;
+  transition:
+    transform var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out);
+}
+
+.chip:hover {
+  transform: translate3d(0, -1px, 0);
+  border-color: var(--accent-line);
+}
+
+.levels {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--r-2);
+  border: 1px solid var(--ink-150);
+  background-color: var(--glass-chip-bg);
+  width: fit-content;
+}
+
+.level {
+  padding: 4px 12px;
+  border-radius: 5px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--ink-500);
+  transition:
+    transform var(--d-2) var(--ease-out),
+    color var(--d-2) var(--ease-out),
+    background-color var(--d-2) var(--ease-out),
+    box-shadow var(--d-2) var(--ease-out);
+}
+
+.level:hover {
+  color: var(--ink-800);
+}
+
+.level:active {
+  transform: scale(0.95);
+}
+
+.levelOn {
+  background-color: var(--paper);
+  color: var(--accent-strong);
+  box-shadow: var(--shadow-chip);
+}
+
+/* ---------- 边界提示 ---------- */
+
+.note {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: var(--s-3);
+  border-radius: var(--r-2);
+  border: 1px solid var(--ok-line);
+  background-color: var(--ok-soft);
+  color: var(--ok-600);
+  font-size: var(--fs-micro);
+  line-height: 1.6;
+}
+
+.note svg {
+  flex: none;
+}
+
+.noteDanger {
+  border-color: var(--danger-line);
+  background-color: var(--danger-soft);
+  color: var(--danger-600);
+}
+
+@media (max-width: 900px) {
+  .controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+                  
+
+/* 共享关键帧就地声明：CSS Modules 会把 animation 名改写成哈希名，引用全局 @keyframes 会解析不到、动画静默失效。 */
+@keyframes lc-rise {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}

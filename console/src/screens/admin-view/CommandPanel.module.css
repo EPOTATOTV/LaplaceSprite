@@ -1,0 +1,189 @@
+.wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 218px) minmax(0, 1fr);
+  gap: var(--s-4);
+}
+
+/* ---------- 子命令 ---------- */
+
+.subs {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sub {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+  padding: 6px 10px;
+  border-radius: var(--r-2);
+  border: 1px solid var(--ink-150);
+  background-color: var(--glass-chip-bg);
+  text-align: left;
+  transition:
+    transform var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out),
+    background-color var(--d-2) var(--ease-out);
+}
+
+.sub:hover {
+  transform: translate3d(2px, 0, 0);
+  border-color: var(--accent-line);
+  background-color: var(--accent-soft);
+}
+
+.sub:active {
+  transform: translate3d(1px, 0, 0) scale(0.98);
+}
+
+.subName {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--accent-strong);
+}
+
+.subArgs {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+}
+
+/* ---------- 输入 + 回执 ---------- */
+
+.right {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.form {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 4px 4px 4px 12px;
+  border-radius: var(--r-3);
+  border: 1px solid var(--ink-150);
+  background-color: color-mix(in srgb, var(--paper) 62%, transparent);
+  transition: border-color var(--d-2) var(--ease-out), box-shadow var(--d-2) var(--ease-out);
+}
+
+.form:focus-within {
+  border-color: var(--accent-line);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.prompt {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--ink-400);
+}
+
+.input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: none;
+  background: none;
+  outline: none;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--ink-800);
+}
+
+.input::placeholder {
+  color: var(--ink-300);
+}
+
+.send {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: var(--r-2);
+  background: linear-gradient(150deg, var(--space-500), var(--space-700));
+  color: var(--paper);
+  font-size: var(--fs-xs);
+  font-weight: 550;
+  transition:
+    transform var(--d-2) var(--ease-out),
+    box-shadow var(--d-2) var(--ease-out),
+    opacity var(--d-2) var(--ease-out);
+}
+
+.send:hover:not(:disabled) {
+  transform: translate3d(0, -1px, 0);
+  box-shadow: var(--shadow-chip);
+}
+
+.send:active:not(:disabled) {
+  transform: translate3d(0, 0, 0) scale(0.95);
+}
+
+.send:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.log {
+  border-radius: var(--r-3);
+  border: 1px solid var(--ink-100);
+  background-color: color-mix(in srgb, var(--paper) 52%, transparent);
+  max-height: 168px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--s-2) var(--s-3);
+}
+
+.logList {
+  display: flex;
+  flex-direction: column;
+}
+
+.receipt {
+  display: grid;
+  grid-template-columns: 42px minmax(0, auto) minmax(0, 1fr);
+  gap: 10px;
+  align-items: baseline;
+  padding: 3px 0;
+  font-size: var(--fs-micro);
+  animation: lc-rise var(--d-3) var(--ease-out) backwards;
+}
+
+.receiptTime {
+  font-family: var(--font-mono);
+  color: var(--ink-400);
+}
+
+.receiptCmd {
+  font-family: var(--font-mono);
+  color: var(--accent-strong);
+}
+
+.receiptText {
+  color: var(--ink-600);
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: var(--s-3);
+  font-size: var(--fs-micro);
+  color: var(--ink-300);
+}
+
+@media (max-width: 760px) {
+  .wrap {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+                  
+
+/* 共享关键帧就地声明：CSS Modules 会把 animation 名改写成哈希名，引用全局 @keyframes 会解析不到、动画静默失效。 */
+@keyframes lc-rise {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}

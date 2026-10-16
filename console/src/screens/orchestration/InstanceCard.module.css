@@ -1,0 +1,226 @@
+/* ---------- 焦点实例卡：一块仪表盘，视觉重心落在这里 ---------- */
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-5);
+  border-radius: var(--r-5);
+  animation: lc-rise var(--d-4) var(--ease-out) backwards;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.head > :last-child {
+  margin-left: auto;
+}
+
+.name {
+  font-size: var(--fs-md);
+  font-weight: 620;
+  letter-spacing: -0.012em;
+  color: var(--ink-900);
+  white-space: nowrap;
+}
+
+.platform {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gaugeWrap {
+  display: grid;
+  place-items: center;
+  margin: var(--s-1) 0;
+  background-image: radial-gradient(
+    62% 74% at 50% 44%,
+    color-mix(in srgb, var(--accent) 8%, transparent),
+    transparent 70%
+  );
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-2) var(--s-4);
+}
+
+.metrics li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+}
+
+.metrics li svg {
+  flex: none;
+  color: var(--ink-300);
+}
+
+.metrics li span {
+  white-space: nowrap;
+}
+
+.metrics li strong {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 620;
+  color: var(--ink-700);
+  white-space: nowrap;
+}
+
+/* ---------- 内存条 ---------- */
+
+.memory {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.memoryTrack {
+  position: relative;
+  flex: 1 1 auto;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background-color: color-mix(in srgb, var(--ink-200) 40%, transparent);
+  overflow: hidden;
+}
+
+.memoryFill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  transform-origin: left center;
+  background: linear-gradient(90deg, var(--space-400), var(--space-700));
+  transition: transform var(--d-5) var(--ease-out);
+}
+
+.memoryHot {
+  background: linear-gradient(90deg, var(--warn-500), var(--danger-600));
+}
+
+.memoryLabel {
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--ink-500);
+  flex: none;
+}
+
+/* ---------- 紧凑实例行：点一下升为焦点 ---------- */
+
+.compact {
+  padding: 0;
+  border-radius: var(--r-3);
+  animation: lc-rise var(--d-4) var(--ease-out) backwards;
+}
+
+.compactInner {
+  display: grid;
+  grid-template-columns: 96px minmax(112px, 0.9fr) minmax(0, 1.15fr) minmax(124px, auto);
+  align-items: center;
+  gap: var(--s-4);
+  width: 100%;
+  padding: var(--s-3) var(--s-4);
+  border-radius: inherit;
+  text-align: left;
+  transition: transform var(--d-2) var(--ease-out);
+}
+
+.compactInner:active {
+  transform: scale(0.994);
+}
+
+.compactGauge {
+  display: grid;
+  place-items: center;
+}
+
+.compactHead {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.compactStats {
+  display: flex;
+  gap: var(--s-5);
+  min-width: 0;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.stat em {
+  font-style: normal;
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+}
+
+.stat strong {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 620;
+  color: var(--ink-700);
+}
+
+.compactTail {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.compactTail .memory {
+  width: 100%;
+}
+
+@media (max-width: 1320px) {
+  .compactInner {
+    grid-template-columns: 84px minmax(0, 1fr) minmax(124px, auto);
+  }
+
+  .compactStats {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .compactInner {
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: var(--s-3);
+  }
+
+  .compactTail {
+    align-items: flex-start;
+  }
+}
+                  
+
+/* 共享关键帧就地声明：CSS Modules 会把 animation 名改写成哈希名，引用全局 @keyframes 会解析不到、动画静默失效。 */
+@keyframes lc-rise {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}

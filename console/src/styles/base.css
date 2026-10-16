@@ -1,0 +1,296 @@
+/* ============================================================
+   基础层：重置 + 排版 + 全局可访问性 + 共享关键帧
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-ui);
+  font-size: var(--fs-base);
+  line-height: var(--lh-normal);
+  color: var(--ink-800);
+  background-color: var(--canvas);
+  background-image: var(--canvas-field);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow: hidden;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 600;
+  line-height: var(--lh-tight);
+  letter-spacing: -0.012em;
+  color: var(--ink-900);
+}
+
+h1 {
+  font-size: var(--fs-xl);
+}
+
+h2 {
+  font-size: var(--fs-lg);
+}
+
+h3 {
+  font-size: var(--fs-md);
+}
+
+p {
+  line-height: var(--lh-normal);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+svg {
+  display: block;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--r-2);
+}
+
+::selection {
+  background: rgba(61, 104, 172, 0.24);
+}
+
+/* 滚动条：细，和画布同色系 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ink-200) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--ink-200);
+  border-radius: var(--r-pill);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-300);
+  background-clip: content-box;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 数值统一等宽，便于纵向比对 */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* ============================================================
+   分层入场：同一屏里的元素错开出现，禁止全部同步触发
+   ============================================================ */
+.stagger > * {
+  animation: lc-rise var(--d-4) var(--ease-out) backwards;
+}
+
+.stagger > *:nth-child(1) {
+  animation-delay: calc(var(--stagger) * 1);
+}
+.stagger > *:nth-child(2) {
+  animation-delay: calc(var(--stagger) * 2);
+}
+.stagger > *:nth-child(3) {
+  animation-delay: calc(var(--stagger) * 3);
+}
+.stagger > *:nth-child(4) {
+  animation-delay: calc(var(--stagger) * 4);
+}
+.stagger > *:nth-child(5) {
+  animation-delay: calc(var(--stagger) * 5);
+}
+.stagger > *:nth-child(6) {
+  animation-delay: calc(var(--stagger) * 6);
+}
+.stagger > *:nth-child(7) {
+  animation-delay: calc(var(--stagger) * 7);
+}
+.stagger > *:nth-child(8) {
+  animation-delay: calc(var(--stagger) * 8);
+}
+.stagger > *:nth-child(n + 9) {
+  animation-delay: calc(var(--stagger) * 9);
+}
+
+/* ============================================================
+   共享关键帧（供 CSS Modules 按名引用）
+   ============================================================ */
+
+@keyframes lc-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes lc-page-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0) scale(0.994);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes lc-page-out {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(0, -10px, 0) scale(0.994);
+    filter: blur(5px);
+  }
+}
+
+@keyframes lc-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes lc-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(240%);
+  }
+}
+
+@keyframes lc-draw {
+  from {
+    stroke-dashoffset: var(--dash, 1200);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes lc-grow-y {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes lc-grow-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes lc-progress {
+  from {
+    transform: scaleX(0.05);
+  }
+  to {
+    transform: scaleX(0.78);
+  }
+}
+
+@keyframes lc-dot-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.28);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

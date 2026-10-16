@@ -1,0 +1,166 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+.count {
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+}
+
+.count strong {
+  color: var(--ink-700);
+  font-weight: 620;
+}
+
+.bulk {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--accent-line);
+  background-color: var(--accent-soft);
+  color: var(--accent-strong);
+  font-size: var(--fs-micro);
+  font-weight: 560;
+  transition:
+    transform var(--d-2) var(--ease-out),
+    box-shadow var(--d-2) var(--ease-out);
+}
+
+.bulk:hover {
+  transform: translate3d(0, -1px, 0);
+  box-shadow: var(--shadow-chip);
+}
+
+.bulk:active {
+  transform: translate3d(0, 0, 0) scale(0.96);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 7px var(--s-2);
+  border-radius: var(--r-2);
+  border: 1px solid transparent;
+  animation: lc-rise var(--d-3) var(--ease-out) backwards;
+  transition:
+    transform var(--d-2) var(--ease-out),
+    background-color var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out);
+}
+
+.item:hover {
+  transform: translate3d(2px, 0, 0);
+  background-color: color-mix(in srgb, var(--accent) 5%, transparent);
+  border-color: var(--accent-line);
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.instance {
+  font-size: var(--fs-xs);
+  font-weight: 550;
+  color: var(--ink-800);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+}
+
+.sub em {
+  font-style: normal;
+  font-family: var(--font-mono);
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--ink-300);
+  flex: none;
+}
+
+.dot[data-status='LIVE'] {
+  background-color: var(--ok-500);
+}
+
+.dot[data-status='CONNECTING'] {
+  background-color: var(--accent);
+}
+
+.dot[data-status='CLOSED'] {
+  background-color: var(--ink-400);
+}
+
+.status {
+  font-family: var(--font-mono);
+}
+
+.view {
+  flex: none;
+  padding: 4px 12px;
+  border-radius: var(--r-2);
+  border: 1px solid var(--ink-150);
+  background-color: var(--glass-chip-bg);
+  color: var(--ink-500);
+  font-size: var(--fs-micro);
+  font-weight: 560;
+  transition:
+    transform var(--d-2) var(--ease-out),
+    color var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out),
+    background-color var(--d-2) var(--ease-out);
+}
+
+.view:hover {
+  transform: translate3d(0, -1px, 0);
+  color: var(--accent-strong);
+  border-color: var(--accent-line);
+}
+
+.view:active {
+  transform: translate3d(0, 0, 0) scale(0.94);
+}
+
+.viewOn {
+  color: var(--accent-strong);
+  border-color: var(--accent-line);
+  background-color: var(--accent-soft);
+}
+                  
+
+/* 共享关键帧就地声明：CSS Modules 会把 animation 名改写成哈希名，引用全局 @keyframes 会解析不到、动画静默失效。 */
+@keyframes lc-rise {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}

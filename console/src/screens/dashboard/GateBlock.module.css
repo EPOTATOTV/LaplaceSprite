@@ -1,0 +1,161 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.verdict {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  border-radius: var(--r-3);
+  border: 1px solid var(--ink-150);
+  background-color: var(--glass-inset-bg);
+  animation: lc-rise var(--d-4) var(--ease-out) backwards;
+}
+
+.seal {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex: none;
+  border-radius: 14px 7px 14px 7px;
+  transition: transform var(--d-3) var(--ease-spring);
+}
+
+.verdict:hover .seal {
+  transform: rotate(-6deg) scale(1.05);
+}
+
+.pass .seal {
+  color: var(--ok-600);
+  background-color: var(--ok-soft);
+  border: 1px solid var(--ok-line);
+}
+
+.fail .seal {
+  color: var(--danger-600);
+  background-color: var(--danger-soft);
+  border: 1px solid var(--danger-line);
+}
+
+.verdictText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.verdictTitle {
+  font-size: var(--fs-md);
+  font-weight: 620;
+  color: var(--ink-900);
+}
+
+.pass .verdictTitle {
+  color: var(--ok-600);
+}
+
+.fail .verdictTitle {
+  color: var(--danger-600);
+}
+
+.verdictNote {
+  font-size: var(--fs-xs);
+  color: var(--ink-500);
+}
+
+.metricChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.chip {
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--danger-line);
+  background-color: var(--danger-soft);
+  color: var(--danger-600);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  animation: lc-rise var(--d-3) var(--ease-out) backwards;
+}
+
+.violations {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.violation {
+  padding: var(--s-3);
+  border-radius: var(--r-3);
+  border: 1px solid var(--ink-100);
+  background-color: color-mix(in srgb, var(--paper) 40%, transparent);
+  animation: lc-rise var(--d-3) var(--ease-out) backwards;
+  transition:
+    transform var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out);
+}
+
+.violation:hover {
+  transform: translate3d(3px, 0, 0);
+  border-color: var(--danger-line);
+}
+
+.vHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.vMetric {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 620;
+  color: var(--ink-800);
+}
+
+.vExpr {
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+}
+
+.compare {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  margin-top: 5px;
+}
+
+.actual {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  font-weight: 620;
+  color: var(--danger-600);
+  font-variant-numeric: tabular-nums;
+}
+
+.delta {
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+}
+
+.vMessage {
+  margin-top: 4px;
+  font-size: var(--fs-micro);
+  color: var(--ink-500);
+  line-height: 1.5;
+}
+                  
+
+/* 共享关键帧就地声明：CSS Modules 会把 animation 名改写成哈希名，引用全局 @keyframes 会解析不到、动画静默失效。 */
+@keyframes lc-rise {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}

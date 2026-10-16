@@ -1,0 +1,281 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+/* ---------- 工具条 ---------- */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.filter {
+  padding: 3px 9px;
+  border-radius: var(--r-2);
+  border: 1px solid var(--ink-150);
+  background-color: transparent;
+  color: var(--ink-400);
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  transition:
+    transform var(--d-2) var(--ease-out),
+    color var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out),
+    background-color var(--d-2) var(--ease-out);
+}
+
+.filter:hover {
+  transform: translate3d(0, -1px, 0);
+  color: var(--ink-700);
+  border-color: var(--accent-line);
+}
+
+.filter:active {
+  transform: translate3d(0, 0, 0) scale(0.95);
+}
+
+.filterOn {
+  color: var(--accent-strong);
+  border-color: var(--accent-line);
+  background-color: var(--accent-soft);
+}
+
+.tools {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.segment {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: var(--r-2);
+  border: 1px solid var(--ink-150);
+  background-color: var(--glass-chip-bg);
+}
+
+.segItem {
+  padding: 3px 9px;
+  border-radius: 5px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+  transition:
+    color var(--d-2) var(--ease-out),
+    background-color var(--d-2) var(--ease-out),
+    box-shadow var(--d-2) var(--ease-out);
+}
+
+.segItem:hover {
+  color: var(--ink-700);
+}
+
+.segOn {
+  background-color: var(--paper);
+  color: var(--ink-800);
+  box-shadow: var(--shadow-chip);
+}
+
+.pause {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--ink-150);
+  background-color: var(--glass-chip-bg);
+  color: var(--ink-500);
+  font-size: var(--fs-micro);
+  font-weight: 550;
+  transition:
+    transform var(--d-2) var(--ease-out),
+    color var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out),
+    background-color var(--d-2) var(--ease-out);
+}
+
+.pause:hover {
+  transform: translate3d(0, -1px, 0);
+  color: var(--accent-strong);
+  border-color: var(--accent-line);
+}
+
+.pause:active {
+  transform: translate3d(0, 0, 0) scale(0.95);
+}
+
+.pauseOn {
+  color: var(--warn-600);
+  border-color: var(--warn-line);
+  background-color: var(--warn-soft);
+}
+
+/* ---------- 流本体 ---------- */
+
+.stream {
+  position: relative;
+  border-radius: var(--r-3);
+  border: 1px solid var(--ink-100);
+  background-color: color-mix(in srgb, var(--paper) 58%, transparent);
+  overflow: hidden;
+}
+
+.body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--s-3) var(--s-4) var(--s-6);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 3px 4px;
+  border-radius: var(--r-1);
+  font-size: var(--fs-xs);
+  line-height: 1.6;
+  animation: lc-rise var(--d-3) var(--ease-out) backwards;
+  transition: background-color var(--d-2) var(--ease-out);
+}
+
+.row:hover {
+  background-color: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+.seq {
+  flex: none;
+  width: 30px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--ink-300);
+}
+
+.time {
+  flex: none;
+  width: 42px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+}
+
+.level {
+  flex: none;
+  width: 48px;
+  text-align: center;
+  padding: 1px 0;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  font-size: var(--fs-micro);
+  font-weight: 640;
+  letter-spacing: 0.05em;
+}
+
+.module {
+  flex: none;
+  min-width: 78px;
+  max-width: 128px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-micro);
+  color: var(--ink-500);
+}
+
+.text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.message {
+  color: var(--ink-800);
+}
+
+.fields {
+  margin-left: 8px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+  overflow-wrap: anywhere;
+}
+
+.empty {
+  padding: var(--s-4);
+  text-align: center;
+  font-size: var(--fs-xs);
+  color: var(--ink-300);
+}
+
+.veil {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 26px;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--paper) 74%, transparent));
+  pointer-events: none;
+}
+
+/* ---------- 级别配色 ---------- */
+
+.debug .level {
+  color: var(--ink-400);
+  border-color: var(--ink-150);
+  background-color: var(--ink-050);
+}
+
+.info .level {
+  color: var(--accent-strong);
+  border-color: var(--accent-line);
+  background-color: var(--accent-soft);
+}
+
+.warn .level {
+  color: var(--warn-600);
+  border-color: var(--warn-line);
+  background-color: var(--warn-soft);
+}
+
+.flag .level {
+  color: var(--danger-600);
+  border-color: var(--danger-line);
+  background-color: var(--danger-soft);
+}
+
+.flag {
+  background-color: color-mix(in srgb, var(--danger-500) 5%, transparent);
+}
+
+.error .level {
+  color: var(--paper);
+  background-color: var(--danger-600);
+  border-color: transparent;
+}
+
+.error {
+  background-color: color-mix(in srgb, var(--danger-500) 8%, transparent);
+}
+                  
+
+/* 共享关键帧就地声明：CSS Modules 会把 animation 名改写成哈希名，引用全局 @keyframes 会解析不到、动画静默失效。 */
+@keyframes lc-rise {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}

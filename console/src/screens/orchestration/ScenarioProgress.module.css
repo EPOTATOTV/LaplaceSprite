@@ -1,0 +1,116 @@
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) 2px;
+  border-bottom: 1px dashed var(--ink-100);
+  animation: lc-rise var(--d-3) var(--ease-out) backwards;
+  transition: background-color var(--d-2) var(--ease-out);
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.row:hover {
+  background-color: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+.index {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px 5px 8px 5px;
+  border: 1px solid var(--ink-150);
+  background-color: var(--ink-050);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.name {
+  font-size: var(--fs-sm);
+  font-weight: 560;
+  color: var(--ink-800);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.platform {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+  white-space: nowrap;
+}
+
+.samples {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+  white-space: nowrap;
+}
+
+.track {
+  position: relative;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background-color: color-mix(in srgb, var(--ink-200) 36%, transparent);
+  overflow: hidden;
+}
+
+.fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  transform-origin: left center;
+  transform: scaleX(var(--p, 0));
+  background: linear-gradient(90deg, var(--space-400), var(--space-700));
+  transition: transform var(--d-5) var(--ease-out);
+}
+
+.done .fill {
+  background: linear-gradient(90deg, var(--ok-500), var(--ok-600));
+}
+
+.pct {
+  min-width: 54px;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  font-weight: 620;
+  color: var(--ink-700);
+}
+
+.done .pct {
+  color: var(--ok-600);
+}
+                  
+
+/* 共享关键帧就地声明：CSS Modules 会把 animation 名改写成哈希名，引用全局 @keyframes 会解析不到、动画静默失效。 */
+@keyframes lc-rise {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}

@@ -1,0 +1,171 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.empty {
+  padding: var(--s-4);
+  text-align: center;
+  color: var(--ink-300);
+  font-size: var(--fs-xs);
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+.instance {
+  font-size: var(--fs-md);
+  font-weight: 620;
+  letter-spacing: -0.012em;
+  color: var(--ink-900);
+}
+
+.simId {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-2);
+}
+
+.stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-2);
+  border: 1px solid var(--glass-inset-border);
+  background-color: var(--glass-inset-bg);
+  transition: transform var(--d-2) var(--ease-out);
+}
+
+.stats > div:hover {
+  transform: translate3d(0, -1px, 0);
+}
+
+.stats dt {
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+}
+
+.stats dd {
+  font-family: var(--font-mono);
+  font-size: var(--fs-lg);
+  font-weight: 620;
+  color: var(--ink-900);
+}
+
+.stats dd[data-tone='ok'] {
+  color: var(--ok-600);
+}
+
+.stats dd[data-tone='danger'] {
+  color: var(--danger-600);
+}
+
+/* ---------- 拐点告警 ---------- */
+
+.knee {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding: var(--s-3);
+  border-radius: var(--r-3);
+  border: 1px solid var(--ink-150);
+  background-color: var(--glass-inset-bg);
+  transition:
+    transform var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out);
+}
+
+.knee:hover {
+  transform: translate3d(0, -1px, 0);
+}
+
+.kneeIcon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px 5px 10px 5px;
+  border: 1px solid var(--ink-150);
+  background-color: var(--paper);
+  color: var(--ink-500);
+}
+
+.kneeText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kneeText strong {
+  font-size: var(--fs-sm);
+  font-weight: 620;
+  color: var(--ink-800);
+}
+
+.kneeText span {
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+  line-height: 1.5;
+}
+
+.kneeOn {
+  border-color: var(--danger-line);
+  background-color: var(--danger-soft);
+}
+
+.kneeOn .kneeIcon {
+  border-color: var(--danger-line);
+  background-color: color-mix(in srgb, var(--danger-500) 14%, var(--paper));
+  color: var(--danger-600);
+}
+
+.kneeOn .kneeText strong {
+  color: var(--danger-600);
+}
+
+.kneeOn .kneeText span {
+  color: color-mix(in srgb, var(--danger-600) 74%, var(--ink-500));
+}
+
+.kneeOff {
+  border-color: var(--ok-line);
+  background-color: var(--ok-soft);
+}
+
+.kneeOff .kneeIcon {
+  border-color: var(--ok-line);
+  background-color: color-mix(in srgb, var(--ok-500) 14%, var(--paper));
+  color: var(--ok-600);
+}
+
+.kneeOff .kneeText strong {
+  color: var(--ok-600);
+}
+
+.recording {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-2);
+  border: 1px dashed var(--danger-line);
+  color: var(--danger-600);
+  font-size: var(--fs-micro);
+}
+
+.recording svg {
+  flex: none;
+}

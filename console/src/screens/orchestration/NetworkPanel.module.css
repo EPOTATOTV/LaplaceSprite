@@ -1,0 +1,185 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+/* ---------- 预设选择 ---------- */
+
+.models {
+  display: flex;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
+.model {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 12px;
+  border-radius: var(--r-3);
+  border: 1px solid var(--ink-150);
+  background-color: var(--glass-chip-bg);
+  text-align: left;
+  transition:
+    transform var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out),
+    background-color var(--d-2) var(--ease-out),
+    box-shadow var(--d-2) var(--ease-out);
+}
+
+.model:hover {
+  transform: translate3d(0, -1px, 0);
+  border-color: var(--accent-line);
+}
+
+.model:active {
+  transform: translate3d(0, 0, 0) scale(0.97);
+}
+
+.modelOn {
+  border-color: var(--accent-line);
+  background-color: var(--accent-soft);
+  box-shadow: var(--shadow-chip);
+}
+
+.modelId {
+  font-size: var(--fs-xs);
+  font-weight: 620;
+  color: var(--ink-700);
+  text-transform: lowercase;
+}
+
+.modelOn .modelId {
+  color: var(--accent-strong);
+}
+
+.modelRange {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+}
+
+/* ---------- 延迟带 ---------- */
+
+.band {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bandTrack {
+  position: relative;
+  display: block;
+  height: 12px;
+  border-radius: var(--r-pill);
+  background-color: var(--ink-050);
+  border: 1px solid var(--ink-100);
+  overflow: hidden;
+}
+
+.bandRange {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: var(--r-pill);
+  background: linear-gradient(90deg, var(--space-300), var(--space-600));
+  transform-origin: left center;
+  animation: lc-grow-x var(--d-5) var(--ease-out) both;
+}
+
+.bandSpike {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  border-radius: 2px;
+  background-color: var(--danger-500);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger-500) 22%, transparent);
+  animation: lc-fade var(--d-4) var(--ease-out) 220ms backwards;
+}
+
+.bandScale {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--ink-300);
+}
+
+/* ---------- 读数 ---------- */
+
+.readouts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-3);
+}
+
+.readouts > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-2);
+  background-color: var(--glass-inset-bg);
+  border: 1px solid var(--glass-inset-border);
+  transition:
+    transform var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out);
+}
+
+.readouts > div:hover {
+  transform: translate3d(0, -1px, 0);
+  border-color: var(--accent-line);
+}
+
+.readouts dt {
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+}
+
+.readouts dd {
+  font-size: var(--fs-sm);
+  font-weight: 550;
+  color: var(--ink-700);
+}
+
+/* ---------- 开关 ---------- */
+
+.toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-4);
+  padding-top: var(--s-3);
+  border-top: 1px dashed var(--ink-150);
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.toggleValue {
+  min-width: 44px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--ink-600);
+}
+
+@media (max-width: 620px) {
+  .readouts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+
+/* 共享关键帧就地声明：CSS Modules 会把 animation 名改写成哈希名，引用全局 @keyframes 会解析不到、动画静默失效。 */
+@keyframes lc-grow-x {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes lc-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

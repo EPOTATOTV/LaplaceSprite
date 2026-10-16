@@ -1,0 +1,106 @@
+.wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: var(--s-6);
+  align-items: start;
+}
+
+@media (max-width: 1080px) {
+  .wrap {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.lead {
+  padding: var(--s-6) var(--s-6) var(--s-7);
+  animation: lc-rise var(--d-4) var(--ease-out) backwards;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--accent-line);
+  background-color: var(--accent-soft);
+  color: var(--accent-strong);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.title {
+  margin-top: var(--s-4);
+  font-size: var(--fs-display);
+  font-weight: 620;
+  letter-spacing: -0.03em;
+}
+
+.summary {
+  margin-top: var(--s-3);
+  max-width: 46ch;
+  color: var(--ink-500);
+  font-size: var(--fs-md);
+}
+
+.rule {
+  margin-top: var(--s-6);
+  height: 1px;
+  width: 168px;
+  background: linear-gradient(90deg, var(--accent-line), transparent);
+}
+
+.plan {
+  display: grid;
+  gap: var(--s-2);
+  counter-reset: plan;
+}
+
+.planItem {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-3);
+  border: 1px solid var(--glass-inset-border);
+  background-color: var(--glass-inset-bg);
+  backdrop-filter: var(--glass-inset-blur);
+  -webkit-backdrop-filter: var(--glass-inset-blur);
+  color: var(--ink-600);
+  animation: lc-rise var(--d-3) var(--ease-out) backwards;
+  transition:
+    transform var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out);
+}
+
+.planItem:hover {
+  transform: translate3d(3px, 0, 0);
+  border-color: var(--accent-line);
+}
+
+.planIndex {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: 9px 5px 9px 5px;
+  background-color: var(--ink-050);
+  border: 1px solid var(--ink-150);
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  color: var(--ink-500);
+  font-variant-numeric: tabular-nums;
+}
+
+.planText {
+  font-size: var(--fs-sm);
+}
+                  
+
+/* 共享关键帧就地声明：CSS Modules 会把 animation 名改写成哈希名，引用全局 @keyframes 会解析不到、动画静默失效。 */
+@keyframes lc-rise {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}

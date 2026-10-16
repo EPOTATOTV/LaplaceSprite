@@ -1,0 +1,171 @@
+.strip {
+  --stage-gap: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--stage-gap);
+}
+
+.stage {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 0 var(--s-1);
+  text-align: center;
+  animation: lc-rise var(--d-4) var(--ease-out) backwards;
+}
+
+/* 连接线：从上一个节点长出来 */
+.stage::before {
+  content: '';
+  position: absolute;
+  top: 15px;
+  left: calc(var(--stage-gap) * -1);
+  right: calc(50% + 20px);
+  height: 2px;
+  border-radius: var(--r-pill);
+  background: linear-gradient(90deg, transparent, var(--ink-200));
+  transform-origin: right center;
+  animation: lc-grow-x var(--d-4) var(--ease-out) backwards;
+  animation-delay: inherit;
+}
+
+.stage:first-child::before {
+  content: none;
+}
+
+.node {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--ink-150);
+  background-color: var(--paper);
+  color: var(--ink-500);
+  box-shadow: var(--shadow-chip);
+  transition:
+    transform var(--d-3) var(--ease-spring),
+    color var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out);
+}
+
+.stage:hover .node {
+  transform: translate3d(0, -2px, 0) scale(1.08);
+}
+
+.name {
+  font-size: var(--fs-sm);
+  font-weight: 560;
+  color: var(--ink-800);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.detail {
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+  line-height: 1.4;
+}
+
+.foot {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.status {
+  font-size: var(--fs-micro);
+  font-weight: 600;
+}
+
+.duration {
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+}
+
+/* ---------- 状态 ---------- */
+
+.pass .node {
+  color: var(--paper);
+  background: linear-gradient(150deg, var(--ok-500), var(--ok-600));
+  border-color: transparent;
+}
+
+.pass .status {
+  color: var(--ok-600);
+}
+
+.fail .node {
+  color: var(--paper);
+  background: linear-gradient(150deg, var(--danger-500), var(--danger-700));
+  border-color: transparent;
+  box-shadow: 0 8px 22px -10px color-mix(in srgb, var(--danger-500) 70%, transparent);
+}
+
+.fail .status {
+  color: var(--danger-600);
+}
+
+.running .node {
+  color: var(--accent-strong);
+  background-color: var(--accent-soft);
+  border: 1.5px dashed var(--accent-line);
+}
+
+.running .status {
+  color: var(--accent-strong);
+}
+
+.runningDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+.skipped .node {
+  color: var(--ink-400);
+  background-color: var(--ink-050);
+}
+
+.skipped .name,
+.skipped .detail {
+  color: var(--muted-600);
+}
+
+.skipped .status {
+  color: var(--muted-600);
+}
+
+@media (max-width: 900px) {
+  .strip {
+    flex-wrap: wrap;
+    gap: var(--s-4);
+  }
+
+  .stage {
+    flex: 1 1 138px;
+  }
+
+  .stage::before {
+    content: none;
+  }
+}
+
+
+/* 共享关键帧就地声明：CSS Modules 会把 animation 名改写成哈希名，引用全局 @keyframes 会解析不到、动画静默失效。 */
+@keyframes lc-rise {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes lc-grow-x {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}

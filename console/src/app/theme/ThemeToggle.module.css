@@ -1,0 +1,66 @@
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--glass-chip-border);
+  background-color: var(--glass-chip-bg);
+  backdrop-filter: var(--glass-chip-blur);
+  -webkit-backdrop-filter: var(--glass-chip-blur);
+  box-shadow: var(--shadow-chip);
+  transition:
+    transform var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out);
+}
+
+.toggle:hover {
+  transform: translate3d(0, -1px, 0);
+  border-color: var(--accent-line);
+}
+
+.toggle:active {
+  transform: translate3d(0, 0, 0) scale(0.97);
+}
+
+.track {
+  position: relative;
+  display: block;
+  width: 42px;
+  height: 22px;
+  border-radius: var(--r-pill);
+  background-color: var(--ink-050);
+  border: 1px solid var(--ink-150);
+  overflow: hidden;
+}
+
+:global([data-theme='dark']) .track {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+/* 滑块用 morph 感：位移动 + 轻微挤压，不做匀速平移 */
+.thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--r-pill);
+  background-color: var(--paper);
+  color: var(--accent-strong);
+  box-shadow: 0 2px 6px -2px rgba(15, 27, 51, 0.35);
+  transition:
+    transform var(--d-3) var(--ease-spring),
+    color var(--d-2) var(--ease-out),
+    background-color var(--d-2) var(--ease-out);
+}
+
+.toggle[data-theme-state='dark'] .thumb {
+  transform: translate3d(20px, 0, 0);
+}
+
+.toggle[data-theme-state='dark'] .track {
+  background-color: var(--space-800);
+  border-color: var(--accent-line);
+}

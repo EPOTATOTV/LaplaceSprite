@@ -1,0 +1,60 @@
+.section {
+  animation: lc-rise var(--d-4) var(--ease-out) backwards;
+  animation-delay: var(--delay, 0ms);
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-3);
+  padding: var(--s-4) var(--s-5) var(--s-3);
+  border-bottom: 1px solid var(--ink-100);
+}
+
+.headBare {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.title {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: -0.014em;
+  color: var(--ink-900);
+  white-space: nowrap;
+}
+
+.note {
+  font-size: var(--fs-xs);
+  color: var(--ink-400);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.body {
+  padding: var(--s-4) var(--s-5) var(--s-5);
+}
+
+.bodyBare {
+  padding: var(--s-4) 0 0;
+}
+
+.bare {
+  display: block;
+}
+                  
+
+/* 共享关键帧就地声明：CSS Modules 会把 animation 名改写成哈希名，引用全局 @keyframes 会解析不到、动画静默失效。 */
+@keyframes lc-rise {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
