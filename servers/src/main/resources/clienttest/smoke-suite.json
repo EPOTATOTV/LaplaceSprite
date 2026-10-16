@@ -1,0 +1,49 @@
+{
+  "id" : "smoke-pack",
+  "name" : "数据包作者冒烟套件",
+  "cases" : [ {
+    "id" : "pack-reload",
+    "name" : "开服后 reload 数据包，断言日志出现指定行",
+    "mcVersion" : "1.21.1",
+    "loader" : "fabric",
+    "jdk" : "21",
+    "os" : "linux",
+    "steps" : [ {
+      "op" : "WAIT_TICKS",
+      "value" : "100",
+      "note" : "等服务端起完"
+    }, {
+      "op" : "SEND",
+      "value" : "minecraft:reload",
+      "note" : "原版数据包 reload"
+    }, {
+      "op" : "EXPECT_LOG_ENDS_WITH",
+      "value" : "Reloaded 3 data packs",
+      "note" : "断言日志尾部出现该行"
+    }, {
+      "op" : "SCREENSHOT",
+      "value" : null,
+      "note" : "客户端用例必须具备截图证据"
+    } ]
+  }, {
+    "id" : "join-world",
+    "name" : "进世界 → 等渲染完成 → 截图",
+    "mcVersion" : "1.21.1",
+    "loader" : "fabric",
+    "jdk" : "21",
+    "os" : "linux",
+    "steps" : [ {
+      "op" : "WAIT_TICKS",
+      "value" : "200",
+      "note" : "等区块加载"
+    }, {
+      "op" : "WAIT_FOR_RENDER",
+      "value" : null,
+      "note" : "等客户端渲染完成"
+    }, {
+      "op" : "SCREENSHOT",
+      "value" : null,
+      "note" : "最小断言单元的收尾截图"
+    } ]
+  } ]
+}
