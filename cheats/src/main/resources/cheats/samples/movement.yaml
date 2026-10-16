@@ -1,0 +1,285 @@
+- id: speed.wurst.default
+  name: Wurst Speed 默认档
+  type: SPEED
+  target: detection-engine
+  source: Wurst
+  injector: speed
+  baseline: baseline:sprint
+  notes: 注入幅度 = 阈值锚点 0.30 × 档位系数（MIN 3.7 / DEFAULT 4.5 / MAX 6.3 / HIDDEN 4.0）；Wurst 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {speed: 1.11, sprint: true}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {speed: 1.35, sprint: true}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {speed: 1.89, sprint: true}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {speed: 1.2, sprint: true, spoofBrand: true, brand: fabric, modId: wurst}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: speed.liquidbounce.max
+  name: LiquidBounce Speed 最高档
+  type: SPEED
+  target: detection-engine
+  source: LiquidBounce
+  injector: speed
+  baseline: baseline:sprint
+  notes: 注入幅度 = 阈值锚点 0.30 × 档位系数（MIN 3.7 / DEFAULT 4.5 / MAX 6.3 / HIDDEN 4.0）；LiquidBounce 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {speed: 1.11, sprint: true}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {speed: 1.35, sprint: true}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {speed: 1.89, sprint: true}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {speed: 1.2, sprint: true, spoofBrand: true, brand: forge, modId: liquidbounce}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: speed.meteor.hidden
+  name: Meteor Speed 隐蔽档
+  type: SPEED
+  target: detection-engine
+  source: Meteor
+  injector: speed
+  baseline: baseline:sprint
+  notes: 注入幅度 = 阈值锚点 0.30 × 档位系数（MIN 3.7 / DEFAULT 4.5 / MAX 6.3 / HIDDEN 4.0）；Meteor 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {speed: 1.11, sprint: true}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {speed: 1.35, sprint: true}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {speed: 1.89, sprint: true}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {speed: 1.2, sprint: true, spoofBrand: true, brand: vanilla, modId: meteor}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: fly.wurst.max
+  name: Wurst Fly 最高档
+  type: FLY
+  target: detection-engine
+  source: Wurst
+  injector: fly
+  baseline: baseline:walk
+  notes: 注入幅度 = 阈值锚点 0.125 × 档位系数（MIN 1.1 / DEFAULT 1.5 / MAX 2.0 / HIDDEN 1.2）；Wurst 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {verticalSpeed: 0.1375}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {verticalSpeed: 0.1875}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {verticalSpeed: 0.25}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {verticalSpeed: 0.15, spoofBrand: true, brand: fabric, modId: wurst}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: fly.meteor.hidden
+  name: Meteor Fly 隐蔽档
+  type: FLY
+  target: detection-engine
+  source: Meteor
+  injector: fly
+  baseline: baseline:walk
+  notes: 注入幅度 = 阈值锚点 0.125 × 档位系数（MIN 1.1 / DEFAULT 1.5 / MAX 2.0 / HIDDEN 1.2）；Meteor 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {verticalSpeed: 0.1375}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {verticalSpeed: 0.1875}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {verticalSpeed: 0.25}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {verticalSpeed: 0.15, spoofBrand: true, brand: vanilla, modId: meteor}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: blink.liquidbounce.default
+  name: LiquidBounce Blink 默认档
+  type: BLINK
+  target: detection-engine
+  source: LiquidBounce
+  injector: blink
+  baseline: baseline:sprint
+  notes: 注入幅度 = 阈值锚点 1.4 × 档位系数（MIN 1.1 / DEFAULT 1.5 / MAX 2.0 / HIDDEN 1.2）；LiquidBounce 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {blinkTicks: 4, distance: 1.54}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {blinkTicks: 8, distance: 2.1}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {blinkTicks: 14, distance: 2.8}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {blinkTicks: 5, distance: 1.68, spoofBrand: true, brand: forge, modId: liquidbounce}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: blink.thunderhack.hidden
+  name: ThunderHack Blink 隐蔽档
+  type: BLINK
+  target: detection-engine
+  source: ThunderHack
+  injector: blink
+  baseline: baseline:sprint
+  notes: 注入幅度 = 阈值锚点 1.4 × 档位系数（MIN 1.1 / DEFAULT 1.5 / MAX 2.0 / HIDDEN 1.2）；ThunderHack 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {blinkTicks: 3, distance: 1.54}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {blinkTicks: 7, distance: 2.1}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {blinkTicks: 12, distance: 2.8}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {blinkTicks: 4, distance: 1.68, spoofBrand: true, brand: fabric, modId: thunderhack}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: nofall.meteor.default
+  name: Meteor NoFall 默认档
+  type: NO_FALL
+  target: detection-engine
+  source: Meteor
+  injector: nofall
+  baseline: baseline:walk
+  notes: 注入幅度 = 阈值锚点 0.1 × 档位系数（MIN 1.1 / DEFAULT 1.5 / MAX 2.0 / HIDDEN 1.2）；Meteor 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {fallSpeed: 0.11, spoofGround: true}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {fallSpeed: 0.15, spoofGround: true}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {fallSpeed: 0.2, spoofGround: true}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {fallSpeed: 0.12, spoofGround: true, spoofBrand: true, brand: vanilla, modId: meteor}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: nofall.wurst.max
+  name: Wurst NoFall 最高档
+  type: NO_FALL
+  target: detection-engine
+  source: Wurst
+  injector: nofall
+  baseline: baseline:walk
+  notes: 注入幅度 = 阈值锚点 0.1 × 档位系数（MIN 1.1 / DEFAULT 1.5 / MAX 2.0 / HIDDEN 1.2）；Wurst 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {fallSpeed: 0.11, spoofGround: true}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {fallSpeed: 0.15, spoofGround: true}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {fallSpeed: 0.2, spoofGround: true}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {fallSpeed: 0.12, spoofGround: true, spoofBrand: true, brand: fabric, modId: wurst}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: jesus.wurst.default
+  name: Wurst Jesus 默认档
+  type: JESUS
+  target: detection-engine
+  source: Wurst
+  injector: jesus
+  baseline: baseline:swim
+  notes: 注入幅度 = 阈值锚点 2 × 档位系数（MIN 31.2 / DEFAULT 31.5 / MAX 32.0 / HIDDEN 31.3）；Wurst 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {surfaceY: 62.4, fluid: water}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {surfaceY: 63.0, fluid: water}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {surfaceY: 64.0, fluid: water}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {surfaceY: 62.6, fluid: water, spoofBrand: true, brand: fabric, modId: wurst}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: jesus.bleachhack.hidden
+  name: BleachHack Jesus 隐蔽档
+  type: JESUS
+  target: detection-engine
+  source: BleachHack
+  injector: jesus
+  baseline: baseline:swim
+  notes: 注入幅度 = 阈值锚点 2 × 档位系数（MIN 31.2 / DEFAULT 31.5 / MAX 32.0 / HIDDEN 31.3）；BleachHack 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {surfaceY: 62.4, fluid: water}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {surfaceY: 63.0, fluid: water}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {surfaceY: 64.0, fluid: water}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {surfaceY: 62.6, fluid: water, spoofBrand: true, brand: vanilla, modId: bleachhack}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: phase.liquidbounce.max
+  name: LiquidBounce Phase 最高档
+  type: PHASE
+  target: detection-engine
+  source: LiquidBounce
+  injector: phase
+  baseline: baseline:walk
+  notes: 注入幅度 = 阈值锚点 1 × 档位系数（MIN 1.1 / DEFAULT 1.5 / MAX 2.0 / HIDDEN 1.2）；LiquidBounce 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {block: stone, depth: 1.1}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {block: deepslate, depth: 1.5}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {block: obsidian, depth: 2.0}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {block: stone, depth: 1.2, spoofBrand: true, brand: forge, modId: liquidbounce}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: phase.lambda.hidden
+  name: Lambda Phase 隐蔽档
+  type: PHASE
+  target: detection-engine
+  source: Lambda
+  injector: phase
+  baseline: baseline:walk
+  notes: 注入幅度 = 阈值锚点 1 × 档位系数（MIN 1.1 / DEFAULT 1.5 / MAX 2.0 / HIDDEN 1.2）；Lambda 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {block: dirt, depth: 1.1}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {block: stone, depth: 1.5}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {block: deepslate, depth: 2.0}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {block: dirt, depth: 1.2, spoofBrand: true, brand: fabric, modId: lambda}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}

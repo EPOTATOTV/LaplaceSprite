@@ -1,0 +1,219 @@
+- id: reach.meteor.default
+  name: Meteor Reach 默认档
+  type: REACH
+  target: detection-engine
+  source: Meteor
+  injector: reach
+  baseline: baseline:pvp
+  notes: 注入幅度 = 阈值锚点 3.0 × 档位系数（MIN 1.1 / DEFAULT 1.5 / MAX 2.0 / HIDDEN 1.2）；Meteor 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {reach: 3.3, clicksPerSecond: 10}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {reach: 4.5, clicksPerSecond: 12}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {reach: 6.0, clicksPerSecond: 14}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {reach: 3.6, clicksPerSecond: 10, spoofBrand: true, brand: vanilla, modId: meteor}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: reach.liquidbounce.max
+  name: LiquidBounce Reach 最高档
+  type: REACH
+  target: detection-engine
+  source: LiquidBounce
+  injector: reach
+  baseline: baseline:pvp
+  notes: 注入幅度 = 阈值锚点 3.0 × 档位系数（MIN 1.1 / DEFAULT 1.5 / MAX 2.0 / HIDDEN 1.2）；LiquidBounce 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {reach: 3.3, clicksPerSecond: 11}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {reach: 4.5, clicksPerSecond: 13}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {reach: 6.0, clicksPerSecond: 16}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {reach: 3.6, clicksPerSecond: 11, spoofBrand: true, brand: forge, modId: liquidbounce}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: killaura.wurst.default
+  name: Wurst KillAura 默认档
+  type: KILL_AURA
+  target: detection-engine
+  source: Wurst
+  injector: killaura
+  baseline: baseline:pvp
+  notes: 注入幅度 = 阈值锚点 3.0 × 档位系数（MIN 1.1 / DEFAULT 1.5 / MAX 2.0 / HIDDEN 1.2）；Wurst 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {reach: 4.5, targets: 3.3}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {reach: 4.5, targets: 4.5}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {reach: 4.5, targets: 6.0}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {reach: 4.5, targets: 3.6, spoofBrand: true, brand: fabric, modId: wurst}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: killaura.liquidbounce.hidden
+  name: LiquidBounce KillAura 隐蔽档
+  type: KILL_AURA
+  target: detection-engine
+  source: LiquidBounce
+  injector: killaura
+  baseline: baseline:pvp
+  notes: 注入幅度 = 阈值锚点 3.0 × 档位系数（MIN 1.1 / DEFAULT 1.5 / MAX 2.0 / HIDDEN 1.2）；LiquidBounce 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {reach: 4.5, targets: 3.3}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {reach: 4.5, targets: 4.5}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {reach: 4.5, targets: 6.0}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {reach: 4.5, targets: 3.6, spoofBrand: true, brand: forge, modId: liquidbounce}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: autoclicker.meteor.default
+  name: Meteor AutoClicker 默认档
+  type: AUTO_CLICKER
+  target: detection-engine
+  source: Meteor
+  injector: autoclicker
+  baseline: baseline:pvp
+  notes: 注入幅度 = 阈值锚点 12.0 × 档位系数（MIN 1.1 / DEFAULT 1.5 / MAX 2.0 / HIDDEN 1.2）；Meteor 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {cps: 13.2}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {cps: 18.0}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {cps: 24.0}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {cps: 14.4, spoofBrand: true, brand: vanilla, modId: meteor}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: autoclicker.thunderhack.max
+  name: ThunderHack AutoClicker 最高档
+  type: AUTO_CLICKER
+  target: detection-engine
+  source: ThunderHack
+  injector: autoclicker
+  baseline: baseline:pvp
+  notes: 注入幅度 = 阈值锚点 12.0 × 档位系数（MIN 1.1 / DEFAULT 1.5 / MAX 2.0 / HIDDEN 1.2）；ThunderHack 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {cps: 13.2}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {cps: 18.0}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {cps: 24.0}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {cps: 14.4, spoofBrand: true, brand: fabric, modId: thunderhack}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: timer.wurst.default
+  name: Wurst Timer 默认档
+  type: TIMER
+  target: detection-engine
+  source: Wurst
+  injector: timer
+  baseline: baseline:sprint
+  notes: 注入幅度 = 阈值锚点 3 × 档位系数（MIN 0.3667 / DEFAULT 0.5 / MAX 0.6667 / HIDDEN 0.4167）；Wurst 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {speedup: 1.1}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {speedup: 1.5}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {speedup: 2.0}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {speedup: 1.25, spoofBrand: true, brand: fabric, modId: wurst}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: timer.lambda.hidden
+  name: Lambda Timer 隐蔽档
+  type: TIMER
+  target: detection-engine
+  source: Lambda
+  injector: timer
+  baseline: baseline:sprint
+  notes: 注入幅度 = 阈值锚点 3 × 档位系数（MIN 0.3667 / DEFAULT 0.5 / MAX 0.6667 / HIDDEN 0.4167）；Lambda 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {speedup: 1.1}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {speedup: 1.5}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {speedup: 2.0}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {speedup: 1.25, spoofBrand: true, brand: forge, modId: lambda}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: autototem.meteor.default
+  name: Meteor AutoTotem 默认档
+  type: AUTO_TOTEM
+  target: detection-engine
+  source: Meteor
+  injector: autototem
+  baseline: baseline:pvp
+  notes: 注入幅度 = 阈值锚点 4 × 档位系数（MIN 1.0 / DEFAULT 0.5 / MAX 0.25 / HIDDEN 0.75）；Meteor 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {swapDelayTicks: 4.0}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {swapDelayTicks: 2.0}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {swapDelayTicks: 1.0}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {swapDelayTicks: 3.0, spoofBrand: true, brand: vanilla, modId: meteor}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: autototem.liquidbounce.hidden
+  name: LiquidBounce AutoTotem 隐蔽档
+  type: AUTO_TOTEM
+  target: detection-engine
+  source: LiquidBounce
+  injector: autototem
+  baseline: baseline:pvp
+  notes: 注入幅度 = 阈值锚点 4 × 档位系数（MIN 1.0 / DEFAULT 0.5 / MAX 0.25 / HIDDEN 0.75）；LiquidBounce 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {swapDelayTicks: 4.0}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {swapDelayTicks: 2.0}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {swapDelayTicks: 1.0}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {swapDelayTicks: 3.0, spoofBrand: true, brand: forge, modId: liquidbounce}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}

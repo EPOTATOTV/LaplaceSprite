@@ -1,0 +1,109 @@
+- id: speed.lambda.hidden
+  name: Lambda Speed 隐蔽档
+  type: SPEED
+  target: detection-engine
+  source: Lambda
+  injector: speed
+  baseline: baseline:sprint
+  notes: 注入幅度 = 阈值锚点 0.30 × 档位系数（MIN 3.7 / DEFAULT 4.5 / MAX 6.3 / HIDDEN 4.0）；Lambda 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {speed: 1.11, sprint: true}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {speed: 1.35, sprint: true}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {speed: 1.89, sprint: true}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {speed: 1.2, sprint: true, spoofBrand: true, brand: vanilla, modId: lambda}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: killaura.meteor.max
+  name: Meteor KillAura 最高档
+  type: KILL_AURA
+  target: detection-engine
+  source: Meteor
+  injector: killaura
+  baseline: baseline:pvp
+  notes: 注入幅度 = 阈值锚点 3.0 × 档位系数（MIN 1.1 / DEFAULT 1.5 / MAX 2.0 / HIDDEN 1.2）；Meteor 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {reach: 4.5, targets: 3.3}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {reach: 4.5, targets: 4.5}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {reach: 4.5, targets: 6.0}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {reach: 4.5, targets: 3.6, spoofBrand: true, brand: vanilla, modId: meteor}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: reach.wurst.hidden
+  name: Wurst Reach 隐蔽档
+  type: REACH
+  target: detection-engine
+  source: Wurst
+  injector: reach
+  baseline: baseline:pvp
+  notes: 注入幅度 = 阈值锚点 3.0 × 档位系数（MIN 1.1 / DEFAULT 1.5 / MAX 2.0 / HIDDEN 1.2）；Wurst 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {reach: 3.3, clicksPerSecond: 10}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {reach: 4.5, clicksPerSecond: 12}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {reach: 6.0, clicksPerSecond: 14}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {reach: 3.6, clicksPerSecond: 10, spoofBrand: true, brand: fabric, modId: wurst}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: autoclicker.liquidbounce.hidden
+  name: LiquidBounce AutoClicker 隐蔽档
+  type: AUTO_CLICKER
+  target: detection-engine
+  source: LiquidBounce
+  injector: autoclicker
+  baseline: baseline:pvp
+  notes: 注入幅度 = 阈值锚点 12.0 × 档位系数（MIN 1.1 / DEFAULT 1.5 / MAX 2.0 / HIDDEN 1.2）；LiquidBounce 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {cps: 13.2}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {cps: 18.0}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {cps: 24.0}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {cps: 14.4, spoofBrand: true, brand: forge, modId: liquidbounce}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: xray.bleachhack.default
+  name: BleachHack XRay 默认档
+  type: XRAY
+  target: detection-engine
+  source: BleachHack
+  injector: xray
+  baseline: baseline:mine
+  notes: 注入幅度 = 阈值锚点 6.0 × 档位系数（MIN 1.1 / DEFAULT 1.5 / MAX 2.0 / HIDDEN 1.2）；BleachHack 仅为出处标签
+  tiers:
+    - tier: MIN
+      params: {ore: diamond_ore, oresPerTick: 1, range: 6.6}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {ore: diamond_ore, oresPerTick: 2, range: 9.0}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {ore: ancient_debris, oresPerTick: 3, range: 12.0}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {ore: emerald_ore, oresPerTick: 1, range: 7.2, spoofBrand: true, brand: vanilla, modId: bleachhack}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
