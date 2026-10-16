@@ -1,0 +1,9 @@
+dependencies {
+    api project(':core')
+    api project(':network')
+    api project(':probes')
+
+    // 验收回归需要拉起合法行为模型与作弊注入，仅测试期可见，主代码不依赖这两者。
+    testImplementation project(':simulator')
+    testImplementation project(':cheats')
+}

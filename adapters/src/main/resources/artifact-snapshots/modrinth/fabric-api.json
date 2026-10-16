@@ -1,0 +1,10 @@
+{
+  "id": "fabric-api",
+  "name": "Fabric API",
+  "version": "0.100.0+1.21.11",
+  "role": "MOD",
+  "location": "https://cdn.modrinth.com/data/P7dR8mSH/versions/offline/fabric-api-0.100.0%2B1.21.11.jar",
+  "dependencies": [
+    { "id": "fabricloader", "semantics": "HARD", "range": ">=0.15.0" }
+  ]
+}

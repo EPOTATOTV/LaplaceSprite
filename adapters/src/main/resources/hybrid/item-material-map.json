@@ -1,0 +1,22 @@
+{
+  "items": [
+    { "registry": "minecraft:stone", "bukkit": "STONE" },
+    { "registry": "minecraft:cobblestone", "bukkit": "COBBLESTONE" },
+    { "registry": "minecraft:dirt", "bukkit": "DIRT" },
+    { "registry": "minecraft:oak_planks", "bukkit": "OAK_PLANKS" },
+    { "registry": "minecraft:bedrock", "bukkit": "BEDROCK" },
+    { "registry": "minecraft:torch", "bukkit": "TORCH" },
+    { "registry": "minecraft:iron_ingot", "bukkit": "IRON_INGOT" },
+    { "registry": "minecraft:golden_apple", "bukkit": "GOLDEN_APPLE" },
+    { "registry": "minecraft:diamond_sword", "bukkit": "DIAMOND_SWORD" },
+    { "registry": "minecraft:water_bucket", "bukkit": "WATER_BUCKET" }
+  ],
+  "entities": [
+    { "registry": "minecraft:zombie", "bukkit": "ZOMBIE" },
+    { "registry": "minecraft:skeleton", "bukkit": "SKELETON" },
+    { "registry": "minecraft:creeper", "bukkit": "CREEPER" },
+    { "registry": "minecraft:arrow", "bukkit": "ARROW" },
+    { "registry": "minecraft:villager", "bukkit": "VILLAGER" },
+    { "registry": "minecraft:ender_dragon", "bukkit": "ENDER_DRAGON" }
+  ]
+}
