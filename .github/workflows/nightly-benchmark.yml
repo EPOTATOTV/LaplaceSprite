@@ -1,0 +1,37 @@
+name: nightly-benchmark
+
+on:
+  schedule:
+    - cron: "0 18 * * *"
+  workflow_dispatch:
+
+jobs:
+  nightly:
+    name: 夜间基准（真实环境轨）
+    runs-on: [self-hosted, laplace-8h8g]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - name: 构建并安装 CLI
+        run: ./gradlew --no-daemon :cli:installDist
+      - name: 8h8g 实例编排
+        run: docker compose -f docker/docker-compose.testservers.yml up -d
+      - name: 全量基准（10000 合法 + 全作弊矩阵）
+        run: ./cli/build/install/laplace/bin/laplace run --suite mixed --players 10000 --ticks 1200 --seed 20261013 --workspace build/laplace
+      - name: 门禁判定
+        run: ./cli/build/install/laplace/bin/laplace gate --workspace build/laplace
+      - name: 指标入库
+        run: ./cli/build/install/laplace/bin/laplace console --workspace build/laplace --out build/laplace/metrics.json
+      - name: 归档证据（含失败）
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-evidence-${{ github.run_id }}
+          path: build/laplace
+      - name: 收尾
+        if: always()
+        run: docker compose -f docker/docker-compose.testservers.yml down -v

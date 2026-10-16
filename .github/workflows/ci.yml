@@ -1,0 +1,207 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
+    name: 全量单测 + 覆盖率
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - name: 单元测试（JUnit 5 + JaCoCo）
+        run: ./gradlew --no-daemon test
+      - name: 上传覆盖率报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-reports
+          path: "**/build/reports/jacoco/**"
+          if-no-files-found: warn
+
+  baseline-benchmark:
+    name: 关键模拟基准
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - name: 安装 CLI
+        run: ./gradlew --no-daemon :cli:installDist
+      - name: 合法模拟基准（10000 人，误报率门禁）
+        run: ./cli/build/install/laplace/bin/laplace run --suite legit --players 10000 --ticks 1200 --seed 20261013 --workspace build/laplace
+      - name: 作弊矩阵基准（检出率门禁）
+        run: ./cli/build/install/laplace/bin/laplace run --suite cheat --tier DEFAULT --ticks 400 --seed 20261013 --workspace build/laplace
+      - name: 门禁判定
+        run: ./cli/build/install/laplace/bin/laplace gate --workspace build/laplace
+      - name: 失败归档证据
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence-baseline
+          path: build/laplace
+
+  boundary-and-concurrency:
+    name: 阈值边界 + 并发安全
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew --no-daemon :cli:installDist
+      - name: 阈值边界样本
+        run: ./cli/build/install/laplace/bin/laplace run --suite boundary --seed 20261013 --workspace build/laplace-boundary
+      - name: 并发灌入（并发安全断言）
+        run: ./cli/build/install/laplace/bin/laplace run --suite legit --players 2000 --parallel --seed 20261013 --workspace build/laplace-concurrency
+      - name: 门禁判定
+        run: ./cli/build/install/laplace/bin/laplace gate --workspace build/laplace-boundary
+
+  adapter-smoke:
+    name: 适配器矩阵冒烟
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew --no-daemon :cli:installDist
+      - name: 全部适配器冒烟（装配 / 事件归一 / 生命周期）
+        run: ./cli/build/install/laplace/bin/laplace test --all --mc 1.21.11
+      - name: Sponge 系与混合端（9. 验收 7）
+        run: |
+          CLI=./cli/build/install/laplace/bin/laplace
+          $CLI test --platform spongeneo --mc 1.21.10
+          $CLI test --platform arclight --mc 1.21.1
+          $CLI test --platform youer --mc 1.21.1
+
+  dev-toolchain:
+    name: 工具链功能轨（第十五章 · 离线）
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew --no-daemon :cli:installDist
+
+      - name: 调试轨 + 热重载双轨制（15.1 / 15.2）
+        run: |
+          ./cli/build/install/laplace/bin/laplace debug \
+            --platform paper --mc 1.21.11 --instance ci-paper \
+            --jdwp-port 5005 --modid sprite --change METHOD_BODY \
+            --changed-path src/main/resources/assets/sprite/textures/x.png \
+            --out build/laplace/debug
+
+      - name: 沙箱轨（15.4）· dry-run + 敏感路径审计
+        run: ./cli/build/install/laplace/bin/laplace sandbox --case ci-smoke --tier SMOKE --out build/laplace/sandbox
+
+      - name: 剖析轨（15.3）
+        run: ./cli/build/install/laplace/bin/laplace profile --instance ci-paper --out build/laplace/profile
+
+      - name: 崩溃诊断器（15.5）· 依赖冲突样本
+        run: |
+          mkdir -p build/crash-fixture/logs
+          cat > build/crash-fixture/logs/latest.log <<'LOG'
+          [main/ERROR] Incompatible mod set!
+          Requires fabric-api >=0.115.0, but fabric-api 0.100.0 is installed
+          at net.fabricmc.loader.impl.discovery.ModSolver.locateCompatible(ModSolver.java:130)
+          at com.example.demo.core.DemoCore.init(DemoCore.java:42)
+          LOG
+          ./cli/build/install/laplace/bin/laplace crash \
+            --instance ci-paper --instance-dir build/crash-fixture --out build/laplace/crash
+
+      - name: 协议兼容轨（15.6）
+        run: ./cli/build/install/laplace/bin/laplace protocol --server-version 1.21.11 --bedrock
+
+      - name: CI 客户端测试轨（15.7）· 证据三件套
+        run: |
+          # 截图必须存在，否则按「失败必传截图」判失败
+          echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8AAAwAB/AGtq1YAAAAASUVORK5CYII=" | base64 -d > build/shot.png
+          ./cli/build/install/laplace/bin/laplace clienttest --screenshot build/shot.png --out build/laplace/clienttest
+
+      - name: 证据链 HMAC 校验（4.6）
+        run: |
+          CLI=./cli/build/install/laplace/bin/laplace
+          rm -rf build/laplace-evidence
+          $CLI run --suite legit --players 200 --ticks 120 --workspace build/laplace-evidence
+          $CLI archive --workspace build/laplace-evidence --verify-chain
+
+      - name: 控制台数据导出
+        run: ./cli/build/install/laplace/bin/laplace console --workspace build/laplace-evidence --out build/laplace-evidence/console.json
+
+      - name: 归档工具链产物
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dev-toolchain-evidence
+          path: build/laplace
+
+  static-analysis:
+    name: CodeQL + gitleaks
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: java-kotlin
+          queries: security-and-quality
+      - run: ./gradlew --no-daemon assemble
+      - uses: github/codeql-action/analyze@v3
+      - name: gitleaks（密钥与凭据扫描）
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  gate:
+    name: GateResult
+    needs: [baseline-benchmark, boundary-and-concurrency, adapter-smoke, dev-toolchain]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: 汇总门禁
+        run: |
+          echo "baseline-benchmark: ${{ needs.baseline-benchmark.result }}"
+          echo "boundary-and-concurrency: ${{ needs.boundary-and-concurrency.result }}"
+          echo "adapter-smoke: ${{ needs.adapter-smoke.result }}"
+          echo "dev-toolchain: ${{ needs.dev-toolchain.result }}"
+          if [ "${{ needs.baseline-benchmark.result }}" != "success" ] \
+             || [ "${{ needs.boundary-and-concurrency.result }}" != "success" ] \
+             || [ "${{ needs.adapter-smoke.result }}" != "success" ] \
+             || [ "${{ needs.dev-toolchain.result }}" != "success" ]; then
+            echo "门禁未通过"
+            exit 1
+          fi
+          echo "门禁通过"

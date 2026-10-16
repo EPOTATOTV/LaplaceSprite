@@ -1,0 +1,40 @@
+# 检测阈值锚点与档位系数（4.2「注入幅度 = 检测阈值 × 档位系数」）
+#
+# ⚠ 本文件是**提取工作流的只读镜像**，不是权威来源。
+#   权威声明在 Java 侧：cheats 模块的 DetectionThresholdAnchor / TierCoefficient。
+#   两边一旦漂移，adapters 模块的 DetectionThresholdAnchorCrossCheckTest 会先失败。
+#   改动阈值请改 Java 侧并同步这里，不要只改这里。
+
+anchors:
+  SPEED:        { value: 0.30,  unit: "格/tick",  direction: higher,  param: speed }
+  FLY:          { value: 0.125, unit: "格/tick",  direction: higher,  param: verticalSpeed }
+  REACH:        { value: 3.0,   unit: "格",       direction: higher,  param: reach }
+  KILL_AURA:    { value: 3.0,   unit: "个",       direction: higher,  param: targets }
+  AUTO_CLICKER: { value: 12.0,  unit: "次/秒",    direction: higher,  param: cps }
+  TIMER:        { value: 3.0,   unit: "次",       direction: higher,  param: speedup }
+  BLINK:        { value: 1.4,   unit: "格",       direction: higher,  param: distance }
+  NO_FALL:      { value: 0.1,   unit: "格/tick",  direction: higher,  param: fallSpeed }
+  PHASE:        { value: 1.0,   unit: "层",       direction: higher,  param: depth }
+  JESUS:        { value: 2.0,   unit: "次",       direction: higher,  param: surfaceY }
+  SCAFFOLD:     { value: 0.8,   unit: "占比",     direction: higher,  param: blocksPerTick }
+  FAST_PLACE:   { value: 3.0,   unit: "次",       direction: higher,  param: placementsPerTick }
+  FAST_EAT:     { value: 16.0,  unit: "tick",     direction: lower,   param: consumeTicks }
+  AUTO_TOTEM:   { value: 4.0,   unit: "tick",     direction: lower,   param: swapDelayTicks }
+  XRAY:         { value: 6.0,   unit: "格",       direction: higher,  param: range }
+
+# 统一档位系数；direction=lower 的类型（越小越可疑）在代码里按反向换算。
+coefficients:
+  MIN:     1.1
+  DEFAULT: 1.5
+  MAX:     2.0
+  HIDDEN:  1.2
+
+# 主参数与锚点不同量纲的类型需要按类型覆盖：这里只列刻度换算的说明，
+# 具体系数以 Java 侧 TierCoefficient.of(CheatType, CheatTierName) 为准。
+scaleConversions:
+  SPEED:        "锚点是位移阈值（格/tick），注入器吃的是位移倍率；按疾跑基线换算"
+  TIMER:        "锚点是重复位置包计数，注入器吃的是计时倍率"
+  JESUS:        "锚点是流体表面落地计数，注入器吃的是水面高度"
+  SCAFFOLD:     "锚点是脚下补块占比，注入器吃的是每 tick 补块数"
+  FAST_EAT:     "锚点是耗时上限，注入器吃的是消耗耗时（反向）"
+  AUTO_TOTEM:   "锚点是换手延迟上限，注入器吃的是延迟 tick（反向）"

@@ -1,0 +1,24 @@
+# 多阶段构建：CLI 自包含发行版（第六章 下载渠道）
+FROM gradle:8.11.1-jdk21 AS build
+WORKDIR /src
+COPY settings.gradle gradle.properties build.gradle ./
+COPY core core
+COPY simulator simulator
+COPY cheats cheats
+COPY network network
+COPY adapters adapters
+COPY probes probes
+COPY servers servers
+COPY report report
+COPY cli cli
+RUN gradle --no-daemon :cli:installDist
+
+FROM eclipse-temurin:21-jre
+LABEL org.opencontainers.image.title="laplace-sprite" \
+      org.opencontainers.image.description="拉普拉斯精灵测试平台 CLI"
+WORKDIR /opt/laplace
+COPY --from=build /src/cli/build/install/laplace /opt/laplace
+ENV PATH="/opt/laplace/bin:${PATH}"
+WORKDIR /work
+ENTRYPOINT ["/opt/laplace/bin/laplace"]
+CMD ["--help"]

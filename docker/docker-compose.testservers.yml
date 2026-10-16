@@ -1,0 +1,170 @@
+# 真实环境轨：独立 8h8g 服务器上的真实实例编排（12.1 / 12.2）
+# 8 vCPU / 8GB：实例内存配额之和控制在 8GB 以内，避免互相挤兑。
+name: laplace-testservers
+
+services:
+  paper:
+    image: itzg/minecraft-server:java21
+    container_name: laplace-paper
+    environment:
+      EULA: "TRUE"
+      TYPE: PAPER
+      VERSION: "1.21.11"
+      MEMORY: 3G
+      ONLINE_MODE: "FALSE"
+      ENABLE_RCON: "TRUE"
+      RCON_PASSWORD: laplace
+      # 被测 被测检测插件以真实插件形式注入（12.1）
+      PLUGINS: /plugins
+      LEVEL: laplace-flat
+      SEED: "20261013"
+    volumes:
+      - ./plugins:/plugins:ro
+      - paper-data:/data
+    ports:
+      - "25565:25565"
+      - "25575:25575"
+    healthcheck:
+      test: ["CMD", "mc-health"]
+      interval: 30s
+      timeout: 10s
+      retries: 12
+      start_period: 180s
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+
+  spigot:
+    image: itzg/minecraft-server:java21
+    container_name: laplace-spigot
+    environment:
+      EULA: "TRUE"
+      TYPE: SPIGOT
+      VERSION: "1.20.6"
+      MEMORY: 2G
+      ONLINE_MODE: "FALSE"
+      ENABLE_RCON: "TRUE"
+      RCON_PASSWORD: laplace
+      PLUGINS: /plugins
+    volumes:
+      - ./plugins:/plugins:ro
+      - spigot-data:/data
+    ports:
+      - "25566:25565"
+    deploy:
+      resources:
+        limits:
+          memory: 3g
+
+  nukkit:
+    image: itzg/minecraft-server:java21
+    container_name: laplace-nukkit
+    environment:
+      EULA: "TRUE"
+      TYPE: NUKKIT
+      VERSION: "1.21"
+      MEMORY: 1G
+      ONLINE_MODE: "FALSE"
+      PLUGINS: /plugins
+    volumes:
+      - ./plugins:/plugins:ro
+      - nukkit-data:/data
+    ports:
+      - "19132:19132/udp"
+      - "25567:25565"
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+
+  geyser:
+    image: itzg/minecraft-server:java21
+    container_name: laplace-geyser
+    environment:
+      EULA: "TRUE"
+      TYPE: PAPER
+      VERSION: "1.21.11"
+      MEMORY: 1G
+      ONLINE_MODE: "FALSE"
+      PLUGINS: /plugins
+    volumes:
+      - ./plugins-geyser:/plugins:ro
+      - geyser-data:/data
+    ports:
+      - "25568:25565"
+      - "19133:19132/udp"
+    deploy:
+      resources:
+        limits:
+          memory: 3g
+
+  allay:
+    image: eclipse-temurin:21-jre
+    container_name: laplace-allay
+    working_dir: /server
+    # AllayMC 官方发行包需在首次运行前放入 ./allay/（不放则本实例不会启动）
+    command: >
+      sh -c "if [ -f /server/allay-server.jar ]; then
+               java -Xmx3G -jar /server/allay-server.jar;
+             else
+               echo 'allay-server.jar 未提供，跳过本实例'; sleep infinity;
+             fi"
+    volumes:
+      - ./allay:/server
+    ports:
+      - "25569:19132/udp"
+    deploy:
+      resources:
+        limits:
+          memory: 3g
+
+  # 混合端：Bukkit 家族 × 模组加载器组合端（14.3）。官方无 mock，只能真实启动完整端，
+  # 因此发行包需自行放入 ./arclight/ 与 ./youer/；不放则对应实例不会启动。
+  arclight:
+    image: eclipse-temurin:21-jre
+    container_name: laplace-arclight
+    working_dir: /server
+    command: >
+      sh -c "if ls /server/*.jar >/dev/null 2>&1; then
+               java -Xmx2G -jar $(ls /server/*.jar | head -n1) nogui;
+             else
+               echo '未提供 Arclight 发行包，跳过本实例'; sleep infinity;
+             fi"
+    volumes:
+      - ./arclight:/server
+      - ./plugins:/server/plugins:ro
+      - ./mods:/server/mods:ro
+    ports:
+      - "25570:25565"
+    deploy:
+      resources:
+        limits:
+          memory: 3g
+
+  youer:
+    image: eclipse-temurin:21-jre
+    container_name: laplace-youer
+    working_dir: /server
+    command: >
+      sh -c "if ls /server/*.jar >/dev/null 2>&1; then
+               java -Xmx2G -jar $(ls /server/*.jar | head -n1) nogui;
+             else
+               echo '未提供 Youer 发行包，跳过本实例'; sleep infinity;
+             fi"
+    volumes:
+      - ./youer:/server
+      - ./plugins:/server/plugins:ro
+      - ./mods:/server/mods:ro
+    ports:
+      - "25571:25565"
+    deploy:
+      resources:
+        limits:
+          memory: 3g
+
+volumes:
+  paper-data:
+  spigot-data:
+  nukkit-data:
+  geyser-data:

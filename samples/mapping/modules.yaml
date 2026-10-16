@@ -1,0 +1,85 @@
+# 模块名 → CheatType 映射（4.2 配置来源）
+#
+# 用途：extract_cheat_configs.py 扫描开源作弊客户端源码时，用本表把模块名归到平台的 CheatType。
+# 只登记公开项目的模块名，不涉及任何玩家数据（6. 数据边界）。
+
+SPEED:
+  - "Speed"
+  - "Sprint"
+  - "Bhop"
+  - "Strafe"
+  - "NoSlowdown"
+
+FLY:
+  - "Fly"
+  - "Flight"
+  - "Glide"
+  - "Jetpack"
+  - "CreativeFlight"
+
+REACH:
+  - "Reach"
+  - "ReachModifier"
+  - "InfinityReach"
+
+AUTO_CLICKER:
+  - "AutoClicker"
+  - "Clicker"
+  - "AutoShoot"
+  - "TriggerBot"
+
+KILL_AURA:
+  - "KillAura"
+  - "Aura"
+  - "Killaura"
+  - "MultiAura"
+  - "LegitAura"
+
+TIMER:
+  - "Timer"
+  - "TimerSpeed"
+  - "TickShift"
+
+BLINK:
+  - "Blink"
+  - "FakeLag"
+  - "Lag"
+
+NO_FALL:
+  - "NoFall"
+  - "NoFallDamage"
+  - "AntiFall"
+
+PHASE:
+  - "Phase"
+  - "NoClip"
+
+JESUS:
+  - "Jesus"
+  - "WaterWalk"
+
+SCAFFOLD:
+  - "Scaffold"
+  - "Eagle"
+  - "SafeWalk"
+  - "Tower"
+
+FAST_PLACE:
+  - "FastPlace"
+  - "NoPlaceDelay"
+
+FAST_EAT:
+  - "FastEat"
+  - "NoEatDelay"
+  - "FastUse"
+
+AUTO_TOTEM:
+  - "AutoTotem"
+  - "Offhand"
+  - "AutoOffhand"
+
+XRAY:
+  - "XRay"
+  - "Xray"
+  - "CaveFinder"
+  - "OreFinder"

@@ -1,0 +1,32 @@
+name: adapter-matrix
+
+on: [push, pull_request]
+
+jobs:
+  adapter-matrix:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { platform: paper,        mc: "1.21.11", adapter: paper-v2 }     # 第一梯队
+          - { platform: folia,        mc: "1.21.11", adapter: folia-v1 }     # 并发变体分支
+          - { platform: velocity,     mc: "1.21.11", adapter: velocity-v3 }  # 代理端
+          - { platform: fabric,       mc: "1.21.11", loader: "0.19.5" }      # 模组线
+          - { platform: neoforge,     mc: "1.21.11", loader: "21.11" }
+          - { platform: quilt,        mc: "1.21.11", loader: "0.26.0" }
+          - { platform: nukkit,       mc: "1.21",    adapter: nukkit-v1 }    # 基岩线
+          - { platform: spongeneo,    mc: "1.21.10", adapter: sponge-v1 }    # Sponge 系
+          - { platform: arclight,     mc: "1.21.1",  adapter: arclight-v1 }  # 混合端
+          - { platform: youer,        mc: "1.21.1",  adapter: youer-v1 }
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew --no-daemon build
+      - run: ./gradlew --no-daemon :cli:installDist
+      - run: ./cli/build/install/laplace/bin/laplace test --platform ${{ matrix.platform }} --mc ${{ matrix.mc }} --adapter ${{ matrix.adapter || matrix.loader }}
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with: { name: evidence-${{ matrix.platform }}-${{ matrix.mc }}, path: build/laplace-evidence }
