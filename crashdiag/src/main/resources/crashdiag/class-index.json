@@ -1,0 +1,27 @@
+{
+  "note": "包名/类名前缀到 modId 的映射。前缀重叠时取最长命中，越具体越优先。这份索引天生不全，覆盖率低于阈值时诊断会降置信度并告警。",
+  "entries": [
+    { "prefix": "net.minecraft.", "modId": "minecraft" },
+    { "prefix": "com.mojang.", "modId": "minecraft" },
+    { "prefix": "net.minecraftforge.", "modId": "forge" },
+    { "prefix": "net.neoforged.", "modId": "neoforge" },
+    { "prefix": "cpw.mods.", "modId": "neoforge" },
+    { "prefix": "net.fabricmc.loader.", "modId": "fabric-loader" },
+    { "prefix": "net.fabricmc.api.", "modId": "fabric-loader" },
+    { "prefix": "net.fabricmc.fabric.", "modId": "fabric-api" },
+    { "prefix": "net.fabricmc.", "modId": "fabric-loader" },
+    { "prefix": "org.quiltmc.", "modId": "quilt-loader" },
+    { "prefix": "org.spongepowered.", "modId": "sponge" },
+    { "prefix": "org.bukkit.", "modId": "bukkit" },
+    { "prefix": "io.papermc.paper.", "modId": "paper" },
+    { "prefix": "com.destroystokyo.paper.", "modId": "paper" },
+    { "prefix": "net.kyori.adventure.", "modId": "adventure" },
+    { "prefix": "dev.architectury.", "modId": "architectury" },
+    { "prefix": "me.shedaniel.cloth.", "modId": "cloth-config" },
+    { "prefix": "com.example.questmod.", "modId": "questmod" },
+    { "prefix": "com.example.qolmod.", "modId": "qolmod" },
+    { "prefix": "com.example.perfcore.", "modId": "perfcore" },
+    { "prefix": "com.example.nethax.", "modId": "nethax" },
+    { "prefix": "com.example.anticheat.", "modId": "sprite-anticheat" }
+  ]
+}

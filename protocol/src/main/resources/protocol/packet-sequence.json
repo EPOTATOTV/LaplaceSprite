@@ -1,0 +1,12 @@
+{
+  "capturedBy": "ProtocolLib",
+  "note": "真实抓包需在真实 Paper 服务端挂 ProtocolLib 监听器；本文件是离线夹具，字段值取自一次手动录制，不代表任何实测结论。",
+  "packets": [
+    { "seq": 1, "packetType": "LOGIN_SUCCESS", "fields": { "protocolVersion": 767, "username": "SimID-legit" } },
+    { "seq": 2, "packetType": "JOIN_GAME", "fields": { "entityId": 42, "gamemode": 0, "viewDistance": 10 } },
+    { "seq": 3, "packetType": "CHUNK_DATA", "fields": { "chunkX": 0, "chunkZ": 0, "bitmask": 15 } },
+    { "seq": 4, "packetType": "ENTITY_POSITION", "fields": { "entityId": 42, "x": 0.5, "y": 64.0, "z": 0.5 } },
+    { "seq": 5, "packetType": "SET_SLOT", "fields": { "windowId": 0, "slot": 36, "material": "DIAMOND_SWORD", "amount": 1 } },
+    { "seq": 6, "packetType": "CHAT", "fields": { "message": "hello", "type": "CHAT" } }
+  ]
+}
