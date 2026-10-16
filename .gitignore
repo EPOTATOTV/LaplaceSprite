@@ -1,0 +1,36 @@
+# build
+.gradle/
+build/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# node
+node_modules/
+dist/
+.vite/
+
+# ide
+.idea/
+*.iml
+.vscode/
+
+# local tooling
+.tools/
+
+# runtime artifacts
+laplace-evidence/
+*.log
+
+# temp extraction dumps
+_doc*.md
+_docfetch.json
+
+# secrets
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.p8
+*.service-account*.json
+*credentials*.json

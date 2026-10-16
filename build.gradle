@@ -1,0 +1,54 @@
+plugins {
+    id 'base'
+}
+
+allprojects {
+    group = 'io.laplace.sprite'
+    version = rootProject.findProperty('laplaceVersion') ?: '1.0.0'
+}
+
+subprojects {
+    apply plugin: 'java-library'
+    apply plugin: 'jacoco'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        testImplementation platform("org.junit:junit-bom:${rootProject.findProperty('junitVersion')}")
+        testImplementation 'org.junit.jupiter:junit-jupiter'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+        testImplementation "org.mockito:mockito-core:${rootProject.findProperty('mockitoVersion')}"
+        testImplementation "org.mockito:mockito-junit-jupiter:${rootProject.findProperty('mockitoVersion')}"
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+        options.release = 21
+        options.compilerArgs << '-Xlint:all' << '-Xlint:-processing' << '-Xlint:-serial'
+    }
+
+    tasks.named('test') {
+        useJUnitPlatform()
+        testLogging {
+            events 'passed', 'skipped', 'failed'
+            exceptionFormat 'full'
+        }
+        finalizedBy tasks.named('jacocoTestReport')
+    }
+
+    tasks.named('jacocoTestReport') {
+        dependsOn tasks.named('test')
+        reports {
+            xml.required = true
+            html.required = true
+        }
+    }
+}
