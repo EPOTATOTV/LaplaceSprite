@@ -9,7 +9,7 @@
 ./cli/build/install/laplace/bin/laplace run --suite legit --players 1000
 ```
 
-产物在 `cli/build/install/laplace/`，可以直接拷走。所在网络有 TLS 中间代理时，给 JVM 加 `-Djavax.net.ssl.trustStoreType=WINDOWS-ROOT`（或等价的环境变量）。
+产物在 `cli/build/install/laplace/`，可以直接拷走。所在网络有 TLS 中间代理时，给 JVM 加 `-Djavax.net.ssl.trustStoreType=WINDOWS-ROOT`（或等价的环境变量）。这个参数只在本机用，别写进仓库的 `gradle.properties`：Linux runner 上没有 `WINDOWS-ROOT` 这个 trust store 类型，Gradle 会直接起不来。
 
 前端单独装：
 
