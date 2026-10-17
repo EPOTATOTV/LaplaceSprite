@@ -7,19 +7,19 @@ import io.laplace.sprite.core.model.FlagEvent;
 import java.util.List;
 
 /**
- * SimAdapter（4.4）：进程内快迭代轨的检测目标。
+ * SimServerAdapter（4.4）：进程内快迭代轨的检测目标。
  *
  * <p>只做「把归一化事件流交给检测引擎」这一件事；引擎可替换，真实检测引擎落地时直接换实现。</p>
  */
-public final class SimAdapter implements DetectionTarget {
+public final class SimServerAdapter implements DetectionTarget {
 
     private final DetectionEngine engine;
 
-    public SimAdapter() {
+    public SimServerAdapter() {
         this(new HeuristicDetectionEngine());
     }
 
-    public SimAdapter(DetectionEngine engine) {
+    public SimServerAdapter(DetectionEngine engine) {
         this.engine = engine;
     }
 

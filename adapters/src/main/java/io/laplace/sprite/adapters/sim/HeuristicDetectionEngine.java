@@ -3,7 +3,7 @@ package io.laplace.sprite.adapters.sim;
 import io.laplace.sprite.core.engine.DetectionContext;
 import io.laplace.sprite.core.event.Event;
 import io.laplace.sprite.core.event.EventStream;
-import io.laplace.sprite.core.model.CheatTierName;
+import io.laplace.sprite.core.model.SampleTierName;
 import io.laplace.sprite.core.model.CheatType;
 import io.laplace.sprite.core.model.FlagEvent;
 
@@ -530,7 +530,7 @@ public final class HeuristicDetectionEngine implements DetectionEngine {
         String runId = ctx.runId() == null ? "sim-run" : ctx.runId();
         String playerId = ctx.playerId() == null ? "SimID-sim" : ctx.playerId();
         String trajectoryRef = ctx.scenario() == null ? "sim" : ctx.scenario().id();
-        CheatTierName tier = ctx.tier();
+        SampleTierName tier = ctx.tier();
         return FlagEvent.truePositive(runId, playerId, check, type, tier, confidence, tick, trajectoryRef,
                 "sim-heuristic");
     }

@@ -1,13 +1,13 @@
 package io.laplace.sprite.adapters;
 
 import io.laplace.sprite.adapters.sim.HeuristicDetectionEngine;
-import io.laplace.sprite.adapters.sim.SimAdapter;
+import io.laplace.sprite.adapters.sim.SimServerAdapter;
 import io.laplace.sprite.core.engine.DetectionContext;
 import io.laplace.sprite.core.engine.DetectionTarget;
 import io.laplace.sprite.core.engine.InMemoryEventStream;
 import io.laplace.sprite.core.event.Event;
 import io.laplace.sprite.core.event.EventStream;
-import io.laplace.sprite.core.model.CheatTierName;
+import io.laplace.sprite.core.model.SampleTierName;
 import io.laplace.sprite.core.model.FlagEvent;
 import io.laplace.sprite.core.model.PlatformFamily;
 import io.laplace.sprite.core.model.PlatformKey;
@@ -23,13 +23,13 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** SimAdapter 启发表（4.4）：合法基线零 flag，注入流命中对应检测项。 */
-class SimAdapterTest {
+/** SimServerAdapter 启发表（4.4）：合法基线零 flag，注入流命中对应检测项。 */
+class SimServerAdapterTest {
 
     private static final PlatformKey PAPER = PlatformKey.of(PlatformFamily.PAPER, "1.21.11");
     private static final String PLAYER = AdapterTestSupport.PLAYER;
 
-    private final SimAdapter adapter = new SimAdapter();
+    private final SimServerAdapter adapter = new SimServerAdapter();
 
     @Test
     void legitWalkBaselineProducesZeroFlags() {
@@ -113,7 +113,7 @@ class SimAdapterTest {
 
     @Test
     void detectionTargetEdgesAreWired() {
-        DetectionTarget target = new SimAdapter(new HeuristicDetectionEngine());
+        DetectionTarget target = new SimServerAdapter(new HeuristicDetectionEngine());
         assertTrue(target.id().contains("sim"));
         assertTrue(target.detect(ctx(AdapterTestSupport.legitBaseline(PAPER))).isEmpty());
     }
@@ -125,7 +125,7 @@ class SimAdapterTest {
     private static DetectionContext ctx(EventStream stream) {
         Scenario scenario = new Scenario("pvp", "pvp", List.of(), "default", 1, Map.of());
         return new DetectionContext("run-sim", PAPER, scenario, stream, ProbeSnapshot.clean(), PLAYER,
-                PlayerType.CHEAT, null, CheatTierName.DEFAULT);
+                PlayerType.CHEAT, null, SampleTierName.DEFAULT);
     }
 
     private static void assertHasCheck(List<FlagEvent> flags, String check) {

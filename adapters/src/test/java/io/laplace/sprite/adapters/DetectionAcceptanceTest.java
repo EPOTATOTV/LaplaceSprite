@@ -1,7 +1,7 @@
 package io.laplace.sprite.adapters;
 
 import io.laplace.sprite.adapters.sim.HeuristicDetectionEngine;
-import io.laplace.sprite.adapters.sim.SimAdapter;
+import io.laplace.sprite.adapters.sim.SimServerAdapter;
 import io.laplace.sprite.cheats.CheatCatalog;
 import io.laplace.sprite.cheats.CheatSessionFactory;
 import io.laplace.sprite.core.engine.DetectionContext;
@@ -9,8 +9,8 @@ import io.laplace.sprite.core.engine.InMemoryEventStream;
 import io.laplace.sprite.core.engine.SimulatedSession;
 import io.laplace.sprite.core.event.EventStream;
 import io.laplace.sprite.core.model.BehaviorProfile;
-import io.laplace.sprite.core.model.CheatSpec;
-import io.laplace.sprite.core.model.CheatTierName;
+import io.laplace.sprite.core.model.TestSpec;
+import io.laplace.sprite.core.model.SampleTierName;
 import io.laplace.sprite.core.model.CheatType;
 import io.laplace.sprite.core.model.NetworkModel;
 import io.laplace.sprite.core.model.PlatformFamily;
@@ -19,7 +19,7 @@ import io.laplace.sprite.core.model.PlayerType;
 import io.laplace.sprite.core.model.ProbeSnapshot;
 import io.laplace.sprite.core.model.Scenario;
 import io.laplace.sprite.network.NetworkModelRegistry;
-import io.laplace.sprite.simulator.LegitTrajectoryGenerator;
+import io.laplace.sprite.simulator.BehaviorTrajectoryGenerator;
 import org.junit.jupiter.api.Test;
 
 import java.util.EnumSet;
@@ -46,8 +46,8 @@ class DetectionAcceptanceTest {
     private static final int PROFILES_PER_COHORT = 50;
     private static final double MIN_DETECTION_RATE = 0.95;
 
-    private final SimAdapter adapter = new SimAdapter(new HeuristicDetectionEngine());
-    private final LegitTrajectoryGenerator generator = new LegitTrajectoryGenerator();
+    private final SimServerAdapter adapter = new SimServerAdapter(new HeuristicDetectionEngine());
+    private final BehaviorTrajectoryGenerator generator = new BehaviorTrajectoryGenerator();
     private final Scenario scenario = new Scenario("pvp", "pvp", List.of(), "default", 8, Map.of());
 
     @Test
@@ -67,9 +67,9 @@ class DetectionAcceptanceTest {
 
     @Test
     void cheatSamplesAtDefaultTierAreDetectedAboveThreshold() {
-        List<CheatSpec> specs = new CheatCatalog().loadDefaults();
+        List<TestSpec> specs = new CheatCatalog().loadDefaults();
         List<SimulatedSession> sessions = new CheatSessionFactory()
-                .buildSessions(specs, CheatTierName.DEFAULT, "pvp", PLATFORM, network(), SEED, baseline());
+                .buildSessions(specs, SampleTierName.DEFAULT, "pvp", PLATFORM, network(), SEED, baseline());
         int detected = 0;
         Set<CheatType> covered = EnumSet.noneOf(CheatType.class);
         for (SimulatedSession session : sessions) {
@@ -89,7 +89,7 @@ class DetectionAcceptanceTest {
 
     @Test
     void boundarySamplesAllMatchExpectation() {
-        List<CheatSpec> specs = new CheatCatalog().loadDefaults();
+        List<TestSpec> specs = new CheatCatalog().loadDefaults();
         List<SimulatedSession> sessions = new CheatSessionFactory()
                 .buildBoundarySessions(specs, "pvp", PLATFORM, network(), SEED, baseline());
         int passed = 0;
@@ -114,8 +114,8 @@ class DetectionAcceptanceTest {
         return new NetworkModelRegistry().defaultModel();
     }
 
-    private DetectionContext ctx(EventStream stream, String playerId, PlayerType playerType, CheatSpec spec,
-                                 CheatTierName tier) {
+    private DetectionContext ctx(EventStream stream, String playerId, PlayerType playerType, TestSpec spec,
+                                 SampleTierName tier) {
         return new DetectionContext("acceptance", PLATFORM, scenario, stream, ProbeSnapshot.clean(), playerId,
                 playerType, spec, tier);
     }
