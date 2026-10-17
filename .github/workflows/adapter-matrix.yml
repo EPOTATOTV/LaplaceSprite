@@ -15,7 +15,7 @@ jobs:
           - { platform: neoforge,     mc: "1.21.11", loader: "21.11" }
           - { platform: quilt,        mc: "1.21.11", loader: "0.26.0" }
           - { platform: nukkit,       mc: "1.21",    adapter: nukkit-v1 }    # 基岩线
-          - { platform: spongeneo,    mc: "1.21.10", adapter: sponge-v1 }    # Sponge 系
+          - { platform: spongeneo,    mc: "1.21.10", adapter: "17.0.0" }    # Sponge 系，loader 取 Sponge API 版本
           - { platform: arclight,     mc: "1.21.1",  adapter: arclight-v1 }  # 混合端
           - { platform: youer,        mc: "1.21.1",  adapter: youer-v1 }
     runs-on: ubuntu-latest
