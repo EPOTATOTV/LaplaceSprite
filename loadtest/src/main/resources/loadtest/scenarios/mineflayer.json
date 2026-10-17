@@ -1,0 +1,13 @@
+{
+  "id": "net-chunk-load",
+  "backend": "MINEFLAYER",
+  "actions": ["JOIN", "WALK", "MINE", "PLACE", "CHAT"],
+  "durationTicks": 6000,
+  "ramp": {
+    "startConcurrency": 10,
+    "step": 10,
+    "stepTicks": 1200,
+    "maxConcurrency": 50
+  },
+  "note": "网络层压测：真实登录后随机走动加载区块，交替挖掘与放置，并定时发送聊天包。"
+}

@@ -1,0 +1,6 @@
+dependencies {
+    api project(':core')
+    api project(':servers')
+    api project(':sandbox')
+    api project(':loadtest')
+}

@@ -1,0 +1,13 @@
+{
+  "id": "in-server-fake-players",
+  "backend": "CARPET",
+  "actions": ["JOIN", "WALK", "MINE", "PLACE", "ATTACK", "IDLE"],
+  "durationTicks": 6000,
+  "ramp": {
+    "startConcurrency": 20,
+    "step": 20,
+    "stepTicks": 1200,
+    "maxConcurrency": 100
+  },
+  "note": "服务端内压测：Carpet 假人进站后走动、挖掘、放置与攻击，不占网络连接。"
+}
