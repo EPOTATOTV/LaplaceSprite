@@ -24,7 +24,6 @@ export function ConsoleDataProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false
-    setState('loading')
     const started = Date.now()
     const settle = (next: ConsoleData, nextSource: 'fixture' | 'api'): void => {
       const wait = Math.max(0, MIN_DWELL_MS - (Date.now() - started))
@@ -45,7 +44,10 @@ export function ConsoleDataProvider({ children }: { children: ReactNode }) {
     }
   }, [nonce])
 
-  const reload = useCallback(() => setNonce((n) => n + 1), [])
+  const reload = useCallback(() => {
+    setState('loading')
+    setNonce((n) => n + 1)
+  }, [])
 
   const value = useMemo<ConsoleDataContextValue>(
     () => ({ state, data, source, reload }),
