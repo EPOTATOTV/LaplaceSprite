@@ -1,5 +1,6 @@
 - id: speed.lambda.hidden
   name: Lambda Speed 隐蔽档
+  category: CHEAT
   type: SPEED
   target: detection-engine
   source: Lambda
@@ -22,6 +23,7 @@
 
 - id: killaura.meteor.max
   name: Meteor KillAura 最高档
+  category: CHEAT
   type: KILL_AURA
   target: detection-engine
   source: Meteor
@@ -44,6 +46,7 @@
 
 - id: reach.wurst.hidden
   name: Wurst Reach 隐蔽档
+  category: CHEAT
   type: REACH
   target: detection-engine
   source: Wurst
@@ -66,6 +69,7 @@
 
 - id: autoclicker.liquidbounce.hidden
   name: LiquidBounce AutoClicker 隐蔽档
+  category: CHEAT
   type: AUTO_CLICKER
   target: detection-engine
   source: LiquidBounce
@@ -88,6 +92,7 @@
 
 - id: xray.bleachhack.default
   name: BleachHack XRay 默认档
+  category: CHEAT
   type: XRAY
   target: detection-engine
   source: BleachHack

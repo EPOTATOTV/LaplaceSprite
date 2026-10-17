@@ -2,8 +2,8 @@ package io.laplace.sprite.cheats.report;
 
 import io.laplace.sprite.cheats.CheatCatalog;
 import io.laplace.sprite.cheats.threshold.DetectionThresholdAnchor;
-import io.laplace.sprite.core.model.CheatSpec;
-import io.laplace.sprite.core.model.CheatTierName;
+import io.laplace.sprite.core.model.TestSpec;
+import io.laplace.sprite.core.model.SampleTierName;
 import io.laplace.sprite.core.model.CheatType;
 import io.laplace.sprite.core.model.DetectionBreakdown;
 import io.laplace.sprite.core.model.FlagEvent;
@@ -27,7 +27,7 @@ import java.util.Map;
 final class ReportFixtures {
 
     static final CheatCatalog CATALOG = new CheatCatalog();
-    static final CheatTierName[] TIERS = CheatTierName.values();
+    static final SampleTierName[] TIERS = SampleTierName.values();
 
     private ReportFixtures() {
     }
@@ -35,41 +35,41 @@ final class ReportFixtures {
     /** 每种作弊类型的样本条数（来自内置样本库）。 */
     static Map<CheatType, Integer> specsPerType() {
         Map<CheatType, Integer> counts = new EnumMap<>(CheatType.class);
-        for (CheatSpec spec : CATALOG.loadDefaults()) {
+        for (TestSpec spec : CATALOG.loadDefaults()) {
             counts.merge(spec.type(), 1, Integer::sum);
         }
         return counts;
     }
 
     /** 四个档位各注入 {@code perTier} 条样本。 */
-    static EnumMap<CheatTierName, Integer> samplesPerTier(int perTier) {
-        EnumMap<CheatTierName, Integer> samples = new EnumMap<>(CheatTierName.class);
-        for (CheatTierName tier : TIERS) {
+    static EnumMap<SampleTierName, Integer> samplesPerTier(int perTier) {
+        EnumMap<SampleTierName, Integer> samples = new EnumMap<>(SampleTierName.class);
+        for (SampleTierName tier : TIERS) {
             samples.put(tier, perTier);
         }
         return samples;
     }
 
     /** 单个类型在四档的检出样本数。 */
-    static Map<CheatType, Map<CheatTierName, Integer>> detected(CheatType type,
+    static Map<CheatType, Map<SampleTierName, Integer>> detected(CheatType type,
                                                                 int min, int def, int max, int hidden) {
-        Map<CheatTierName, Integer> byTier = new EnumMap<>(CheatTierName.class);
-        byTier.put(CheatTierName.MIN, min);
-        byTier.put(CheatTierName.DEFAULT, def);
-        byTier.put(CheatTierName.MAX, max);
-        byTier.put(CheatTierName.HIDDEN, hidden);
-        Map<CheatType, Map<CheatTierName, Integer>> result = new EnumMap<>(CheatType.class);
+        Map<SampleTierName, Integer> byTier = new EnumMap<>(SampleTierName.class);
+        byTier.put(SampleTierName.MIN, min);
+        byTier.put(SampleTierName.DEFAULT, def);
+        byTier.put(SampleTierName.MAX, max);
+        byTier.put(SampleTierName.HIDDEN, hidden);
+        Map<CheatType, Map<SampleTierName, Integer>> result = new EnumMap<>(CheatType.class);
         result.put(type, byTier);
         return result;
     }
 
     /** 全量检出：每个类型的每条样本在每档都检出。 */
-    static Map<CheatType, Map<CheatTierName, Integer>> fullyDetected() {
+    static Map<CheatType, Map<SampleTierName, Integer>> fullyDetected() {
         Map<CheatType, Integer> specs = specsPerType();
-        Map<CheatType, Map<CheatTierName, Integer>> result = new EnumMap<>(CheatType.class);
+        Map<CheatType, Map<SampleTierName, Integer>> result = new EnumMap<>(CheatType.class);
         for (CheatType type : CheatType.values()) {
-            Map<CheatTierName, Integer> byTier = new EnumMap<>(CheatTierName.class);
-            for (CheatTierName tier : TIERS) {
+            Map<SampleTierName, Integer> byTier = new EnumMap<>(SampleTierName.class);
+            for (SampleTierName tier : TIERS) {
                 byTier.put(tier, specs.getOrDefault(type, 0));
             }
             result.put(type, byTier);
@@ -81,21 +81,21 @@ final class ReportFixtures {
      * 由「每类型每档的检出样本数」构造一次运行：合成等量的 TP flag（playerId 唯一），
      * 并同步填好 breakdown，形状与 {@code Runner} 的产出一致。
      */
-    static TestRun run(String id, Map<CheatType, Map<CheatTierName, Integer>> detectedByType,
-                       Map<CheatTierName, Integer> samplesByTier) {
-        Map<String, Map<CheatTierName, Integer>> hitsByCheckTier = new LinkedHashMap<>();
-        Map<CheatTierName, Integer> samplesByTierCopy = new EnumMap<>(CheatTierName.class);
+    static TestRun run(String id, Map<CheatType, Map<SampleTierName, Integer>> detectedByType,
+                       Map<SampleTierName, Integer> samplesByTier) {
+        Map<String, Map<SampleTierName, Integer>> hitsByCheckTier = new LinkedHashMap<>();
+        Map<SampleTierName, Integer> samplesByTierCopy = new EnumMap<>(SampleTierName.class);
         samplesByTier.forEach(samplesByTierCopy::put);
         Map<CheatType, Integer> hitsByType = new EnumMap<>(CheatType.class);
         Map<CheatType, Integer> samplesByType = new EnumMap<>(CheatType.class);
         List<FlagEvent> flags = new ArrayList<>();
         long tick = 0;
 
-        for (Map.Entry<CheatType, Map<CheatTierName, Integer>> typeEntry : detectedByType.entrySet()) {
+        for (Map.Entry<CheatType, Map<SampleTierName, Integer>> typeEntry : detectedByType.entrySet()) {
             CheatType type = typeEntry.getKey();
             String check = DetectionThresholdAnchor.of(type).checkName();
-            EnumMap<CheatTierName, Integer> byTier = new EnumMap<>(CheatTierName.class);
-            for (Map.Entry<CheatTierName, Integer> tierEntry : typeEntry.getValue().entrySet()) {
+            EnumMap<SampleTierName, Integer> byTier = new EnumMap<>(SampleTierName.class);
+            for (Map.Entry<SampleTierName, Integer> tierEntry : typeEntry.getValue().entrySet()) {
                 int count = tierEntry.getValue();
                 if (count <= 0) {
                     continue;
@@ -120,7 +120,7 @@ final class ReportFixtures {
                 List.of(), flags, RunStatus.PASSED, 1L, Instant.EPOCH, 0L);
     }
 
-    static TierRate tierOf(RateRow row, CheatTierName tier) {
+    static TierRate tierOf(RateRow row, SampleTierName tier) {
         return row.tiers().stream().filter(candidate -> candidate.tier() == tier).findFirst().orElseThrow();
     }
 

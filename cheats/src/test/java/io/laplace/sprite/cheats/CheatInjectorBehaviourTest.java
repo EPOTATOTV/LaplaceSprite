@@ -3,9 +3,9 @@ package io.laplace.sprite.cheats;
 import io.laplace.sprite.core.event.Event;
 import io.laplace.sprite.core.event.EventStream;
 import io.laplace.sprite.core.event.EventType;
-import io.laplace.sprite.core.model.CheatSpec;
-import io.laplace.sprite.core.model.CheatTier;
-import io.laplace.sprite.core.model.CheatTierName;
+import io.laplace.sprite.core.model.TestSpec;
+import io.laplace.sprite.core.model.SampleTier;
+import io.laplace.sprite.core.model.SampleTierName;
 import io.laplace.sprite.core.model.NetworkModel;
 import org.junit.jupiter.api.Test;
 
@@ -26,11 +26,11 @@ class CheatInjectorBehaviourTest {
 
     @Test
     void defaultTierInjectionChangesBaseline() {
-        for (CheatSpec spec : catalog.loadDefaults()) {
+        for (TestSpec spec : catalog.loadDefaults()) {
             EventStream baseline = TestStreams.walk();
             List<Event> before = baseline.events();
             EventStream injected = registry.of(spec.type())
-                    .inject(request(spec, CheatTierName.DEFAULT, baseline, SEED));
+                    .inject(request(spec, SampleTierName.DEFAULT, baseline, SEED));
             assertNotEquals(before, injected.events(), "注入未改变基线: " + spec.id());
             assertFalse(injected.isEmpty(), spec.id());
             assertEquals(before.size(), baseline.size(), "基线被注入器修改: " + spec.id());
@@ -39,20 +39,20 @@ class CheatInjectorBehaviourTest {
 
     @Test
     void appendedEventsCarryRequestedPlayerId() {
-        CheatSpec spec = catalog.byId("killaura.wurst.default").orElseThrow();
+        TestSpec spec = catalog.byId("killaura.wurst.default").orElseThrow();
         EventStream injected = registry.of(spec.type())
-                .inject(request(spec, CheatTierName.DEFAULT, TestStreams.walk(), SEED));
+                .inject(request(spec, SampleTierName.DEFAULT, TestStreams.walk(), SEED));
         assertTrue(injected.events().stream()
                 .anyMatch(event -> "SimID-killaura.wurst.default".equals(event.playerId())));
     }
 
     @Test
     void hiddenTierSpoofsIdentityDeterministically() {
-        CheatSpec spec = catalog.byId("speed.meteor.hidden").orElseThrow();
+        TestSpec spec = catalog.byId("speed.meteor.hidden").orElseThrow();
         EventStream first = registry.of(spec.type())
-                .inject(request(spec, CheatTierName.HIDDEN, TestStreams.walk(), SEED));
+                .inject(request(spec, SampleTierName.HIDDEN, TestStreams.walk(), SEED));
         EventStream second = registry.of(spec.type())
-                .inject(request(spec, CheatTierName.HIDDEN, TestStreams.walk(), SEED));
+                .inject(request(spec, SampleTierName.HIDDEN, TestStreams.walk(), SEED));
         assertEquals(first.events(), second.events());
         assertEquals(3, first.events().stream()
                 .filter(event -> event.type() == EventType.BRAND
@@ -61,9 +61,9 @@ class CheatInjectorBehaviourTest {
                 .count());
     }
 
-    private static CheatInjectionRequest request(CheatSpec spec, CheatTierName tierName, EventStream baseline,
+    private static CheatInjectionRequest request(TestSpec spec, SampleTierName tierName, EventStream baseline,
                                                  long seed) {
-        CheatTier tier = spec.tier(tierName).orElseThrow();
+        SampleTier tier = spec.tier(tierName).orElseThrow();
         assertTrue(tier.expected().expectedDetected(), spec.id());
         return new CheatInjectionRequest(spec, tierName, "SimID-" + spec.id(), TestStreams.PLATFORM, baseline,
                 TestStreams.scenario(), NetworkModel.defaults(), seed);

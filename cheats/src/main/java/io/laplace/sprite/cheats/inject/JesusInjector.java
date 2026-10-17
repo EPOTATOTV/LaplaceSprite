@@ -3,7 +3,7 @@ package io.laplace.sprite.cheats.inject;
 import io.laplace.sprite.cheats.CheatInjectionRequest;
 import io.laplace.sprite.core.engine.InMemoryEventStream;
 import io.laplace.sprite.core.event.Event;
-import io.laplace.sprite.core.model.CheatTier;
+import io.laplace.sprite.core.model.SampleTier;
 import io.laplace.sprite.core.model.CheatType;
 
 import java.util.List;
@@ -21,7 +21,7 @@ public final class JesusInjector extends AbstractCheatInjector {
 
     @Override
     protected void apply(List<Event> baseline, InMemoryEventStream out, CheatInjectionRequest request,
-                         CheatTier tier) {
+                         SampleTier tier) {
         double surfaceY = tier.doubleParam(primaryParamKey(), 62.5);
         String fluid = paramString(tier, "fluid", "water");
         List<Event.Move> moves = moveEvents(baseline);

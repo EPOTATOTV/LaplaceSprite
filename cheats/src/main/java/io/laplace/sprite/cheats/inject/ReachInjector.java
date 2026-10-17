@@ -3,7 +3,7 @@ package io.laplace.sprite.cheats.inject;
 import io.laplace.sprite.cheats.CheatInjectionRequest;
 import io.laplace.sprite.core.engine.InMemoryEventStream;
 import io.laplace.sprite.core.event.Event;
-import io.laplace.sprite.core.model.CheatTier;
+import io.laplace.sprite.core.model.SampleTier;
 import io.laplace.sprite.core.model.CheatType;
 
 import java.time.Instant;
@@ -24,7 +24,7 @@ public final class ReachInjector extends AbstractCheatInjector {
 
     @Override
     protected void apply(List<Event> baseline, InMemoryEventStream out, CheatInjectionRequest request,
-                         CheatTier tier) {
+                         SampleTier tier) {
         double reach = tier.doubleParam(primaryParamKey(), 4.5);
         int cps = tier.intParam("clicksPerSecond", 12);
         boolean hasCombat = baseline.stream().anyMatch(Event.Combat.class::isInstance);

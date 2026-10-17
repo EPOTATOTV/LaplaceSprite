@@ -1,9 +1,9 @@
 package io.laplace.sprite.cheats.threshold;
 
 import io.laplace.sprite.cheats.CheatCatalog;
-import io.laplace.sprite.core.model.CheatSpec;
-import io.laplace.sprite.core.model.CheatTier;
-import io.laplace.sprite.core.model.CheatTierName;
+import io.laplace.sprite.core.model.TestSpec;
+import io.laplace.sprite.core.model.SampleTier;
+import io.laplace.sprite.core.model.SampleTierName;
 import io.laplace.sprite.core.model.CheatType;
 import io.laplace.sprite.core.model.ExpectedDetection;
 
@@ -48,13 +48,13 @@ public final class SampleLibraryValidator {
     public List<String> violations() {
         List<String> problems = new ArrayList<>();
         checkAnchors(problems);
-        List<CheatSpec> specs = catalog.loadDefaults();
+        List<TestSpec> specs = catalog.loadDefaults();
         if (specs.size() < MIN_SPECS) {
             problems.add("样本数不足: " + specs.size() + " < " + MIN_SPECS);
         }
         Set<String> ids = new HashSet<>();
         Set<CheatType> covered = EnumSet.noneOf(CheatType.class);
-        for (CheatSpec spec : specs) {
+        for (TestSpec spec : specs) {
             if (!ids.add(spec.id())) {
                 problems.add("样本 id 重复: " + spec.id());
             }
@@ -93,25 +93,25 @@ public final class SampleLibraryValidator {
         }
     }
 
-    private static void checkTiers(CheatSpec spec, List<String> problems) {
-        Set<CheatTierName> names = EnumSet.noneOf(CheatTierName.class);
-        for (CheatTier tier : spec.tiers()) {
+    private static void checkTiers(TestSpec spec, List<String> problems) {
+        Set<SampleTierName> names = EnumSet.noneOf(SampleTierName.class);
+        for (SampleTier tier : spec.tiers()) {
             if (!names.add(tier.tier())) {
                 problems.add(spec.id() + " 档位重复: " + tier.tier());
             }
         }
-        if (names.size() != CheatTierName.values().length) {
+        if (names.size() != SampleTierName.values().length) {
             problems.add(spec.id() + " 档位集合不是四档: " + names);
             return;
         }
         DetectionThresholdAnchor anchor = DetectionThresholdAnchor.of(spec.type());
-        for (CheatTier tier : spec.tiers()) {
+        for (SampleTier tier : spec.tiers()) {
             checkExpected(spec, tier, anchor, problems);
             checkMagnitude(spec, tier, anchor, problems);
         }
     }
 
-    private static void checkExpected(CheatSpec spec, CheatTier tier, DetectionThresholdAnchor anchor,
+    private static void checkExpected(TestSpec spec, SampleTier tier, DetectionThresholdAnchor anchor,
                                       List<String> problems) {
         ExpectedDetection expected = tier.expected();
         if (expected == null) {
@@ -122,13 +122,13 @@ public final class SampleLibraryValidator {
         if (expected.expectedDetected() != detectable) {
             problems.add(spec.id() + " " + tier.tier() + " 的 expectedDetected 与可检出性不符");
         }
-        boolean shouldBoundary = detectable && tier.tier() == CheatTierName.MIN;
+        boolean shouldBoundary = detectable && tier.tier() == SampleTierName.MIN;
         if (expected.boundary() != shouldBoundary) {
             problems.add(spec.id() + " " + tier.tier() + " 的 boundary 与档位语义不符");
         }
     }
 
-    private static void checkMagnitude(CheatSpec spec, CheatTier tier, DetectionThresholdAnchor anchor,
+    private static void checkMagnitude(TestSpec spec, SampleTier tier, DetectionThresholdAnchor anchor,
                                        List<String> problems) {
         if (anchor.undetectable()) {
             return;

@@ -1,5 +1,6 @@
 - id: reach.meteor.default
   name: Meteor Reach 默认档
+  category: CHEAT
   type: REACH
   target: detection-engine
   source: Meteor
@@ -22,6 +23,7 @@
 
 - id: reach.liquidbounce.max
   name: LiquidBounce Reach 最高档
+  category: CHEAT
   type: REACH
   target: detection-engine
   source: LiquidBounce
@@ -44,6 +46,7 @@
 
 - id: killaura.wurst.default
   name: Wurst KillAura 默认档
+  category: CHEAT
   type: KILL_AURA
   target: detection-engine
   source: Wurst
@@ -66,6 +69,7 @@
 
 - id: killaura.liquidbounce.hidden
   name: LiquidBounce KillAura 隐蔽档
+  category: CHEAT
   type: KILL_AURA
   target: detection-engine
   source: LiquidBounce
@@ -88,6 +92,7 @@
 
 - id: autoclicker.meteor.default
   name: Meteor AutoClicker 默认档
+  category: CHEAT
   type: AUTO_CLICKER
   target: detection-engine
   source: Meteor
@@ -110,6 +115,7 @@
 
 - id: autoclicker.thunderhack.max
   name: ThunderHack AutoClicker 最高档
+  category: CHEAT
   type: AUTO_CLICKER
   target: detection-engine
   source: ThunderHack
@@ -132,6 +138,7 @@
 
 - id: timer.wurst.default
   name: Wurst Timer 默认档
+  category: CHEAT
   type: TIMER
   target: detection-engine
   source: Wurst
@@ -154,6 +161,7 @@
 
 - id: timer.lambda.hidden
   name: Lambda Timer 隐蔽档
+  category: CHEAT
   type: TIMER
   target: detection-engine
   source: Lambda
@@ -176,6 +184,7 @@
 
 - id: autototem.meteor.default
   name: Meteor AutoTotem 默认档
+  category: CHEAT
   type: AUTO_TOTEM
   target: detection-engine
   source: Meteor
@@ -198,6 +207,7 @@
 
 - id: autototem.liquidbounce.hidden
   name: LiquidBounce AutoTotem 隐蔽档
+  category: CHEAT
   type: AUTO_TOTEM
   target: detection-engine
   source: LiquidBounce

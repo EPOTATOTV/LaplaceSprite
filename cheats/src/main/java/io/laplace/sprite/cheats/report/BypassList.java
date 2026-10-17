@@ -15,6 +15,9 @@ import java.util.Map;
  * <p>两类 backlog 分开承载：{@link #entries()} 是「已实现但被绕过」，
  * {@link #undetectableTypes()} 是「引擎尚未实现该检测项」，Markdown 里也分节输出。</p>
  *
+ * <p>通用异常样本不属于这里：它们本就不期望被检出，未命中是功能性失败，
+ * 应看「未覆盖项清单」与功能冒烟结果，而不是绕过清单。</p>
+ *
  * @param entries           绕过记录
  * @param undetectableTypes 锚点标记为不可检出、目标引擎尚无对应 check 的类型
  */

@@ -4,9 +4,9 @@ import io.laplace.sprite.core.engine.InMemoryEventStream;
 import io.laplace.sprite.core.engine.SimulatedSession;
 import io.laplace.sprite.core.event.Event;
 import io.laplace.sprite.core.event.EventStream;
-import io.laplace.sprite.core.model.CheatSpec;
-import io.laplace.sprite.core.model.CheatTier;
-import io.laplace.sprite.core.model.CheatTierName;
+import io.laplace.sprite.core.model.TestSpec;
+import io.laplace.sprite.core.model.SampleTier;
+import io.laplace.sprite.core.model.SampleTierName;
 import io.laplace.sprite.core.model.ExpectedDetection;
 import io.laplace.sprite.core.model.NetworkModel;
 import io.laplace.sprite.core.model.PlatformKey;
@@ -40,14 +40,14 @@ public final class CheatSessionFactory {
     }
 
     /** 每个 (样本, 档位) 组合一个会话；样本未声明该档位时跳过。 */
-    public List<SimulatedSession> buildSessions(List<CheatSpec> specs, CheatTierName tier, String scenarioId,
+    public List<SimulatedSession> buildSessions(List<TestSpec> specs, SampleTierName tier, String scenarioId,
                                                 PlatformKey platform, NetworkModel network, long seed,
                                                 EventStream baselineTemplate) {
         EventStream baseline = baselineOrSynthetic(baselineTemplate, platform);
         Scenario scenario = scenarioOf(scenarioId, network);
         List<SimulatedSession> sessions = new ArrayList<>();
-        for (CheatSpec spec : specs) {
-            Optional<CheatTier> declared = spec.tier(tier);
+        for (TestSpec spec : specs) {
+            Optional<SampleTier> declared = spec.tier(tier);
             if (declared.isEmpty()) {
                 continue;
             }
@@ -58,27 +58,27 @@ public final class CheatSessionFactory {
     }
 
     /** 每个样本只取阈值边界档位；样本未标注边界时，用默认档位参数合成边界预期。 */
-    public List<SimulatedSession> buildBoundarySessions(List<CheatSpec> specs, String scenarioId,
+    public List<SimulatedSession> buildBoundarySessions(List<TestSpec> specs, String scenarioId,
                                                         PlatformKey platform, NetworkModel network, long seed,
                                                         EventStream baselineTemplate) {
         EventStream baseline = baselineOrSynthetic(baselineTemplate, platform);
         Scenario scenario = scenarioOf(scenarioId, network);
         List<SimulatedSession> sessions = new ArrayList<>();
-        for (CheatSpec spec : specs) {
-            Optional<CheatTier> boundary = spec.tiers().stream()
+        for (TestSpec spec : specs) {
+            Optional<SampleTier> boundary = spec.tiers().stream()
                     .filter(declared -> declared.expected() != null && declared.expected().boundary())
                     .findFirst();
-            CheatSpec effectiveSpec = spec;
-            CheatTier effectiveTier;
+            TestSpec effectiveSpec = spec;
+            SampleTier effectiveTier;
             if (boundary.isPresent()) {
                 effectiveTier = boundary.get();
             } else {
-                Optional<CheatTier> fallback = spec.tier(CheatTierName.DEFAULT)
+                Optional<SampleTier> fallback = spec.tier(SampleTierName.DEFAULT)
                         .or(() -> spec.tiers().stream().findFirst());
                 if (fallback.isEmpty()) {
                     continue;
                 }
-                effectiveTier = new CheatTier(fallback.get().tier(), fallback.get().params(),
+                effectiveTier = new SampleTier(fallback.get().tier(), fallback.get().params(),
                         ExpectedDetection.boundarySample());
                 effectiveSpec = replaceTier(spec, effectiveTier);
             }
@@ -88,9 +88,9 @@ public final class CheatSessionFactory {
         return List.copyOf(sessions);
     }
 
-    private SimulatedSession build(CheatSpec spec, CheatTierName tierName, String scenarioId, PlatformKey platform,
+    private SimulatedSession build(TestSpec spec, SampleTierName tierName, String scenarioId, PlatformKey platform,
                                    NetworkModel network, long seed, EventStream baseline, Scenario scenario,
-                                   CheatTier tier) {
+                                   SampleTier tier) {
         String playerId = playerId(spec, tierName);
         CheatInjectionRequest request = new CheatInjectionRequest(spec, tierName, playerId, platform, baseline,
                 scenario, network, seed);
@@ -99,23 +99,23 @@ public final class CheatSessionFactory {
                 trajectoryRef(spec), tier.expected());
     }
 
-    private static CheatSpec replaceTier(CheatSpec spec, CheatTier replacement) {
-        List<CheatTier> tiers = spec.tiers().stream()
+    private static TestSpec replaceTier(TestSpec spec, SampleTier replacement) {
+        List<SampleTier> tiers = spec.tiers().stream()
                 .map(tier -> tier.tier() == replacement.tier() ? replacement : tier)
                 .toList();
-        return new CheatSpec(spec.id(), spec.name(), spec.type(), spec.target(), tiers, spec.baseline(),
+        return new TestSpec(spec.id(), spec.name(), spec.type(), spec.target(), tiers, spec.baseline(),
                 spec.injector(), spec.source(), spec.notes());
     }
 
-    private static String playerId(CheatSpec spec, CheatTierName tier) {
+    private static String playerId(TestSpec spec, SampleTierName tier) {
         return "SimID-" + spec.id() + "-" + tier.name().toLowerCase(Locale.ROOT);
     }
 
-    private static String trajectoryRef(CheatSpec spec) {
+    private static String trajectoryRef(TestSpec spec) {
         return spec.baseline() == null ? "baseline:vanilla" : spec.baseline();
     }
 
-    private static ProbeSnapshot probeOf(CheatSpec spec) {
+    private static ProbeSnapshot probeOf(TestSpec spec) {
         String client = spec.source() == null ? "unknown" : spec.source().toLowerCase(Locale.ROOT);
         return new ProbeSnapshot(List.of("javaw.exe", "minecraft.exe"), List.of(client), List.of(), List.of(),
                 List.of(), List.of(), List.of(), List.of(), Map.of("injector", String.valueOf(spec.injector())));

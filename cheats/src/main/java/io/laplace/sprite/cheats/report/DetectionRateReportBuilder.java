@@ -1,12 +1,11 @@
 package io.laplace.sprite.cheats.report;
 
 import io.laplace.sprite.cheats.CheatCatalog;
-import io.laplace.sprite.cheats.threshold.DetectionThresholdAnchor;
-import io.laplace.sprite.core.model.CheatSpec;
-import io.laplace.sprite.core.model.CheatTierName;
+import io.laplace.sprite.cheats.SampleSpec;
 import io.laplace.sprite.core.model.CheatType;
 import io.laplace.sprite.core.model.DetectionBreakdown;
 import io.laplace.sprite.core.model.FlagEvent;
+import io.laplace.sprite.core.model.SampleTierName;
 import io.laplace.sprite.core.model.TestRun;
 
 import java.util.ArrayList;
@@ -17,7 +16,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * 由一次运行与样本库构建 {@link DetectionRateReport}。
@@ -29,92 +27,93 @@ import java.util.TreeSet;
  * <p><b>分母只算本次实际注入的档位</b>：用 {@code breakdown.samplesByTier()} 判定哪些档位真的跑过。
  * 只跑 {@code --tier DEFAULT} 时，MIN / MAX / HIDDEN 的分母为 0，不会伪造出 0% 检出。</p>
  *
- * <p><b>按客户端的归桶规则</b>：同一 {@link CheatType} 可能同时挂在多个 {@code source} 标签下
- * （如 SPEED 出现在 Wurst / LiquidBounce / Meteor / Lambda）。这里按样本库把该客户端的样本数记为
- * 「该客户端名下所有 Spec 在注入档位上的样本数之和」，检出数取这些类型检出样本的并集
- * （同一玩家只属于一个类型，因此并集等于直接相加）。这是口径选择：宁可对多客户端共有的类型
- * 重复计数，也不虚构样本级的单归属。</p>
+ * <p><b>按目标</b>：桶键取 {@link TestRun#target()}。一次运行只针对一个被测目标，所以当前只有
+ * 一行；保留列表结构是为了多目标汇总时直接追加。<b>按样本类型</b>：作弊子类按 {@link CheatType}
+ * 逐型分桶，通用异常样本按各自 {@code sampleType} 分桶。</p>
+ *
+ * <p><b>非作弊样本不参与检出率</b>：它们描述功能鲁棒性，{@code expectedDetected} 恒为 false。
+ * 当前 Runner 只对携带 TestSpec 的作弊会话累计 {@code samplesByTier}，因此通用异常的样本数一律按
+ * 「本次未注入」计为 0，并出现在未覆盖项清单里；即使将来注入，它们命中与否也只算功能性失败，
+ * 不能写进检出率分子。</p>
  */
 public final class DetectionRateReportBuilder {
 
     public DetectionRateReport build(TestRun run, CheatCatalog catalog) {
         DetectionBreakdown breakdown = run.breakdown();
-        Map<CheatTierName, Set<String>> detectedPlayersByTier = detectedPlayersByTier(run);
-        Map<CheatType, Map<CheatTierName, Set<String>>> detectedByTypeTier =
+        Map<SampleTierName, Set<String>> detectedPlayersByTier = detectedPlayersByTier(run);
+        Map<CheatType, Map<SampleTierName, Set<String>>> detectedByTypeTier =
                 detectedPlayersByTypeTier(run);
-        Set<CheatTierName> injectedTiers = injectedTiers(breakdown);
-
-        Map<CheatType, Integer> specsPerType = new EnumMap<>(CheatType.class);
-        Map<String, Set<CheatType>> checkTypes = new LinkedHashMap<>();
-        Map<String, Set<CheatType>> clientTypes = new LinkedHashMap<>();
-        Map<String, Integer> specsPerClient = new LinkedHashMap<>();
-
-        for (CheatSpec spec : catalog.loadDefaults()) {
-            String check = DetectionThresholdAnchor.of(spec.type()).checkName();
-            specsPerType.merge(spec.type(), 1, Integer::sum);
-            checkTypes.computeIfAbsent(check, ignored -> EnumSet.noneOf(CheatType.class)).add(spec.type());
-            clientTypes.computeIfAbsent(spec.source(), ignored -> EnumSet.noneOf(CheatType.class))
-                    .add(spec.type());
-            specsPerClient.merge(spec.source(), 1, Integer::sum);
-        }
-
-        List<RateRow> byCheck = new ArrayList<>();
-        for (String check : new TreeSet<>(checkTypes.keySet())) {
-            Set<CheatType> types = checkTypes.get(check);
-            int specs = types.stream().mapToInt(type -> specsPerType.getOrDefault(type, 0)).sum();
-            byCheck.add(row(check, types, specs, detectedByTypeTier, injectedTiers));
-        }
-        // 引擎报了但样本库里没有对应类型的检测项：保留一行，样本数为 0 并标「无样本」，
-        // 不要因为没样本就把它从视图里抹掉。
-        for (String check : new TreeSet<>(breakdown.hitsByCheckTier().keySet())) {
-            if (!checkTypes.containsKey(check)) {
-                byCheck.add(row(check, Set.of(), 0, detectedByTypeTier, injectedTiers));
-            }
-        }
-
-        List<RateRow> byClient = new ArrayList<>();
-        for (String client : new TreeSet<>(clientTypes.keySet())) {
-            byClient.add(row(client, clientTypes.get(client),
-                    specsPerClient.getOrDefault(client, 0), detectedByTypeTier, injectedTiers));
-        }
+        Set<SampleTierName> injectedTiers = injectedTiers(breakdown);
 
         List<TierRate> byTier = new ArrayList<>();
         int totalSamples = 0;
         int totalHits = 0;
-        for (CheatTierName tier : CheatTierName.values()) {
+        for (SampleTierName tier : SampleTierName.values()) {
             int samples = breakdown.samplesByTier().getOrDefault(tier, 0);
             int hits = detectedPlayersByTier.getOrDefault(tier, Set.of()).size();
             byTier.add(new TierRate(tier, hits, samples));
             totalSamples += samples;
             totalHits += hits;
         }
-        return new DetectionRateReport(run.id(), totalSamples, totalHits, byCheck, byClient, byTier);
+
+        String target = run.target() == null ? "unknown" : run.target();
+        List<RateRow> byTarget = List.of(new RateRow(target, List.copyOf(byTier), totalHits, totalSamples));
+        List<SampleSpec> specs = catalog.allSamples();
+        List<RateRow> bySampleType = bySampleType(specs, detectedByTypeTier, injectedTiers);
+        List<UncoveredEntry> uncovered = uncovered(specs, injectedTiers);
+        return new DetectionRateReport(run.id(), totalSamples, totalHits, byTarget, bySampleType, byTier,
+                uncovered);
     }
 
-    /** 某组类型在本次注入档位上的样本级检出行。 */
-    private static RateRow row(String label, Set<CheatType> types, int specs,
-                               Map<CheatType, Map<CheatTierName, Set<String>>> detected,
-                               Set<CheatTierName> injectedTiers) {
-        List<TierRate> tiers = new ArrayList<>();
-        int totalHits = 0;
-        int totalSamples = 0;
-        for (CheatTierName tier : CheatTierName.values()) {
-            Set<String> players = new LinkedHashSet<>();
-            for (CheatType type : types) {
-                players.addAll(detected.getOrDefault(type, Map.of()).getOrDefault(tier, Set.of()));
+    private static List<RateRow> bySampleType(List<SampleSpec> specs,
+                                              Map<CheatType, Map<SampleTierName, Set<String>>> detected,
+                                              Set<SampleTierName> injectedTiers) {
+        Map<String, Integer> specCounts = new LinkedHashMap<>();
+        Map<String, CheatType> cheatTypes = new LinkedHashMap<>();
+        for (SampleSpec spec : specs) {
+            specCounts.merge(spec.sampleType(), 1, Integer::sum);
+            if (spec.isCheat()) {
+                cheatTypes.putIfAbsent(spec.sampleType(), spec.cheatType());
             }
-            int samples = injectedTiers.contains(tier) ? specs : 0;
-            int hits = players.size();
-            tiers.add(new TierRate(tier, hits, samples));
-            totalHits += hits;
-            totalSamples += samples;
         }
-        return new RateRow(label, tiers, totalHits, totalSamples);
+        List<RateRow> rows = new ArrayList<>();
+        for (Map.Entry<String, Integer> entry : specCounts.entrySet()) {
+            CheatType cheatType = cheatTypes.get(entry.getKey());
+            List<TierRate> tiers = new ArrayList<>();
+            int totalHits = 0;
+            int totalSamples = 0;
+            for (SampleTierName tier : SampleTierName.values()) {
+                // 通用异常尚未进入 Runner 的样本计数，注入档位只对作弊子类成立。
+                int samples = cheatType != null && injectedTiers.contains(tier) ? entry.getValue() : 0;
+                int hits = cheatType == null ? 0
+                        : detected.getOrDefault(cheatType, Map.of()).getOrDefault(tier, Set.of()).size();
+                tiers.add(new TierRate(tier, hits, samples));
+                totalHits += hits;
+                totalSamples += samples;
+            }
+            rows.add(new RateRow(entry.getKey(), tiers, totalHits, totalSamples));
+        }
+        return List.copyOf(rows);
+    }
+
+    private static List<UncoveredEntry> uncovered(List<SampleSpec> specs, Set<SampleTierName> injectedTiers) {
+        List<UncoveredEntry> result = new ArrayList<>();
+        for (SampleSpec spec : specs) {
+            // samplesByTier 只累计作弊会话；通用异常样本即使某个档位有作弊样本跑过，
+            // 也不代表它被注入，因此整条样本都算未覆盖。
+            List<SampleTierName> missing = spec.isCheat()
+                    ? spec.declaredTiers().stream().filter(tier -> !injectedTiers.contains(tier)).toList()
+                    : spec.declaredTiers();
+            if (!missing.isEmpty()) {
+                result.add(new UncoveredEntry(spec.category(), spec.id(), spec.sampleType(), missing));
+            }
+        }
+        return List.copyOf(result);
     }
 
     /** 本次真的注入过的档位：以运行时的样本计数为准，而不是样本库声明。 */
-    static Set<CheatTierName> injectedTiers(DetectionBreakdown breakdown) {
-        Set<CheatTierName> tiers = EnumSet.noneOf(CheatTierName.class);
+    static Set<SampleTierName> injectedTiers(DetectionBreakdown breakdown) {
+        Set<SampleTierName> tiers = EnumSet.noneOf(SampleTierName.class);
         breakdown.samplesByTier().forEach((tier, count) -> {
             if (count != null && count > 0) {
                 tiers.add(tier);
@@ -124,8 +123,8 @@ public final class DetectionRateReportBuilder {
     }
 
     /** 按档位归集的已检出玩家：一个玩家属于一条样本，去重后即检出样本数。 */
-    static Map<CheatTierName, Set<String>> detectedPlayersByTier(TestRun run) {
-        Map<CheatTierName, Set<String>> result = new EnumMap<>(CheatTierName.class);
+    static Map<SampleTierName, Set<String>> detectedPlayersByTier(TestRun run) {
+        Map<SampleTierName, Set<String>> result = new EnumMap<>(SampleTierName.class);
         for (FlagEvent flag : run.flags()) {
             if (isCheatDetection(flag) && flag.tier() != null) {
                 result.computeIfAbsent(flag.tier(), ignored -> new LinkedHashSet<>())
@@ -136,13 +135,13 @@ public final class DetectionRateReportBuilder {
     }
 
     /** 按 (作弊类型, 档位) 归集的已检出玩家。 */
-    static Map<CheatType, Map<CheatTierName, Set<String>>> detectedPlayersByTypeTier(TestRun run) {
-        Map<CheatType, Map<CheatTierName, Set<String>>> result = new EnumMap<>(CheatType.class);
+    static Map<CheatType, Map<SampleTierName, Set<String>>> detectedPlayersByTypeTier(TestRun run) {
+        Map<CheatType, Map<SampleTierName, Set<String>>> result = new EnumMap<>(CheatType.class);
         for (FlagEvent flag : run.flags()) {
             if (!isCheatDetection(flag) || flag.cheatType() == null || flag.tier() == null) {
                 continue;
             }
-            result.computeIfAbsent(flag.cheatType(), ignored -> new EnumMap<>(CheatTierName.class))
+            result.computeIfAbsent(flag.cheatType(), ignored -> new EnumMap<>(SampleTierName.class))
                     .computeIfAbsent(flag.tier(), ignored -> new LinkedHashSet<>())
                     .add(flag.playerId());
         }

@@ -3,7 +3,7 @@ package io.laplace.sprite.cheats.inject;
 import io.laplace.sprite.cheats.CheatInjectionRequest;
 import io.laplace.sprite.core.engine.InMemoryEventStream;
 import io.laplace.sprite.core.event.Event;
-import io.laplace.sprite.core.model.CheatTier;
+import io.laplace.sprite.core.model.SampleTier;
 import io.laplace.sprite.core.model.CheatType;
 
 import java.util.ArrayList;
@@ -22,7 +22,7 @@ public final class BlinkInjector extends AbstractCheatInjector {
 
     @Override
     protected void apply(List<Event> baseline, InMemoryEventStream out, CheatInjectionRequest request,
-                         CheatTier tier) {
+                         SampleTier tier) {
         int blinkTicks = Math.max(1, tier.intParam("blinkTicks", 8));
         double distance = tier.doubleParam(primaryParamKey(), 4.0);
         List<Event.Move> moves = moveEvents(baseline);

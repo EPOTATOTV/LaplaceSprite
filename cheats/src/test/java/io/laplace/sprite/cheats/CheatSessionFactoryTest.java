@@ -1,9 +1,9 @@
 package io.laplace.sprite.cheats;
 
 import io.laplace.sprite.core.engine.SimulatedSession;
-import io.laplace.sprite.core.model.CheatSpec;
-import io.laplace.sprite.core.model.CheatTier;
-import io.laplace.sprite.core.model.CheatTierName;
+import io.laplace.sprite.core.model.TestSpec;
+import io.laplace.sprite.core.model.SampleTier;
+import io.laplace.sprite.core.model.SampleTierName;
 import io.laplace.sprite.core.model.CheatType;
 import io.laplace.sprite.core.model.ExpectedDetection;
 import io.laplace.sprite.core.model.NetworkModel;
@@ -28,8 +28,8 @@ class CheatSessionFactoryTest {
 
     @Test
     void buildsOneSessionPerSpecAndTier() {
-        List<CheatSpec> specs = catalog.loadDefaults();
-        for (CheatTierName tier : CheatTierName.values()) {
+        List<TestSpec> specs = catalog.loadDefaults();
+        for (SampleTierName tier : SampleTierName.values()) {
             List<SimulatedSession> sessions = factory.buildSessions(specs, tier, SCENARIO, TestStreams.PLATFORM,
                     NetworkModel.defaults(), SEED, TestStreams.walk());
             long declared = specs.stream().filter(spec -> spec.tier(tier).isPresent()).count();
@@ -47,19 +47,19 @@ class CheatSessionFactoryTest {
 
     @Test
     void allSpecsDeclareEveryTier() {
-        List<CheatSpec> specs = catalog.loadDefaults();
-        for (CheatTierName tier : CheatTierName.values()) {
+        List<TestSpec> specs = catalog.loadDefaults();
+        for (SampleTierName tier : SampleTierName.values()) {
             List<SimulatedSession> sessions = factory.buildSessions(specs, tier, SCENARIO, TestStreams.PLATFORM,
                     NetworkModel.defaults(), SEED, TestStreams.walk());
             assertEquals(specs.size(), sessions.size(), tier.name());
         }
-        assertEquals(new CheatMatrix().totalConfigurations(),
-                specs.size() * CheatTierName.values().length);
+        assertEquals(new AnomalyMatrix().totalConfigurations(),
+                specs.size() * SampleTierName.values().length);
     }
 
     @Test
     void boundarySessionsUseBoundaryExpectation() {
-        List<CheatSpec> specs = catalog.loadDefaults();
+        List<TestSpec> specs = catalog.loadDefaults();
         List<SimulatedSession> sessions = factory.buildBoundarySessions(specs, SCENARIO, TestStreams.PLATFORM,
                 NetworkModel.defaults(), SEED, TestStreams.walk());
         assertEquals(specs.size(), sessions.size());
@@ -69,8 +69,8 @@ class CheatSessionFactoryTest {
 
     @Test
     void nullBaselineFallsBackToSyntheticStream() {
-        List<CheatSpec> specs = catalog.loadDefaults();
-        List<SimulatedSession> sessions = factory.buildSessions(specs, CheatTierName.DEFAULT, SCENARIO,
+        List<TestSpec> specs = catalog.loadDefaults();
+        List<SimulatedSession> sessions = factory.buildSessions(specs, SampleTierName.DEFAULT, SCENARIO,
                 TestStreams.PLATFORM, NetworkModel.defaults(), SEED, null);
         assertEquals(specs.size(), sessions.size());
         assertTrue(sessions.stream().allMatch(session -> !session.stream().isEmpty()));
@@ -78,16 +78,16 @@ class CheatSessionFactoryTest {
 
     @Test
     void boundaryIsSynthesisedWhenSpecHasNoBoundaryTier() {
-        CheatSpec spec = new CheatSpec("synthetic.no-boundary", "无边界样本", CheatType.SPEED,
+        TestSpec spec = new TestSpec("synthetic.no-boundary", "无边界样本", CheatType.SPEED,
                 "detection-engine",
-                List.of(new CheatTier(CheatTierName.DEFAULT, Map.of("speed", 1.4),
+                List.of(new SampleTier(SampleTierName.DEFAULT, Map.of("speed", 1.4),
                         ExpectedDetection.detected())),
                 null, "speed", "Wurst", null);
         List<SimulatedSession> sessions = factory.buildBoundarySessions(List.of(spec), SCENARIO,
                 TestStreams.PLATFORM, NetworkModel.defaults(), SEED, TestStreams.walk());
         assertEquals(1, sessions.size());
         assertTrue(sessions.get(0).isBoundary());
-        assertEquals(CheatTierName.DEFAULT, sessions.get(0).tier());
+        assertEquals(SampleTierName.DEFAULT, sessions.get(0).tier());
         assertFalse(sessions.get(0).stream().isEmpty());
     }
 }

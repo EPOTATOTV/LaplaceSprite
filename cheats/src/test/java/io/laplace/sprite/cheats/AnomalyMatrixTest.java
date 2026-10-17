@@ -1,6 +1,6 @@
 package io.laplace.sprite.cheats;
 
-import io.laplace.sprite.core.model.CheatTierName;
+import io.laplace.sprite.core.model.SampleTierName;
 import io.laplace.sprite.core.model.CheatType;
 import org.junit.jupiter.api.Test;
 
@@ -11,15 +11,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** 作弊矩阵的聚合口径。 */
-class CheatMatrixTest {
+class AnomalyMatrixTest {
 
-    private final CheatMatrix matrix = new CheatMatrix();
+    private final AnomalyMatrix matrix = new AnomalyMatrix();
 
     @Test
     void totalConfigurationsEqualsSumOfDeclaredTiers() {
         int expected = matrix.specs().stream().mapToInt(spec -> spec.tiers().size()).sum();
         assertEquals(expected, matrix.totalConfigurations());
-        assertEquals(matrix.specs().size() * CheatTierName.values().length, matrix.totalConfigurations());
+        assertEquals(matrix.specs().size() * SampleTierName.values().length, matrix.totalConfigurations());
         assertTrue(matrix.totalConfigurations() >= 120, "配置总数不足: " + matrix.totalConfigurations());
     }
 
@@ -27,7 +27,20 @@ class CheatMatrixTest {
     void everyTypeIsPopulatedAndAllTiersAreListed() {
         assertEquals(EnumSet.allOf(CheatType.class), matrix.byType().keySet());
         assertTrue(matrix.byType().values().stream().noneMatch(List::isEmpty));
-        assertEquals(List.of(CheatTierName.MIN, CheatTierName.DEFAULT, CheatTierName.MAX, CheatTierName.HIDDEN),
+        assertEquals(List.of(SampleTierName.MIN, SampleTierName.DEFAULT, SampleTierName.MAX, SampleTierName.HIDDEN),
                 matrix.tiers());
+    }
+
+    @Test
+    void categoriesCoverWholeMatrix() {
+        assertEquals(EnumSet.allOf(SampleCategory.class), matrix.byCategory().keySet());
+        assertTrue(matrix.byCategory().values().stream().noneMatch(List::isEmpty));
+        assertEquals(matrix.samples().size(), matrix.byCategory().values().stream()
+                .mapToInt(List::size).sum());
+
+        long nonCheat = matrix.samples().stream().filter(spec -> !spec.isCheat()).count();
+        assertTrue(nonCheat >= 12, "通用异常样本不足: " + nonCheat);
+        assertEquals(matrix.specs().size(), matrix.samples().stream()
+                .filter(SampleSpec::isCheat).count());
     }
 }

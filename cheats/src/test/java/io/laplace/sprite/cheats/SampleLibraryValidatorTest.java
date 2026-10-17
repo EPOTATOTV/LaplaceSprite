@@ -3,9 +3,9 @@ package io.laplace.sprite.cheats;
 import io.laplace.sprite.cheats.threshold.DetectionThresholdAnchor;
 import io.laplace.sprite.cheats.threshold.SampleLibraryValidator;
 import io.laplace.sprite.cheats.threshold.TierCoefficient;
-import io.laplace.sprite.core.model.CheatSpec;
-import io.laplace.sprite.core.model.CheatTier;
-import io.laplace.sprite.core.model.CheatTierName;
+import io.laplace.sprite.core.model.TestSpec;
+import io.laplace.sprite.core.model.SampleTier;
+import io.laplace.sprite.core.model.SampleTierName;
 import io.laplace.sprite.core.model.CheatType;
 import org.junit.jupiter.api.Test;
 
@@ -70,7 +70,7 @@ class SampleLibraryValidatorTest {
     void magnitudeIsAnchorTimesCoefficient() {
         for (CheatType type : DetectionThresholdAnchor.covered()) {
             double anchor = DetectionThresholdAnchor.of(type).value();
-            for (CheatTierName tier : CheatTierName.values()) {
+            for (SampleTierName tier : SampleTierName.values()) {
                 double coefficient = TierCoefficient.of(type, tier);
                 assertEquals(anchor * coefficient, TierCoefficient.magnitude(type, tier), 1e-9,
                         type + "/" + tier);
@@ -85,10 +85,10 @@ class SampleLibraryValidatorTest {
                 continue;
             }
             DetectionThresholdAnchor anchor = DetectionThresholdAnchor.of(type);
-            double min = TierCoefficient.magnitude(type, CheatTierName.MIN);
+            double min = TierCoefficient.magnitude(type, SampleTierName.MIN);
             assertTrue(min > anchor.value(),
                     () -> type + " 的 MIN 幅度须超过阈值: " + min + " <= " + anchor.value());
-            double defaultValue = TierCoefficient.magnitude(type, CheatTierName.DEFAULT);
+            double defaultValue = TierCoefficient.magnitude(type, SampleTierName.DEFAULT);
             assertTrue(defaultValue > min,
                     () -> type + " 的 DEFAULT 幅度须高于 MIN: " + defaultValue + " <= " + min);
         }
@@ -96,21 +96,21 @@ class SampleLibraryValidatorTest {
 
     @Test
     void everySpecDeclaresPrimaryParamAsDerivedMagnitude() {
-        for (CheatSpec spec : catalog.loadDefaults()) {
+        for (TestSpec spec : catalog.loadDefaults()) {
             DetectionThresholdAnchor anchor = DetectionThresholdAnchor.of(spec.type());
-            Set<CheatTierName> declared = EnumSet.noneOf(CheatTierName.class);
-            for (CheatTier tier : spec.tiers()) {
+            Set<SampleTierName> declared = EnumSet.noneOf(SampleTierName.class);
+            for (SampleTier tier : spec.tiers()) {
                 declared.add(tier.tier());
                 Object raw = tier.params().get(anchor.paramKey());
                 assertTrue(raw instanceof Number, spec.id() + " " + tier.tier() + " 主参数缺失");
                 double actual = ((Number) raw).doubleValue();
                 assertEquals(TierCoefficient.magnitude(spec.type(), tier.tier()), actual, 1e-3,
                         spec.id() + " " + tier.tier());
-                boolean shouldBoundary = tier.tier() == CheatTierName.MIN;
+                boolean shouldBoundary = tier.tier() == SampleTierName.MIN;
                 assertEquals(shouldBoundary, tier.expected().boundary(), spec.id() + " " + tier.tier());
                 assertTrue(tier.expected().expectedDetected(), spec.id() + " " + tier.tier());
             }
-            assertEquals(EnumSet.allOf(CheatTierName.class), declared, spec.id());
+            assertEquals(EnumSet.allOf(SampleTierName.class), declared, spec.id());
         }
     }
 }

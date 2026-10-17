@@ -1,0 +1,376 @@
+# 通用异常样本（4.2）：无效输入、越界参数、并发竞争、资源引用缺失、故障注入。
+# 这些样本只验证被测目标的功能鲁棒性，expectedDetected 恒为 false，
+# 不计入检出率；未注入的档位会进入报告的「未覆盖项清单」。
+
+# ---------- CONTENT ----------
+- id: content.duplicate-registry.default
+  name: 注册表重复条目
+  category: CONTENT
+  sampleType: DUPLICATE_REGISTRY_ENTRY
+  target: server-runtime
+  source: 内置异常样本
+  injector: content
+  baseline: baseline:walk
+  notes: 同一 tick 重复注册同一注册表条目，探测注册表是否去重或拒绝二次写入
+  tiers:
+    - tier: MIN
+      params: {duplicateCount: 1, registry: minecraft:item, entry: minecraft:stone}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: true, note: 单次重复注册，边界输入}
+    - tier: DEFAULT
+      params: {duplicateCount: 2, registry: minecraft:item, entry: minecraft:stone}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: MAX
+      params: {duplicateCount: 4, registry: minecraft:item, entry: minecraft:stone}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: HIDDEN
+      params: {duplicateCount: 2, registry: minecraft:block, entry: minecraft:stone}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+
+- id: content.missing-recipe.default
+  name: 配方引用缺失
+  category: CONTENT
+  sampleType: MISSING_RECIPE_REFERENCE
+  target: server-runtime
+  source: 内置异常样本
+  injector: content
+  baseline: baseline:walk
+  notes: 配方解析阶段引用不存在的材料与产物，探测加载器是否显式报错而不是静默丢条目
+  tiers:
+    - tier: MIN
+      params: {missingRefs: 1, recipe: minecraft:crafting_table}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: true, note: 单条悬空引用，边界输入}
+    - tier: DEFAULT
+      params: {missingRefs: 2, recipe: minecraft:crafting_table}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: MAX
+      params: {missingRefs: 4, recipe: minecraft:furnace}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: HIDDEN
+      params: {missingRefs: 2, recipe: minecraft:smithing_table}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+
+- id: content.dangling-tag.default
+  name: 标签成员悬空
+  category: CONTENT
+  sampleType: DANGLING_TAG_REFERENCE
+  target: server-runtime
+  source: 内置异常样本
+  injector: content
+  baseline: baseline:walk
+  notes: 标签成员指向未注册条目，探测标签解析的容错边界与错误信息是否可定位
+  tiers:
+    - tier: MIN
+      params: {missingTags: 1, tag: laplace:missing_tag}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: true, note: 单个悬空成员，边界输入}
+    - tier: DEFAULT
+      params: {missingTags: 2, tag: laplace:missing_tag}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: MAX
+      params: {missingTags: 4, tag: laplace:missing_tag}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: HIDDEN
+      params: {missingTags: 3, tag: minecraft:logs}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+
+# ---------- TECH ----------
+- id: tech.block-entity-chain.default
+  name: 方块实体长链中断
+  category: TECH
+  sampleType: BLOCK_ENTITY_CHAIN_BREAK
+  target: server-runtime
+  source: 内置异常样本
+  injector: tech
+  baseline: baseline:walk
+  notes: 多 tick 状态链中间环节丢失，探测方块实体是否停在半完成状态或能回滚
+  tiers:
+    - tier: MIN
+      params: {chainSteps: 3, blockX: 12, blockY: 64, blockZ: 8}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: true, note: 三步链中断，边界输入}
+    - tier: DEFAULT
+      params: {chainSteps: 5, blockX: 12, blockY: 64, blockZ: 8}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: MAX
+      params: {chainSteps: 8, blockX: 12, blockY: 64, blockZ: 8}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: HIDDEN
+      params: {chainSteps: 4, blockX: 13, blockY: 64, blockZ: 8}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+
+- id: tech.block-entity-race.default
+  name: 方块实体并发写
+  category: TECH
+  sampleType: BLOCK_ENTITY_CONCURRENT_WRITE
+  target: server-runtime
+  source: 内置异常样本
+  injector: tech
+  baseline: baseline:walk
+  notes: 同一 tick 内多个写入者改同一方块实体状态，探测最终状态是否可判定而非互相覆盖
+  tiers:
+    - tier: MIN
+      params: {writers: 2, blockX: 20, blockY: 64, blockZ: 4}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: true, note: 两写者竞争，边界输入}
+    - tier: DEFAULT
+      params: {writers: 3, blockX: 20, blockY: 64, blockZ: 4}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: MAX
+      params: {writers: 5, blockX: 20, blockY: 64, blockZ: 4}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: HIDDEN
+      params: {writers: 2, blockX: 21, blockY: 64, blockZ: 4}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+
+- id: tech.scheduler-reentry.default
+  name: 调度器重入
+  category: TECH
+  sampleType: SCHEDULER_REENTRY
+  target: server-runtime
+  source: 内置异常样本
+  injector: tech
+  baseline: baseline:walk
+  notes: 同一 tick 重复触发同一条计划任务，探测调度器是否允许重入以及耗时是否会累积
+  tiers:
+    - tier: MIN
+      params: {reentries: 1, mspt: 55}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: true, note: 一次重入，边界输入}
+    - tier: DEFAULT
+      params: {reentries: 2, mspt: 80}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: MAX
+      params: {reentries: 4, mspt: 140}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: HIDDEN
+      params: {reentries: 2, mspt: 60}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+
+# ---------- PERF ----------
+- id: perf.entity-spike.default
+  name: 实体堆积尖峰
+  category: PERF
+  sampleType: ENTITY_SPIKE
+  target: server-runtime
+  source: 内置异常样本
+  injector: perf
+  baseline: baseline:walk
+  notes: 单 tick 内同一玩家产生大量位移事件并压低 TPS，探测主循环是否被单帧尖峰拖垮
+  tiers:
+    - tier: MIN
+      params: {entities: 80, mspt: 55}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: true, note: 80 条单帧事件，边界输入}
+    - tier: DEFAULT
+      params: {entities: 240, mspt: 120}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: MAX
+      params: {entities: 600, mspt: 300}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: HIDDEN
+      params: {entities: 120, mspt: 70}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+
+- id: perf.chunk-load-storm.default
+  name: 区块加载风暴
+  category: PERF
+  sampleType: CHUNK_LOAD_STORM
+  target: server-runtime
+  source: 内置异常样本
+  injector: perf
+  baseline: baseline:walk
+  notes: 单 tick 请求大量区块加载，探测区块队列是否会无界增长或挤占 tick 预算
+  tiers:
+    - tier: MIN
+      params: {chunks: 64, radius: 4, tps: 19.0, mspt: 55}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: true, note: 64 个区块，边界输入}
+    - tier: DEFAULT
+      params: {chunks: 256, radius: 8, tps: 16.0, mspt: 90}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: MAX
+      params: {chunks: 1024, radius: 16, tps: 10.0, mspt: 240}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: HIDDEN
+      params: {chunks: 96, radius: 6, tps: 18.0, mspt: 60}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+
+# ---------- NETWORK ----------
+- id: network.packet-loss.default
+  name: 丢包突发
+  category: NETWORK
+  sampleType: PACKET_LOSS_BURST
+  target: network-stack
+  source: 内置异常样本
+  injector: network
+  baseline: baseline:walk
+  notes: 在突发窗口内按固定间隔丢包，探测重传与状态同步是否会把丢包放大成断线
+  tiers:
+    - tier: MIN
+      params: {dropEvery: 8, startTick: 0, burstTicks: 40}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: true, note: 每 8 包丢 1 包，边界输入}
+    - tier: DEFAULT
+      params: {dropEvery: 4, startTick: 0, burstTicks: 40}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: MAX
+      params: {dropEvery: 2, startTick: 0, burstTicks: 40}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: HIDDEN
+      params: {dropEvery: 6, startTick: 10, burstTicks: 20}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+
+- id: network.reorder.default
+  name: 乱序重排
+  category: NETWORK
+  sampleType: REORDER_BURST
+  target: network-stack
+  source: 内置异常样本
+  injector: network
+  baseline: baseline:walk
+  notes: 在窗口内反转数据包顺序，探测服务端是否按序号丢弃过期包而不是误用旧状态
+  tiers:
+    - tier: MIN
+      params: {windowTicks: 20}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: true, note: 半段窗口重排，边界输入}
+    - tier: DEFAULT
+      params: {windowTicks: 40}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: MAX
+      params: {windowTicks: 40, repeat: 2}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: HIDDEN
+      params: {windowTicks: 30}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+
+- id: network.timeout.default
+  name: 超时断连
+  category: NETWORK
+  sampleType: TIMEOUT_DISCONNECT
+  target: network-stack
+  source: 内置异常样本
+  injector: network
+  baseline: baseline:walk
+  notes: 在指定 tick 后停止上行数据包并补一条断连事件，探测超时判定与半开连接清理
+  tiers:
+    - tier: MIN
+      params: {timeoutTick: 30, reason: read_timeout}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: true, note: 末段才超时，边界输入}
+    - tier: DEFAULT
+      params: {timeoutTick: 20, reason: read_timeout}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: MAX
+      params: {timeoutTick: 10, reason: read_timeout}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: HIDDEN
+      params: {timeoutTick: 25, reason: keepalive_timeout}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+
+# ---------- ANOMALY ----------
+- id: anomaly.nan-coordinates.default
+  name: 无效输入 NaN 坐标
+  category: ANOMALY
+  sampleType: INVALID_INPUT_NAN_COORDINATES
+  target: server-runtime
+  source: 内置异常样本
+  injector: anomaly
+  baseline: baseline:walk
+  notes: 位移坐标写入 NaN，探测位置校验与后续寻路是否会把 NaN 传播到区块或实体索引
+  tiers:
+    - tier: MIN
+      params: {corruptEvery: 16}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: true, note: 每 16 个位移坏 1 个，边界输入}
+    - tier: DEFAULT
+      params: {corruptEvery: 8}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: MAX
+      params: {corruptEvery: 4}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: HIDDEN
+      params: {corruptEvery: 12}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+
+- id: anomaly.out-of-range.default
+  name: 越界参数
+  category: ANOMALY
+  sampleType: OUT_OF_RANGE_PARAMETER
+  target: server-runtime
+  source: 内置异常样本
+  injector: anomaly
+  baseline: baseline:walk
+  notes: 坐标超世界边界且视角越界，探测范围校验是否在写入前生效而不是写到区块外
+  tiers:
+    - tier: MIN
+      params: {atTick: 10, coordinateScale: 1000000.0, pitch: 91.0}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: true, note: 百万级坐标，边界输入}
+    - tier: DEFAULT
+      params: {atTick: 15, coordinateScale: 10000000.0, pitch: 120.0}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: MAX
+      params: {atTick: 20, coordinateScale: 30000000.0, pitch: 180.0}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: HIDDEN
+      params: {atTick: 12, coordinateScale: 5000000.0, pitch: 95.0}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+
+- id: anomaly.concurrent-race.default
+  name: 并发竞争
+  category: ANOMALY
+  sampleType: CONCURRENT_RACE
+  target: server-runtime
+  source: 内置异常样本
+  injector: anomaly
+  baseline: baseline:walk
+  notes: 同一 tick 写入互相矛盾的背包与位移状态，探测并发读写是否产生丢失更新
+  tiers:
+    - tier: MIN
+      params: {raceCount: 1}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: true, note: 一组冲突写入，边界输入}
+    - tier: DEFAULT
+      params: {raceCount: 2}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: MAX
+      params: {raceCount: 4}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: HIDDEN
+      params: {raceCount: 2}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+
+- id: anomaly.missing-resource.default
+  name: 资源引用缺失
+  category: ANOMALY
+  sampleType: MISSING_RESOURCE_REFERENCE
+  target: server-runtime
+  source: 内置异常样本
+  injector: anomaly
+  baseline: baseline:walk
+  notes: 模型与配方引用不存在的资源 id，探测缺失资源是否降级为占位而不是抛栈中断 tick
+  tiers:
+    - tier: MIN
+      params: {missingRefs: 1, namespace: laplace}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: true, note: 单条缺失资源，边界输入}
+    - tier: DEFAULT
+      params: {missingRefs: 2, namespace: laplace}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: MAX
+      params: {missingRefs: 4, namespace: laplace}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: HIDDEN
+      params: {missingRefs: 3, namespace: minecraft}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+
+- id: anomaly.fault-injection.default
+  name: 故障注入
+  category: ANOMALY
+  sampleType: FAULT_INJECTION
+  target: server-runtime
+  source: 内置异常样本
+  injector: anomaly
+  baseline: baseline:walk
+  notes: 中途插入断连后继续灌事件并标记测试失败，探测流水线是否会带着失效上下文继续执行
+  tiers:
+    - tier: MIN
+      params: {faultTick: 10}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: true, note: 单次中途断连，边界输入}
+    - tier: DEFAULT
+      params: {faultTick: 15}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: MAX
+      params: {faultTick: 20}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: HIDDEN
+      params: {faultTick: 12}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}

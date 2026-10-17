@@ -1,6 +1,6 @@
 package io.laplace.sprite.cheats.report;
 
-import io.laplace.sprite.core.model.CheatTierName;
+import io.laplace.sprite.core.model.SampleTierName;
 import io.laplace.sprite.core.model.CheatType;
 
 import java.util.List;
@@ -19,7 +19,7 @@ import java.util.List;
 public record BypassEntry(
         CheatType cheatType,
         List<String> sources,
-        CheatTierName tier,
+        SampleTierName tier,
         int samples,
         int hits,
         boolean neverDetected,

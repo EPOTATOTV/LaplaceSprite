@@ -1,6 +1,6 @@
 package io.laplace.sprite.cheats.report;
 
-import io.laplace.sprite.core.model.CheatTierName;
+import io.laplace.sprite.core.model.SampleTierName;
 
 /**
  * 单个档位的命中 / 样本统计。
@@ -12,7 +12,7 @@ import io.laplace.sprite.core.model.CheatTierName;
  * @param hits    命中数
  * @param samples 样本数
  */
-public record TierRate(CheatTierName tier, int hits, int samples) {
+public record TierRate(SampleTierName tier, int hits, int samples) {
 
     public boolean hasSamples() {
         return samples > 0;

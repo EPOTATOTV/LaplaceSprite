@@ -3,7 +3,7 @@ package io.laplace.sprite.cheats.inject;
 import io.laplace.sprite.cheats.CheatInjectionRequest;
 import io.laplace.sprite.core.engine.InMemoryEventStream;
 import io.laplace.sprite.core.event.Event;
-import io.laplace.sprite.core.model.CheatTier;
+import io.laplace.sprite.core.model.SampleTier;
 import io.laplace.sprite.core.model.CheatType;
 
 import java.time.Instant;
@@ -23,7 +23,7 @@ public final class AutoClickerInjector extends AbstractCheatInjector {
 
     @Override
     protected void apply(List<Event> baseline, InMemoryEventStream out, CheatInjectionRequest request,
-                         CheatTier tier) {
+                         SampleTier tier) {
         int cps = tier.intParam(primaryParamKey(), 16);
         emitAll(out, baseline);
         Instant origin = originOf(request.baseline());

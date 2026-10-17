@@ -1,6 +1,6 @@
 package io.laplace.sprite.cheats.threshold;
 
-import io.laplace.sprite.core.model.CheatTierName;
+import io.laplace.sprite.core.model.SampleTierName;
 import io.laplace.sprite.core.model.CheatType;
 
 import java.util.EnumMap;
@@ -17,16 +17,16 @@ import java.util.Map;
 public final class TierCoefficient {
 
     /** 统一档位系数：MIN 贴阈值边界，DEFAULT/MAX 明显超过阈值，HIDDEN 接近阈值但仍越界。 */
-    private static final Map<CheatTierName, Double> UNIFORM = uniform();
+    private static final Map<SampleTierName, Double> UNIFORM = uniform();
 
     /** 需要按类型覆盖的档位系数。 */
-    private static final Map<CheatType, Map<CheatTierName, Double>> OVERRIDES = overrides();
+    private static final Map<CheatType, Map<SampleTierName, Double>> OVERRIDES = overrides();
 
     private TierCoefficient() {
     }
 
     /** 统一档位系数；未覆盖的类型使用该值。 */
-    public static double of(CheatTierName tier) {
+    public static double of(SampleTierName tier) {
         Double coefficient = UNIFORM.get(tier);
         if (coefficient == null) {
             throw new IllegalArgumentException("未定义档位系数: " + tier);
@@ -35,27 +35,27 @@ public final class TierCoefficient {
     }
 
     /** 指定类型的档位系数，优先取覆盖值。 */
-    public static double of(CheatType type, CheatTierName tier) {
-        Map<CheatTierName, Double> override = OVERRIDES.get(type);
+    public static double of(CheatType type, SampleTierName tier) {
+        Map<SampleTierName, Double> override = OVERRIDES.get(type);
         return override == null ? of(tier) : override.get(tier);
     }
 
     /** 注入幅度 = 阈值锚点 × 档位系数。 */
-    public static double magnitude(CheatType type, CheatTierName tier) {
+    public static double magnitude(CheatType type, SampleTierName tier) {
         return DetectionThresholdAnchor.of(type).value() * of(type, tier);
     }
 
-    private static Map<CheatTierName, Double> uniform() {
-        Map<CheatTierName, Double> map = new EnumMap<>(CheatTierName.class);
-        map.put(CheatTierName.MIN, 1.1);
-        map.put(CheatTierName.DEFAULT, 1.5);
-        map.put(CheatTierName.MAX, 2.0);
-        map.put(CheatTierName.HIDDEN, 1.2);
+    private static Map<SampleTierName, Double> uniform() {
+        Map<SampleTierName, Double> map = new EnumMap<>(SampleTierName.class);
+        map.put(SampleTierName.MIN, 1.1);
+        map.put(SampleTierName.DEFAULT, 1.5);
+        map.put(SampleTierName.MAX, 2.0);
+        map.put(SampleTierName.HIDDEN, 1.2);
         return map;
     }
 
-    private static Map<CheatType, Map<CheatTierName, Double>> overrides() {
-        Map<CheatType, Map<CheatTierName, Double>> overrides = new EnumMap<>(CheatType.class);
+    private static Map<CheatType, Map<SampleTierName, Double>> overrides() {
+        Map<CheatType, Map<SampleTierName, Double>> overrides = new EnumMap<>(CheatType.class);
         // SPEED：锚点是 0.30 格/tick 的位移阈值，注入器 speed 是对基线位移的倍率，两者不同量纲；
         // 参考疾跑基线约 0.28 格/tick，越界倍率约 1.07，故系数需放大到 3.7 起才能让 0.30×系数>1.07。
         overrides.put(CheatType.SPEED, tierMap(3.7, 4.5, 6.3, 4.0));
@@ -74,12 +74,12 @@ public final class TierCoefficient {
         return overrides;
     }
 
-    private static Map<CheatTierName, Double> tierMap(double min, double defaultTier, double max, double hidden) {
-        Map<CheatTierName, Double> map = new EnumMap<>(CheatTierName.class);
-        map.put(CheatTierName.MIN, min);
-        map.put(CheatTierName.DEFAULT, defaultTier);
-        map.put(CheatTierName.MAX, max);
-        map.put(CheatTierName.HIDDEN, hidden);
+    private static Map<SampleTierName, Double> tierMap(double min, double defaultTier, double max, double hidden) {
+        Map<SampleTierName, Double> map = new EnumMap<>(SampleTierName.class);
+        map.put(SampleTierName.MIN, min);
+        map.put(SampleTierName.DEFAULT, defaultTier);
+        map.put(SampleTierName.MAX, max);
+        map.put(SampleTierName.HIDDEN, hidden);
         return map;
     }
 }

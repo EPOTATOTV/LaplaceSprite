@@ -1,5 +1,6 @@
 - id: scaffold.liquidbounce.default
   name: LiquidBounce Scaffold 默认档
+  category: CHEAT
   type: SCAFFOLD
   target: detection-engine
   source: LiquidBounce
@@ -22,6 +23,7 @@
 
 - id: scaffold.meteor.hidden
   name: Meteor Scaffold 隐蔽档
+  category: CHEAT
   type: SCAFFOLD
   target: detection-engine
   source: Meteor
@@ -44,6 +46,7 @@
 
 - id: fastplace.wurst.default
   name: Wurst FastPlace 默认档
+  category: CHEAT
   type: FAST_PLACE
   target: detection-engine
   source: Wurst
@@ -66,6 +69,7 @@
 
 - id: fastplace.thunderhack.max
   name: ThunderHack FastPlace 最高档
+  category: CHEAT
   type: FAST_PLACE
   target: detection-engine
   source: ThunderHack
@@ -88,6 +92,7 @@
 
 - id: fasteat.wurst.default
   name: Wurst FastEat 默认档
+  category: CHEAT
   type: FAST_EAT
   target: detection-engine
   source: Wurst
@@ -110,6 +115,7 @@
 
 - id: fasteat.lambda.max
   name: Lambda FastEat 最高档
+  category: CHEAT
   type: FAST_EAT
   target: detection-engine
   source: Lambda
@@ -132,6 +138,7 @@
 
 - id: xray.meteor.default
   name: Meteor XRay 默认档
+  category: CHEAT
   type: XRAY
   target: detection-engine
   source: Meteor
@@ -154,6 +161,7 @@
 
 - id: xray.thunderhack.hidden
   name: ThunderHack XRay 隐蔽档
+  category: CHEAT
   type: XRAY
   target: detection-engine
   source: ThunderHack

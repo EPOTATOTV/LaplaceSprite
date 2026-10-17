@@ -8,7 +8,7 @@ import java.util.List;
  * <p>{@code tiers} 恒含四个档位（含样本数为 0 的档位），报表按固定列输出。</p>
  *
  * @param label   行标签（check 名或客户端出处标签）
- * @param tiers   分档位统计，顺序与覆盖范围同 {@link io.laplace.sprite.core.model.CheatTierName}
+ * @param tiers   分档位统计，顺序与覆盖范围同 {@link io.laplace.sprite.core.model.SampleTierName}
  * @param hits    合计命中数
  * @param samples 合计样本数
  */

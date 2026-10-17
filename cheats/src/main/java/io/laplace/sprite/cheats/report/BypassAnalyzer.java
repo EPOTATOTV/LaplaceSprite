@@ -1,10 +1,10 @@
 package io.laplace.sprite.cheats.report;
 
 import io.laplace.sprite.cheats.CheatCatalog;
+import io.laplace.sprite.cheats.SampleSpec;
 import io.laplace.sprite.cheats.threshold.DetectionThresholdAnchor;
-import io.laplace.sprite.core.model.CheatSpec;
-import io.laplace.sprite.core.model.CheatTier;
-import io.laplace.sprite.core.model.CheatTierName;
+import io.laplace.sprite.core.model.SampleTier;
+import io.laplace.sprite.core.model.SampleTierName;
 import io.laplace.sprite.core.model.CheatType;
 import io.laplace.sprite.core.model.DetectionBreakdown;
 import io.laplace.sprite.core.model.TestRun;
@@ -49,22 +49,26 @@ public final class BypassAnalyzer {
 
     public BypassList analyze(TestRun run, CheatCatalog catalog) {
         DetectionBreakdown breakdown = run.breakdown();
-        Set<CheatTierName> injected = DetectionRateReportBuilder.injectedTiers(breakdown);
-        Map<CheatType, Map<CheatTierName, Set<String>>> detected =
+        Set<SampleTierName> injected = DetectionRateReportBuilder.injectedTiers(breakdown);
+        Map<CheatType, Map<SampleTierName, Set<String>>> detected =
                 DetectionRateReportBuilder.detectedPlayersByTypeTier(run);
 
         Map<CheatType, String> checkOfType = new EnumMap<>(CheatType.class);
         Map<CheatType, Integer> specsPerType = new EnumMap<>(CheatType.class);
-        Map<CheatType, EnumSet<CheatTierName>> expectedTiers = new EnumMap<>(CheatType.class);
+        Map<CheatType, EnumSet<SampleTierName>> expectedTiers = new EnumMap<>(CheatType.class);
         Map<CheatType, LinkedHashSet<String>> sourceSets = new EnumMap<>(CheatType.class);
 
-        for (CheatSpec spec : catalog.loadDefaults()) {
-            checkOfType.putIfAbsent(spec.type(), DetectionThresholdAnchor.of(spec.type()).checkName());
-            specsPerType.merge(spec.type(), 1, Integer::sum);
-            sourceSets.computeIfAbsent(spec.type(), ignored -> new LinkedHashSet<>()).add(spec.source());
-            EnumSet<CheatTierName> expected =
-                    expectedTiers.computeIfAbsent(spec.type(), ignored -> EnumSet.noneOf(CheatTierName.class));
-            for (CheatTier tier : spec.tiers()) {
+        // 只遍历 CHEAT：非作弊样本的 expectedDetected 恒为 false，0 命中属于功能性失败，
+        // 不是「已实现但被绕过」，不能进绕过清单。
+        for (SampleSpec spec : catalog.cheatSamples()) {
+            checkOfType.putIfAbsent(spec.cheatType(),
+                    DetectionThresholdAnchor.of(spec.cheatType()).checkName());
+            specsPerType.merge(spec.cheatType(), 1, Integer::sum);
+            sourceSets.computeIfAbsent(spec.cheatType(), ignored -> new LinkedHashSet<>())
+                    .add(spec.source());
+            EnumSet<SampleTierName> expected = expectedTiers.computeIfAbsent(spec.cheatType(),
+                    ignored -> EnumSet.noneOf(SampleTierName.class));
+            for (SampleTier tier : spec.tiers()) {
                 if (tier.expected() != null && tier.expected().expectedDetected()) {
                     expected.add(tier.tier());
                 }
@@ -75,7 +79,7 @@ public final class BypassAnalyzer {
         List<CheatType> undetectableTypes = new ArrayList<>();
 
         for (CheatType type : CheatType.values()) {
-            EnumSet<CheatTierName> expected = expectedTiers.get(type);
+            EnumSet<SampleTierName> expected = expectedTiers.get(type);
             if (expected == null) {
                 continue;
             }
@@ -84,8 +88,8 @@ public final class BypassAnalyzer {
                 continue;
             }
             // 本次注入过、且预期应被检出的档位，才是这轮可比对的档位。
-            EnumSet<CheatTierName> comparable = EnumSet.noneOf(CheatTierName.class);
-            for (CheatTierName tier : expected) {
+            EnumSet<SampleTierName> comparable = EnumSet.noneOf(SampleTierName.class);
+            for (SampleTierName tier : expected) {
                 if (injected.contains(tier)) {
                     comparable.add(tier);
                 }
@@ -93,14 +97,14 @@ public final class BypassAnalyzer {
             if (comparable.isEmpty()) {
                 continue;
             }
-            Map<CheatTierName, Set<String>> detectedByTier = detected.getOrDefault(type, Map.of());
+            Map<SampleTierName, Set<String>> detectedByTier = detected.getOrDefault(type, Map.of());
             boolean neverDetected = comparable.stream()
                     .allMatch(tier -> detectedByTier.getOrDefault(tier, Set.of()).isEmpty());
             int specs = specsPerType.getOrDefault(type, 0);
             String check = checkOfType.get(type);
             List<String> sources = List.copyOf(sourceSets.get(type));
 
-            for (CheatTierName tier : comparable) {
+            for (SampleTierName tier : comparable) {
                 int detectedCount = detectedByTier.getOrDefault(tier, Set.of()).size();
                 if (detectedCount > 0) {
                     continue;

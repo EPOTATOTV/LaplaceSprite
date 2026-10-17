@@ -21,7 +21,7 @@ import java.util.Set;
  *
  * @param type         作弊类型
  * @param value        引擎的判定阈值（对齐下方 note 里指名的常量）
- * @param paramKey     注入器实际读取的主参数键（{@code CheatTier.params} 的键）
+ * @param paramKey     注入器实际读取的主参数键（{@code SampleTier.params} 的键）
  * @param checkName    引擎 check 名（{@code HeuristicDetectionEngine.CHECK_*}）
  * @param unit         物理量纲与比较方向
  * @param undetectable 引擎当前无对应 check（不可检出）

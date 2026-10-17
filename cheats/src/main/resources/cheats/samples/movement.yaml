@@ -1,5 +1,6 @@
 - id: speed.wurst.default
   name: Wurst Speed 默认档
+  category: CHEAT
   type: SPEED
   target: detection-engine
   source: Wurst
@@ -22,6 +23,7 @@
 
 - id: speed.liquidbounce.max
   name: LiquidBounce Speed 最高档
+  category: CHEAT
   type: SPEED
   target: detection-engine
   source: LiquidBounce
@@ -44,6 +46,7 @@
 
 - id: speed.meteor.hidden
   name: Meteor Speed 隐蔽档
+  category: CHEAT
   type: SPEED
   target: detection-engine
   source: Meteor
@@ -66,6 +69,7 @@
 
 - id: fly.wurst.max
   name: Wurst Fly 最高档
+  category: CHEAT
   type: FLY
   target: detection-engine
   source: Wurst
@@ -88,6 +92,7 @@
 
 - id: fly.meteor.hidden
   name: Meteor Fly 隐蔽档
+  category: CHEAT
   type: FLY
   target: detection-engine
   source: Meteor
@@ -110,6 +115,7 @@
 
 - id: blink.liquidbounce.default
   name: LiquidBounce Blink 默认档
+  category: CHEAT
   type: BLINK
   target: detection-engine
   source: LiquidBounce
@@ -132,6 +138,7 @@
 
 - id: blink.thunderhack.hidden
   name: ThunderHack Blink 隐蔽档
+  category: CHEAT
   type: BLINK
   target: detection-engine
   source: ThunderHack
@@ -154,6 +161,7 @@
 
 - id: nofall.meteor.default
   name: Meteor NoFall 默认档
+  category: CHEAT
   type: NO_FALL
   target: detection-engine
   source: Meteor
@@ -176,6 +184,7 @@
 
 - id: nofall.wurst.max
   name: Wurst NoFall 最高档
+  category: CHEAT
   type: NO_FALL
   target: detection-engine
   source: Wurst
@@ -198,6 +207,7 @@
 
 - id: jesus.wurst.default
   name: Wurst Jesus 默认档
+  category: CHEAT
   type: JESUS
   target: detection-engine
   source: Wurst
@@ -220,6 +230,7 @@
 
 - id: jesus.bleachhack.hidden
   name: BleachHack Jesus 隐蔽档
+  category: CHEAT
   type: JESUS
   target: detection-engine
   source: BleachHack
@@ -242,6 +253,7 @@
 
 - id: phase.liquidbounce.max
   name: LiquidBounce Phase 最高档
+  category: CHEAT
   type: PHASE
   target: detection-engine
   source: LiquidBounce
@@ -264,6 +276,7 @@
 
 - id: phase.lambda.hidden
   name: Lambda Phase 隐蔽档
+  category: CHEAT
   type: PHASE
   target: detection-engine
   source: Lambda
