@@ -1,0 +1,34 @@
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      gradle-test:
+        patterns:
+          - "org.junit*"
+          - "org.mockito*"
+      gradle-jackson:
+        patterns:
+          - "com.fasterxml.jackson*"
+
+  - package-ecosystem: npm
+    directory: "/console"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      console-minor:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3

@@ -1,0 +1,10 @@
+# 默认由仓库维护者评审
+* @W1ngB3i
+
+# 判定口径与门禁改动需要额外确认
+/core/src/main/java/io/laplace/sprite/core/engine/ @W1ngB3i
+/core/src/main/java/io/laplace/sprite/core/model/MetricSet.java @W1ngB3i
+/core/src/main/java/io/laplace/sprite/core/model/Thresholds.java @W1ngB3i
+
+# 适配器 SPI 与平台家族
+/adapters/src/main/java/io/laplace/sprite/adapters/spi/ @W1ngB3i

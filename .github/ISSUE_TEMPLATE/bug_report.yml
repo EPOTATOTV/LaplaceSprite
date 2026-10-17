@@ -1,0 +1,64 @@
+name: 缺陷报告
+description: 报告一个可复现的缺陷
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        提交前请先确认：同一个问题没有已存在的 issue，且已经用 `gradle test` 与相关门禁命令复现过。
+        涉及安全问题的请走 SECURITY.md 的私密渠道，不要开公开 issue。
+  - type: dropdown
+    id: target_type
+    attributes:
+      label: 被测目标类型
+      options:
+        - 模组（Forge / Fabric / NeoForge / Quilt）
+        - 插件（Bukkit 系 / 代理端 / 基岩系）
+        - 数据包 / 资源包
+        - 整合包
+        - 检测引擎
+        - 平台自身
+    validations:
+      required: true
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: 实际行为
+      description: 发生了什么，包括完整报错或截图
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: 复现步骤
+      description: 可直接粘贴的命令；尽量带上 `--seed`、`--workspace` 与运行 id
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 版本
+      description: 平台版本（`laplace --version`）、JDK、操作系统
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 证据
+      description: 相关日志、`report/` 下的诊断 JSON 或证据链条目；不要粘贴玩家隐私数据
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 确认
+      options:
+        - label: 我已搜索过现有 issue
+          required: true
+        - label: 我提供的内容不含玩家真实数据或密钥
+          required: true
