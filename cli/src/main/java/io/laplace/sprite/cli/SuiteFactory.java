@@ -6,15 +6,15 @@ import io.laplace.sprite.core.engine.InMemoryEventStream;
 import io.laplace.sprite.core.engine.SimulatedSession;
 import io.laplace.sprite.core.event.EventStream;
 import io.laplace.sprite.core.model.BehaviorProfile;
-import io.laplace.sprite.core.model.CheatSpec;
-import io.laplace.sprite.core.model.CheatTierName;
-import io.laplace.sprite.core.model.LegitTrajectory;
+import io.laplace.sprite.core.model.TestSpec;
+import io.laplace.sprite.core.model.SampleTierName;
+import io.laplace.sprite.core.model.BehaviorTrajectory;
 import io.laplace.sprite.core.model.NetworkModel;
 import io.laplace.sprite.core.model.PlatformKey;
 import io.laplace.sprite.core.model.Scenario;
 import io.laplace.sprite.network.NetworkModelRegistry;
-import io.laplace.sprite.simulator.LegitSessionFactory;
-import io.laplace.sprite.simulator.LegitTrajectoryGenerator;
+import io.laplace.sprite.simulator.BehaviorSessionFactory;
+import io.laplace.sprite.simulator.BehaviorTrajectoryGenerator;
 import io.laplace.sprite.simulator.ScenarioLibrary;
 import io.laplace.sprite.simulator.SimulationProfile;
 
@@ -29,8 +29,8 @@ import java.util.List;
 final class SuiteFactory {
 
     private final ScenarioLibrary scenarios = new ScenarioLibrary();
-    private final LegitTrajectoryGenerator generator = new LegitTrajectoryGenerator();
-    private final LegitSessionFactory legitSessions = new LegitSessionFactory();
+    private final BehaviorTrajectoryGenerator generator = new BehaviorTrajectoryGenerator();
+    private final BehaviorSessionFactory legitSessions = new BehaviorSessionFactory();
     private final CheatCatalog catalog = new CheatCatalog();
     private final CheatSessionFactory cheatSessions = new CheatSessionFactory();
     private final NetworkModelRegistry networks = new NetworkModelRegistry();
@@ -61,7 +61,7 @@ final class SuiteFactory {
     List<SimulatedSession> legit(int players, Scenario scenario, PlatformKey platform, long seed, int ticks) {
         SimulationProfile profile = SimulationProfile.of(scenario.id());
         List<BehaviorProfile> rotation = profile.rotation(players, seed);
-        List<LegitTrajectory> trajectories = new ArrayList<>();
+        List<BehaviorTrajectory> trajectories = new ArrayList<>();
         for (int i = 0; i < players; i++) {
             BehaviorProfile behavior = rotation.isEmpty()
                     ? BehaviorProfile.SPRINT
@@ -72,11 +72,11 @@ final class SuiteFactory {
         return legitSessions.toSessions(trajectories);
     }
 
-    List<CheatSpec> specs(List<String> ids) {
+    List<TestSpec> specs(List<String> ids) {
         if (ids == null || ids.isEmpty()) {
             return catalog.loadDefaults();
         }
-        List<CheatSpec> selected = new ArrayList<>();
+        List<TestSpec> selected = new ArrayList<>();
         for (String id : ids) {
             catalog.byId(id).ifPresentOrElse(selected::add,
                     () -> {
@@ -86,12 +86,12 @@ final class SuiteFactory {
         return selected;
     }
 
-    List<SimulatedSession> cheat(List<CheatSpec> specs, CheatTierName tier, Scenario scenario,
+    List<SimulatedSession> cheat(List<TestSpec> specs, SampleTierName tier, Scenario scenario,
                                 PlatformKey platform, NetworkModel network, long seed, EventStream baseline) {
         return cheatSessions.buildSessions(specs, tier, scenario.id(), platform, network, seed, baseline);
     }
 
-    List<SimulatedSession> boundary(List<CheatSpec> specs, Scenario scenario, PlatformKey platform,
+    List<SimulatedSession> boundary(List<TestSpec> specs, Scenario scenario, PlatformKey platform,
                                     NetworkModel network, long seed, EventStream baseline) {
         return cheatSessions.buildBoundarySessions(specs, scenario.id(), platform, network, seed, baseline);
     }
@@ -101,12 +101,12 @@ final class SuiteFactory {
         BehaviorProfile behavior = scenario.profiles().isEmpty()
                 ? BehaviorProfile.SPRINT
                 : scenario.profiles().get(0);
-        LegitTrajectory trajectory = generator.generate("baseline", behavior, scenario.id(), seed,
+        BehaviorTrajectory trajectory = generator.generate("baseline", behavior, scenario.id(), seed,
                 ticks, platform);
         return new InMemoryEventStream(trajectory.events());
     }
 
-    LegitTrajectory trajectory(String id, BehaviorProfile behavior, Scenario scenario, long seed,
+    BehaviorTrajectory trajectory(String id, BehaviorProfile behavior, Scenario scenario, long seed,
                                int ticks, PlatformKey platform) {
         return generator.generate(id, behavior, scenario.id(), seed, ticks, platform);
     }

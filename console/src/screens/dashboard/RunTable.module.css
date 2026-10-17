@@ -46,13 +46,14 @@
 
 .scroll {
   max-height: 468px;
-  overflow-y: auto;
+  overflow: auto;
   border-radius: var(--r-3);
   border: 1px solid var(--ink-100);
   background-color: color-mix(in srgb, var(--paper) 46%, transparent);
 }
 
 .table {
+  min-width: 780px;
   font-size: var(--fs-xs);
 }
 
@@ -139,6 +140,42 @@
 .breach {
   color: var(--danger-600);
   font-weight: 620;
+}
+
+.perfCell {
+  white-space: nowrap;
+}
+
+.perf {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  font-size: var(--fs-micro);
+  font-weight: 600;
+}
+
+.perf em {
+  font-style: normal;
+  font-weight: 560;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.86;
+}
+
+.ok {
+  color: var(--ok-600);
+}
+
+.warn {
+  color: var(--warn-600);
+}
+
+.danger {
+  color: var(--danger-600);
+}
+
+.neutral {
+  color: var(--ink-500);
 }
                   
 

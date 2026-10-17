@@ -33,6 +33,13 @@
   box-shadow: var(--shadow-lift);
 }
 
+/* 单列时 span 2 会撑出隐式第二列，直接收回 */
+@media (max-width: 620px) {
+  .hero {
+    grid-column: auto;
+  }
+}
+
 .head {
   display: flex;
   align-items: center;

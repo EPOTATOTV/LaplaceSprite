@@ -50,6 +50,69 @@
   }
 }
 
+/* ---------- 检测类专项读数 ---------- */
+
+.detectionStats {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-bottom: var(--s-3);
+}
+
+.detectionLabel {
+  padding-right: var(--s-3);
+  border-right: 1px solid var(--ink-150);
+  font-size: var(--fs-micro);
+  letter-spacing: 0.06em;
+  color: var(--ink-400);
+}
+
+.detectionChip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: var(--r-2);
+  border: 1px solid var(--ink-150);
+  background-color: var(--ink-050);
+  transition:
+    transform var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out);
+}
+
+.detectionChip:hover {
+  transform: translate3d(0, -1px, 0);
+  border-color: var(--accent-line);
+}
+
+.detectionChip em {
+  font-style: normal;
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+}
+
+.detectionChip strong {
+  font-size: var(--fs-xs);
+  color: var(--ink-800);
+}
+
+.chipAlert {
+  color: var(--danger-600);
+}
+
+.detectionHint {
+  margin-left: auto;
+  font-size: var(--fs-micro);
+  color: var(--ink-300);
+}
+
+@media (max-width: 620px) {
+  .detectionHint {
+    display: none;
+  }
+}
+
 /* ---------- 档位合计 ---------- */
 
 .tierRow {

@@ -3,12 +3,12 @@ import { useMemo } from 'react'
 
 import { cx } from '../../lib/cx'
 import { formatPercent } from '../../lib/format'
-import type { CheatTier, DetectionByCheckTier } from '../../types'
+import type { SampleTier, DetectionByCheckTier } from '../../types'
 import styles from './charts.module.css'
 
 interface HeatMatrixProps {
   data: DetectionByCheckTier
-  tiers: readonly CheatTier[]
+  tiers: readonly SampleTier[]
   ariaLabel: string
 }
 

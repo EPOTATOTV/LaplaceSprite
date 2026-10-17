@@ -52,6 +52,24 @@
   animation: lc-rise var(--d-3) var(--ease-out) backwards;
 }
 
+.groupLabel {
+  fill: var(--ink-500);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.groupCount {
+  fill: var(--ink-300);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.groupRule {
+  stroke: var(--ink-100);
+  stroke-width: 1;
+}
+
 .micro {
   fill: var(--ink-400);
   font-family: var(--font-mono);
@@ -345,6 +363,13 @@
   font-weight: 600;
   color: var(--ink-800);
   font-variant-numeric: tabular-nums;
+}
+
+.legendNote {
+  margin-left: auto;
+  font-size: var(--fs-micro);
+  color: var(--ink-300);
+  letter-spacing: 0.04em;
 }
 
 /* ---------- 迷你趋势 ---------- */

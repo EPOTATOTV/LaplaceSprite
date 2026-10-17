@@ -1,7 +1,7 @@
 package io.laplace.sprite.cli;
 
 import io.laplace.sprite.adapters.AdapterRegistryFactory;
-import io.laplace.sprite.adapters.sim.SimAdapter;
+import io.laplace.sprite.adapters.sim.SimServerAdapter;
 import io.laplace.sprite.cheats.CheatCatalog;
 import io.laplace.sprite.cheats.report.BypassAnalyzer;
 import io.laplace.sprite.cheats.report.BypassList;
@@ -15,7 +15,7 @@ import io.laplace.sprite.core.engine.SimulatedSession;
 import io.laplace.sprite.core.engine.ThresholdGate;
 import io.laplace.sprite.core.event.EventStream;
 import io.laplace.sprite.core.io.Json;
-import io.laplace.sprite.core.model.CheatTierName;
+import io.laplace.sprite.core.model.SampleTierName;
 import io.laplace.sprite.core.model.FlagEvent;
 import io.laplace.sprite.core.model.GateResult;
 import io.laplace.sprite.core.model.NetworkModel;
@@ -76,7 +76,7 @@ final class RunCommand implements Callable<Integer> {
     long seed;
 
     @Option(names = "--tier", defaultValue = "DEFAULT", description = "作弊档位 min|default|max|hidden")
-    CheatTierName tier;
+    SampleTierName tier;
 
     @Option(names = "--cheat", description = "仅运行指定作弊样本 id，可重复")
     List<String> cheatIds;
@@ -144,7 +144,7 @@ final class RunCommand implements Callable<Integer> {
                 seed, thresholds, parallel, coverage, exemptionPolicy);
 
         Orchestrator orchestrator = new Orchestrator(new Runner(), AdapterRegistryFactory.defaultRegistry());
-        TestRun run = orchestrator.runSuite(request, scenario, sessions, new SimAdapter());
+        TestRun run = orchestrator.runSuite(request, scenario, sessions, new SimServerAdapter());
 
         Path ws = Support.workspace(workspace);
         Path reportPath = ws.resolve("report").resolve("report.json");

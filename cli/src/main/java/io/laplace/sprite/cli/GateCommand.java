@@ -77,6 +77,12 @@ final class GateCommand implements Callable<Integer> {
                 total.detectedSamples(), total.detectionRate() * 100, minDetectionRate * 100);
         out.printf("  边界样本 %d/%d · 覆盖率 %.2f%% · 并发安全 %s%n", total.boundaryPassed(),
                 total.boundarySamples(), total.coverage() * 100, total.concurrencyOk() ? "通过" : "未通过");
+        out.printf("  功能冒烟 %d/%d（%.2f%%）%n", total.functionalSmokePassed(),
+                total.functionalSmokeTotal(), total.functionalSmokePassRate() * 100);
+        out.printf("  性能基线 %s（Δ %.2f%%）· 资源与装配 %s%n",
+                total.performanceBaselineOk() ? "未劣化" : "劣化",
+                total.performanceBaselineDelta() * 100,
+                total.resourceAndAssemblyOk() ? "通过" : "未通过");
 
         if (gate.passed()) {
             out.println("门禁结果：通过");

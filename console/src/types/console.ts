@@ -2,6 +2,9 @@
  * 后端 JSON 契约的 TypeScript 镜像。
  * 对应 Java：io.laplace.sprite.core.model（report 模块对外序列化的形状）。
  * 字段名与后端保持一致，不要在此处做重命名。
+ *
+ * v1.3 新增字段（sampleSpecCount / functionalPassRate / performanceBaseline* /
+ * sampleTypeBreakdown / targetTypes）在旧后端尚未升级时由 data/api.ts 用 fixture 补齐。
  */
 
 export type RunStatus =
@@ -12,10 +15,54 @@ export type RunStatus =
   | 'ABORTED'
   | 'SKIPPED'
 
-/** CheatTierName：作弊配置档位（4.2） */
-export type CheatTier = 'MIN' | 'DEFAULT' | 'MAX' | 'HIDDEN'
+/** SampleTierName：作弊配置档位（4.2） */
+export type SampleTier = 'MIN' | 'DEFAULT' | 'MAX' | 'HIDDEN'
 
-/** CheatType：作弊类型（4.2 / 第五章 CheatSpec.type），取自开源作弊客户端真实模块 */
+/** 样本所属的目标大类（11.2 v1.3：条形图按样本类型聚合后再分组） */
+export type SampleCategory = 'content' | 'tech' | 'perf' | 'network' | 'anomaly' | 'cheat'
+
+/** 单个样本类型在某一档位下的断言命中 / 样本数 */
+export interface SampleTierStat {
+  tier: SampleTier
+  hits: number
+  samples: number
+}
+
+/** 样本类型 × 档位断言结果（11.2 条形图数据源） */
+export interface SampleTypeRow {
+  sampleType: string
+  category: SampleCategory
+  tiers: SampleTierStat[]
+}
+
+export type SampleTypeBreakdown = SampleTypeRow[]
+
+/** 13.6 / 9 验收 11：12 类被测目标 */
+export type TargetTypeKey =
+  | 'CONTENT'
+  | 'TECH_AUTOMATION'
+  | 'OPTIMIZATION_RENDER'
+  | 'CLIENT_QOL'
+  | 'SERVER_PLUGIN'
+  | 'CROSS_LOADER_LIBRARY'
+  | 'RESOURCE_PACK_SHADER'
+  | 'DATAPACK'
+  | 'MODPACK'
+  | 'BEDROCK_ADDON'
+  | 'NETWORK_MULTIPLAYER'
+  | 'WORLDGEN'
+
+/** 一类目标的测试画像（TargetTypeProfile 的前端投影） */
+export interface TargetTypeRow {
+  type: TargetTypeKey
+  label: string
+  testFocus: string[]
+  frameworks: string[]
+  risks: string[]
+  projects: string[]
+}
+
+/** CheatType：作弊类型（4.2 / 第五章 TestSpec.type），取自开源作弊客户端真实模块 */
 export type CheatType =
   | 'SPEED'
   | 'FLY'
@@ -71,15 +118,28 @@ export interface PlatformRef {
   id: string
 }
 
-/** 11.2 顶部六个指标卡 */
+/** 11.2 顶部六个指标卡（v1.3：功能类优先，检测类指标保留为专项口径） */
 export interface MetricCards {
   todayRuns: number
   simulatedPlayers: number
+  /** 样本矩阵数：目标类型 × 档位 × 样本变体 */
+  sampleSpecCount: number
+  /** 功能冒烟通过率，总数为 0 时按 1.0 处理（不适用） */
+  functionalPassRate: number
+  /** 性能基线是否可判定（false 表示未采集到可比基线） */
+  performanceBaselineOk: boolean
+  /** 相对上一版本基线的 TPS 变化率，正值为改善 */
+  performanceBaselineDelta: number
+  gatePassed: number
+  gateTotal: number
+  /** 检测类专项：仍保留给检测类目标 */
   cheatSpecCount: number
   falsePositiveRate: number
   detectionRate: number
-  gatePassed: number
 }
+
+/** 设计稿 v1.3 的卡片载荷别名；Java 侧记录名仍为 MetricCards */
+export type ConsoleCards = MetricCards
 
 /** 11.2 测试运行表的一行（TestRun 的表格投影） */
 export interface TestRunRow {
@@ -90,11 +150,18 @@ export interface TestRunRow {
   falsePositiveRate: number
   detectionRate: number
   boundarySamples: number
+  functionalSmokePassed: number
+  functionalSmokeTotal: number
+  performanceBaselineOk: boolean
+  performanceBaselineDelta: number
   status: RunStatus
   platform: PlatformRef
   startedAt: string
   durationMs: number
 }
+
+/** 设计稿 v1.3 的运行行别名；Java 侧记录名仍为 TestRunRow */
+export type RunRow = TestRunRow
 
 /** GateResult.violations 的一项 */
 export interface GateViolation {
@@ -147,10 +214,10 @@ export interface ModuleHealth {
 }
 
 /** DetectionBreakdown 派生：检测项 × 档位的检出率 */
-export type DetectionByCheckTier = Record<string, Record<CheatTier, number>>
+export type DetectionByCheckTier = Record<string, Record<SampleTier, number>>
 
 /** 各档位的合计检出率 */
-export type DetectionByTier = Record<CheatTier, number>
+export type DetectionByTier = Record<SampleTier, number>
 
 /** 11.6 受测插件配置（ServerPluginConfig，服务端模式默认仅告警） */
 export interface ServerPluginConfig {
@@ -335,6 +402,11 @@ export interface PerfOverlay {
 export interface ConsoleData {
   cards: MetricCards
   runs: TestRunRow[]
+  /** 11.2 v1.3 样本类型 × 档位断言结果 */
+  sampleTypeBreakdown: SampleTypeBreakdown
+  /** 11.2 v1.3 全类型目标矩阵 */
+  targetTypes: TargetTypeRow[]
+  /** 检测类专项：检测项 × 档位 */
   detectionByCheckTier: DetectionByCheckTier
   detectionByTier: DetectionByTier
   falsePositiveHistory: MetricHistory

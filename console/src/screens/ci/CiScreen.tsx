@@ -76,7 +76,7 @@ export default function CiScreen() {
   const trendSeries: TrendSeries[] = [
     {
       key: 'detection',
-      label: '检出率',
+      label: '检出率（检测类）',
       tone: 'accent',
       axis: 'left',
       points: data.detectionHistory.points,
@@ -85,7 +85,7 @@ export default function CiScreen() {
     },
     {
       key: 'falsePositive',
-      label: '误报率',
+      label: '误报率（检测类）',
       tone: 'warn',
       axis: 'right',
       points: data.falsePositiveHistory.points,
@@ -100,14 +100,14 @@ export default function CiScreen() {
       .map((point) => ({
         key: `d-${point.version}`,
         version: point.version,
-        text: `检出率 ${formatPercent(point.value, 1)} 低于下限 ${formatPercent(data.detectionHistory.threshold, 0)}`,
+        text: `检测类检出率 ${formatPercent(point.value, 1)} 低于下限 ${formatPercent(data.detectionHistory.threshold, 0)}`,
       })),
     ...data.falsePositiveHistory.points
       .filter((point) => point.breached)
       .map((point) => ({
         key: `f-${point.version}`,
         version: point.version,
-        text: `误报率 ${formatRate(point.value)} 超过上限 ${formatRate(data.falsePositiveHistory.threshold)}`,
+        text: `检测类误报率 ${formatRate(point.value)} 超过上限 ${formatRate(data.falsePositiveHistory.threshold)}`,
       })),
   ]
 
@@ -125,10 +125,11 @@ export default function CiScreen() {
         actions={
           <div className={styles.thresholds}>
             <span className={styles.threshold}>
-              检出率 <strong className="tabular">≥ {formatPercent(0.95, 0)}</strong>
+              检出率（检测类） <strong className="tabular">≥ {formatPercent(0.95, 0)}</strong>
             </span>
             <span className={styles.threshold}>
-              误报率 <strong className="tabular">≤ {formatRate(FALSE_POSITIVE_THRESHOLD)}</strong>
+              误报率（检测类）{' '}
+              <strong className="tabular">≤ {formatRate(FALSE_POSITIVE_THRESHOLD)}</strong>
             </span>
           </div>
         }
@@ -137,8 +138,8 @@ export default function CiScreen() {
       </Section>
 
       <Section
-        title="误报率与检出率演化"
-        note="左轴检出率 / 右轴误报率 · 红点为越界版本"
+        title="检测类专项 · 指标演化"
+        note="仅检测类目标 · 左轴检出率 / 右轴误报率 · 红点为越界版本"
         delay={90}
         className={styles.spanFull}
       >
@@ -146,7 +147,7 @@ export default function CiScreen() {
           series={trendSeries}
           viewWidth={1180}
           height={252}
-          ariaLabel="从 v0.11.0 到 v0.15.1 的检出率与误报率演化曲线，越界版本以红点标注"
+          ariaLabel="从 v0.11.0 到 v0.15.1 的检测类检出率与误报率演化曲线，越界版本以红点标注"
         />
         <div className={styles.annotations}>
           <span className={styles.annotationsLabel}>越界记录</span>
@@ -164,11 +165,15 @@ export default function CiScreen() {
         </div>
       </Section>
 
-      <Section title="检出率矩阵" note="检测项 × 档位 · 颜色越深检出率越高" delay={140}>
+      <Section
+        title="检测类检出率矩阵"
+        note="检测项 × 档位 · 颜色越深检出率越高"
+        delay={140}
+      >
         <HeatMatrix
           data={data.detectionByCheckTier}
           tiers={DETECTION_TIERS}
-          ariaLabel="检测项与档位交叉的检出率矩阵"
+          ariaLabel="检测类检测项与档位交叉的检出率矩阵"
         />
       </Section>
 

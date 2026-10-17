@@ -1,27 +1,32 @@
 package io.laplace.sprite.cli;
 
-import io.laplace.sprite.adapters.sim.SimAdapter;
+import io.laplace.sprite.adapters.sim.SimServerAdapter;
 import io.laplace.sprite.core.engine.DetectionContext;
 import io.laplace.sprite.core.engine.InMemoryEventStream;
 import io.laplace.sprite.core.event.Event;
 import io.laplace.sprite.core.event.EventStream;
 import io.laplace.sprite.core.event.EventType;
 import io.laplace.sprite.core.model.BehaviorProfile;
-import io.laplace.sprite.core.model.CheatSpec;
-import io.laplace.sprite.core.model.CheatTierName;
+import io.laplace.sprite.core.model.TestSpec;
+import io.laplace.sprite.core.model.SampleTierName;
 import io.laplace.sprite.core.model.FlagEvent;
-import io.laplace.sprite.core.model.LegitTrajectory;
+import io.laplace.sprite.core.model.BehaviorTrajectory;
 import io.laplace.sprite.core.model.NetworkModel;
 import io.laplace.sprite.core.model.PlatformKey;
 import io.laplace.sprite.core.model.PlayerType;
 import io.laplace.sprite.core.model.ProbeSnapshot;
 import io.laplace.sprite.core.model.Scenario;
+import io.laplace.sprite.replay.McprArchive;
+import io.laplace.sprite.replay.McprReader;
+import io.laplace.sprite.replay.ReplayScript;
+import io.laplace.sprite.replay.ReplayScriptExtractor;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 import picocli.CommandLine.Model.CommandSpec;
 
+import java.nio.file.Path;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +57,7 @@ final class ReplayCommand implements Callable<Integer> {
     String cheatId;
 
     @Option(names = "--tier", defaultValue = "DEFAULT", description = "作弊档位")
-    CheatTierName tier;
+    SampleTierName tier;
 
     @Option(names = "--platform", defaultValue = "in-process", description = "目标平台")
     String platform;
@@ -69,11 +74,17 @@ final class ReplayCommand implements Callable<Integer> {
     @Option(names = "--limit", defaultValue = "40", description = "--stepwise 打印条数上限")
     int limit;
 
+    @Option(names = "--mcpr", description = "ReplayMod .mcpr 录像，抽取可重放的 bot 剧本（15.10）")
+    Path mcpr;
+
     @Spec
     CommandSpec spec;
 
     @Override
     public Integer call() {
+        if (mcpr != null) {
+            return replayMcpr();
+        }
         SuiteFactory factory = new SuiteFactory();
         Scenario scenario = factory.scenario(scenarioId);
         PlatformKey key = Support.resolvePlatform(spec, platform, mc, loader);
@@ -81,9 +92,9 @@ final class ReplayCommand implements Callable<Integer> {
 
         EventStream stream;
         PlayerType playerType;
-        CheatSpec spec = null;
+        TestSpec spec = null;
         if (cheatId != null && !cheatId.isBlank()) {
-            List<CheatSpec> specs = factory.specs(List.of(cheatId));
+            List<TestSpec> specs = factory.specs(List.of(cheatId));
             spec = specs.get(0);
             NetworkModel network = factory.network(scenario, seed);
             EventStream baseline = factory.baseline(scenario, key, seed, ticks);
@@ -95,7 +106,7 @@ final class ReplayCommand implements Callable<Integer> {
             stream = sessions.get(0).stream();
             playerType = PlayerType.CHEAT;
         } else {
-            LegitTrajectory trajectory = factory.trajectory("replay", profile, scenario, seed, ticks, key);
+            BehaviorTrajectory trajectory = factory.trajectory("replay", profile, scenario, seed, ticks, key);
             stream = new InMemoryEventStream(trajectory.events());
             playerType = PlayerType.LEGIT;
         }
@@ -112,7 +123,7 @@ final class ReplayCommand implements Callable<Integer> {
 
         DetectionContext ctx = new DetectionContext("replay-" + seed, key, scenario, stream,
                 ProbeSnapshot.clean(), "replay", playerType, spec, spec == null ? null : tier);
-        List<FlagEvent> flags = new SimAdapter().detect(ctx);
+        List<FlagEvent> flags = new SimServerAdapter().detect(ctx);
         if (flags.isEmpty()) {
             out.println("  检测结果：无 flag（与预期一致）");
             return 0;
@@ -121,6 +132,29 @@ final class ReplayCommand implements Callable<Integer> {
         flags.forEach(f -> out.printf("    - %s @tick %d 置信度 %.2f%n", f.checkName(), f.tick(),
                 f.confidence()));
         return spec == null ? 1 : 0;
+    }
+
+    /** 15.10：把 ReplayMod 录像抽成可重放剧本；不声称能逐 tick 复现。 */
+    private Integer replayMcpr() {
+        if (!java.nio.file.Files.isRegularFile(mcpr)) {
+            throw new CommandLine.ParameterException(spec.commandLine(),
+                    "录像不存在: " + mcpr.toAbsolutePath());
+        }
+        var out = spec.commandLine().getOut();
+        McprArchive archive = new McprReader().read(mcpr);
+        ReplayScript script = new ReplayScriptExtractor().extract(archive, mcpr.getFileName().toString(),
+                null);
+
+        out.println("世界快照回放轨（15.10）");
+        out.println("  录像 " + mcpr.toAbsolutePath());
+        out.println("  MC " + archive.mcVersion() + " · 时长 " + archive.durationTicks() + " tick · 包 "
+                + archive.packets().size()
+                + (archive.truncated() ? "（尾部截断，已保留可解析部分）" : ""));
+        out.println("  玩家 " + archive.playerName() + " · 生成器 " + archive.generator());
+        out.println("  抽取剧本：移动 " + script.movement().samples().size() + " 条 · 指令 "
+                + script.commands().entries().size() + " 条");
+        out.println("  边界：原版不保证 tick 级确定性，重放结论以「复现同类崩溃 / 同一日志特征」为准");
+        return 0;
     }
 
     private static Map<EventType, Integer> histogram(EventStream stream) {

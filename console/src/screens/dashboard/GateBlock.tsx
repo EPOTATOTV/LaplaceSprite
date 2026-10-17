@@ -5,8 +5,33 @@ import { formatPercent, formatRate } from '../../lib/format'
 import type { GateResult } from '../../types'
 import styles from './GateBlock.module.css'
 
+const METRIC_LABEL: Record<string, string> = {
+  false_positive_rate: '误报率（检测类）',
+  falsePositiveRate: '误报率（检测类）',
+  detection_rate: '检出率（检测类）',
+  detectionRate: '检出率（检测类）',
+  functional_smoke_pass_rate: '功能通过率',
+  performance_baseline_delta: '性能基线',
+  resource_assembly: '资源与装配',
+  boundary: '阈值边界',
+  concurrency: '并发安全',
+  coverage: '覆盖率',
+}
+
+function metricLabel(metric: string): string {
+  return METRIC_LABEL[metric] ?? metric
+}
+
 function isUpperBoundViolation(operator: string): boolean {
   return operator === '<='
+}
+
+function isFalsePositiveMetric(metric: string): boolean {
+  return metric === 'false_positive_rate' || metric === 'falsePositiveRate'
+}
+
+function formatMetric(metric: string, value: number, digits: number): string {
+  return isFalsePositiveMetric(metric) ? formatRate(value) : formatPercent(value, digits)
 }
 
 export function GateBlock({ gate }: { gate: GateResult }) {
@@ -37,7 +62,7 @@ export function GateBlock({ gate }: { gate: GateResult }) {
                 className={styles.chip}
                 style={{ animationDelay: `${index * 60}ms` }}
               >
-                {metric}
+                {metricLabel(metric)}
               </span>
             ))}
           </div>
@@ -50,23 +75,18 @@ export function GateBlock({ gate }: { gate: GateResult }) {
                 style={{ animationDelay: `${80 + index * 55}ms` }}
               >
                 <div className={styles.vHead}>
-                  <span className={styles.vMetric}>{violation.metric}</span>
+                  <span className={styles.vMetric}>{metricLabel(violation.metric)}</span>
                   <span className={styles.vExpr}>
                     {isUpperBoundViolation(violation.operator) ? '上限' : '下限'}{' '}
-                    {violation.metric === 'falsePositiveRate'
-                      ? formatRate(violation.threshold)
-                      : formatPercent(violation.threshold, 0)}
+                    {formatMetric(violation.metric, violation.threshold, 0)}
                   </span>
                 </div>
                 <div className={styles.compare}>
                   <span className={styles.actual}>
-                    实测{' '}
-                    {violation.metric === 'falsePositiveRate'
-                      ? formatRate(violation.actual)
-                      : formatPercent(violation.actual, 2)}
+                    实测 {formatMetric(violation.metric, violation.actual, 2)}
                   </span>
                   <span className={styles.delta}>
-                    {violation.metric === 'falsePositiveRate' ? '超出' : '低于'}阈值
+                    {isUpperBoundViolation(violation.operator) ? '超出' : '低于'}阈值
                   </span>
                 </div>
                 <p className={styles.vMessage}>{violation.message}</p>

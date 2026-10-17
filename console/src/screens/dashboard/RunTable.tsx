@@ -3,16 +3,16 @@ import { ChevronDown, ChevronUp } from 'lucide-react'
 
 import { StatusPill } from '../../components/StatusPill'
 import { cx } from '../../lib/cx'
-import { formatClock, formatInt, formatPercent, formatRate } from '../../lib/format'
-import { FALSE_POSITIVE_THRESHOLD } from '../../data/fixtures'
+import { formatClock, formatInt, formatPercent } from '../../lib/format'
+import { performanceVerdict } from '../../lib/performance'
 import type { TestRunRow } from '../../types'
 import styles from './RunTable.module.css'
 
 const COLLAPSED_COUNT = 16
 
 const SUITE_LABEL: Record<string, string> = {
-  legit: '合法',
-  cheat: '作弊',
+  legit: '行为基线',
+  cheat: '检测注入',
   boundary: '边界',
   concurrency: '并发',
 }
@@ -50,7 +50,7 @@ export function RunTable({ runs }: { runs: TestRunRow[] }) {
       <div className={styles.scroll}>
         <table className={styles.table}>
           <caption className="visually-hidden">
-            最近测试运行列表，含目标、套件与误报率检出率
+            最近测试运行列表，含目标、套件、行为基线样本、功能通过率、性能基线与边界样本
           </caption>
           <thead>
             <tr>
@@ -58,13 +58,13 @@ export function RunTable({ runs }: { runs: TestRunRow[] }) {
               <th scope="col">目标</th>
               <th scope="col">套件</th>
               <th scope="col" className={styles.num}>
-                合法样本
+                行为基线样本
               </th>
               <th scope="col" className={styles.num}>
-                误报率
+                功能通过率
               </th>
               <th scope="col" className={styles.num}>
-                检出率
+                性能基线
               </th>
               <th scope="col" className={styles.num}>
                 边界样本
@@ -74,7 +74,19 @@ export function RunTable({ runs }: { runs: TestRunRow[] }) {
           </thead>
           <tbody>
             {visible.map((run, index) => {
-              const fpBreached = run.falsePositiveRate > FALSE_POSITIVE_THRESHOLD
+              const perf = performanceVerdict(
+                run.performanceBaselineOk,
+                run.performanceBaselineDelta,
+              )
+              const functionalRate =
+                run.functionalSmokeTotal > 0
+                  ? run.functionalSmokePassed / run.functionalSmokeTotal
+                  : null
+              // 运行中 / 排队中的样本还没跑完，低于 100% 不代表失败，只有终态才标红。
+              const functionalBreach =
+                functionalRate !== null &&
+                functionalRate < 1 &&
+                (run.status === 'FAILED' || run.status === 'ABORTED')
               return (
                 <tr
                   key={run.id}
@@ -95,17 +107,24 @@ export function RunTable({ runs }: { runs: TestRunRow[] }) {
                     </span>
                   </td>
                   <td className={cx(styles.num, styles.mono)}>{formatInt(run.legitSamples)}</td>
-                  <td className={cx(styles.num, styles.mono, fpBreached && styles.breach)}>
-                    {formatRate(run.falsePositiveRate)}
-                  </td>
                   <td
-                    className={cx(
-                      styles.num,
-                      styles.mono,
-                      run.detectionRate < 0.95 && run.detectionRate < 1 && styles.breach,
-                    )}
+                    className={cx(styles.num, styles.mono, functionalBreach && styles.breach)}
+                    title={
+                      functionalRate === null
+                        ? '本轮未执行功能冒烟'
+                        : `${run.functionalSmokePassed} / ${run.functionalSmokeTotal} 通过`
+                    }
                   >
-                    {formatPercent(run.detectionRate, 1)}
+                    {functionalRate === null ? '—' : formatPercent(functionalRate, 1)}
+                  </td>
+                  <td className={cx(styles.num, styles.perfCell)}>
+                    <span
+                      className={cx(styles.perf, styles[perf.tone])}
+                      title={`${perf.label} ${perf.deltaLabel}`}
+                    >
+                      {perf.label}
+                      <em>{perf.deltaLabel}</em>
+                    </span>
                   </td>
                   <td className={cx(styles.num, styles.mono)}>{formatInt(run.boundarySamples)}</td>
                   <td>

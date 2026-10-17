@@ -1,5 +1,5 @@
 import type {
-  CheatTier,
+  SampleTier,
   ClientSettings,
   ConsoleData,
   DetectionByCheckTier,
@@ -18,10 +18,13 @@ import type {
   ProbeSnapshot,
   RedScreenBroadcast,
   RunStatus,
+  SampleCategory,
+  SampleTypeRow,
   ScenarioRun,
   ServerHealth,
   ServerPluginConfig,
   SimPlayer,
+  TargetTypeRow,
   TestRunRow,
 } from '../types'
 
@@ -30,14 +33,18 @@ import type {
 
    口径（自下而上算出来，不是写死的展示数字）：
      今日运行      126 条
-     模拟合法玩家  32,480（= Σ 各行 legitSamples）
-     误报率        2 / 32480 ≈ 0.00616%（阈值 0.01%）
-     检出率        Σ 命中 / Σ 注入样本
+     模拟人数      32,480（= Σ 各行 legitSamples，行为基线样本）
+     功能通过率    Σ functionalSmokePassed / Σ functionalSmokeTotal
+     性能基线      Σ 逐行取最小 delta（一次劣化即整体劣化）
+     误报率        2 / 32480 ≈ 0.00616%（检测类专项，阈值 0.01%）
+     检出率        Σ 命中 / Σ 注入样本（检测类专项）
    --------------------------------------------------------------- */
 
 const RUN_COUNT = 126
 const SIMULATED_PLAYERS = 32_480
 const CHEAT_SPEC_COUNT = 144
+/** 12 类目标 × 4 档位 × 3 样本变体 */
+const SAMPLE_SPEC_COUNT = 144
 const FINGERPRINT_COUNT = 512
 const FP_PER_ROW = 1
 const FP_ROW_COUNT = 2
@@ -145,7 +152,7 @@ function buildRuns(): RawRun[] {
 
   const rows: RawRun[] = []
   for (let i = 0; i < RUN_COUNT; i += 1) {
-    // 误报发生在合法样本上，所以这两行固定走 legit 套件；
+    // 误报发生在行为基线样本上，所以这两行固定走 legit 套件；
     // 其余失败行走正常套件轮转，用来制造检出率的下探。
     const suite = fpIndexes.includes(i) ? 'legit' : SUITE_BY_INDEX[i % SUITE_BY_INDEX.length]
     const legitSamples = legit[i] as number
@@ -164,6 +171,28 @@ function buildRuns(): RawRun[] {
     const boundarySamples =
       suite === 'boundary' ? 96 + Math.floor(rand() * 128) : 24 + Math.floor(rand() * 40)
 
+    const status = statuses[i] as RunStatus
+
+    // 排队 / 跳过尚未执行功能冒烟，total 记 0 表示「不适用」，不能按 0% 计入通过率。
+    let functionalSmokePassed = 0
+    let functionalSmokeTotal = 0
+    if (status !== 'QUEUED' && status !== 'SKIPPED') {
+      functionalSmokeTotal = 48 + Math.floor(rand() * 48)
+      if (status === 'PASSED') functionalSmokePassed = functionalSmokeTotal
+      else if (status === 'FAILED') {
+        functionalSmokePassed = functionalSmokeTotal - (2 + Math.floor(rand() * 4))
+      } else if (status === 'RUNNING') {
+        functionalSmokePassed = functionalSmokeTotal - Math.floor(rand() * 2)
+      } else {
+        functionalSmokePassed = functionalSmokeTotal - (8 + Math.floor(rand() * 5))
+      }
+    }
+
+    // 一条明确的劣化样本，让性能基线卡能看到负向状态；其余在 ±1% 内波动。
+    let performanceBaselineDelta = -0.004 + rand() * 0.012
+    if (i === 7) performanceBaselineDelta = -0.021
+    else if (i === 19 || i === 44) performanceBaselineDelta = -0.009 - rand() * 0.004
+
     rows.push({
       id: `run-${(0x2f00 + i).toString(16)}`,
       target: `tgt-${(0x9000 + i * 7).toString(16)}`,
@@ -172,7 +201,11 @@ function buildRuns(): RawRun[] {
       falsePositiveRate: legitSamples === 0 ? 0 : falsePositives / legitSamples,
       detectionRate: cheatSamples === 0 ? 1 : detectedSamples / cheatSamples,
       boundarySamples,
-      status: statuses[i] as RunStatus,
+      functionalSmokePassed,
+      functionalSmokeTotal,
+      performanceBaselineOk: true,
+      performanceBaselineDelta,
+      status,
       platform: { id: pick(PLATFORMS) },
       startedAt: startedAt(i * 6 + Math.floor(rand() * 5)),
       durationMs: 18_000 + Math.floor(rand() * 96_000),
@@ -195,6 +228,18 @@ const aggregateFalsePositiveRate = totalFalsePositives / totalLegit
 const aggregateDetectionRate = totalDetected / totalCheat
 const passedRuns = rawRuns.filter((r) => r.status === 'PASSED').length
 
+const totalFunctionalSmoke = rawRuns.reduce((a, r) => a + r.functionalSmokeTotal, 0)
+const totalFunctionalPassed = rawRuns.reduce((a, r) => a + r.functionalSmokePassed, 0)
+const functionalPassRate =
+  totalFunctionalSmoke === 0 ? 1 : totalFunctionalPassed / totalFunctionalSmoke
+
+// 与 MetricAggregator.sum 同口径：布尔项取与，delta 取最小，一次劣化即整体劣化。
+const performanceBaselineOk = rawRuns.every((r) => r.performanceBaselineOk)
+const performanceBaselineDelta = rawRuns.reduce(
+  (min, r) => Math.min(min, r.performanceBaselineDelta),
+  rawRuns[0]?.performanceBaselineDelta ?? 0,
+)
+
 /** 去掉内部统计字段后的表格投影 */
 const runs: TestRunRow[] = rawRuns.map((r) => ({
   id: r.id,
@@ -204,6 +249,10 @@ const runs: TestRunRow[] = rawRuns.map((r) => ({
   falsePositiveRate: r.falsePositiveRate,
   detectionRate: r.detectionRate,
   boundarySamples: r.boundarySamples,
+  functionalSmokePassed: r.functionalSmokePassed,
+  functionalSmokeTotal: r.functionalSmokeTotal,
+  performanceBaselineOk: r.performanceBaselineOk,
+  performanceBaselineDelta: r.performanceBaselineDelta,
   status: r.status,
   platform: r.platform,
   startedAt: r.startedAt,
@@ -223,11 +272,11 @@ const CHECK_TIER_RATE: DetectionByCheckTier = {
   'Xray 透视': { MIN: 0.874, DEFAULT: 0.934, MAX: 0.962, HIDDEN: 0.803 },
 }
 
-const TIERS: readonly CheatTier[] = ['MIN', 'DEFAULT', 'MAX', 'HIDDEN']
+const TIERS: readonly SampleTier[] = ['MIN', 'DEFAULT', 'MAX', 'HIDDEN']
 
 function tierMeans(byCheck: DetectionByCheckTier): DetectionByTier {
   const checks = Object.values(byCheck)
-  const mean = (tier: CheatTier): number =>
+  const mean = (tier: SampleTier): number =>
     checks.reduce((a, c) => a + c[tier], 0) / (checks.length || 1)
   return {
     MIN: mean('MIN'),
@@ -238,6 +287,204 @@ function tierMeans(byCheck: DetectionByCheckTier): DetectionByTier {
 }
 
 const detectionByTier = tierMeans(CHECK_TIER_RATE)
+
+/* ---------------- 样本类型 × 档位断言结果 ---------------- */
+
+interface SampleSeed {
+  sampleType: string
+  category: SampleCategory
+  weight: number
+  rates: Record<SampleTier, number>
+}
+
+const TIER_WEIGHTS: Record<SampleTier, number> = {
+  MIN: 0.24,
+  DEFAULT: 0.34,
+  MAX: 0.22,
+  HIDDEN: 0.2,
+}
+
+// 功能类样本：五个大类各两个样本类型，权重合计 1。
+const FUNCTIONAL_SAMPLE_SEEDS: readonly SampleSeed[] = [
+  {
+    sampleType: '注册与配方',
+    category: 'content',
+    weight: 0.12,
+    rates: { MIN: 0.997, DEFAULT: 0.999, MAX: 1, HIDDEN: 0.995 },
+  },
+  {
+    sampleType: '生物与维度',
+    category: 'content',
+    weight: 0.1,
+    rates: { MIN: 0.994, DEFAULT: 0.998, MAX: 0.999, HIDDEN: 0.992 },
+  },
+  {
+    sampleType: '机器 tick',
+    category: 'tech',
+    weight: 0.12,
+    rates: { MIN: 0.991, DEFAULT: 0.997, MAX: 0.999, HIDDEN: 0.988 },
+  },
+  {
+    sampleType: '物流与配方同步',
+    category: 'tech',
+    weight: 0.1,
+    rates: { MIN: 0.996, DEFAULT: 0.999, MAX: 1, HIDDEN: 0.994 },
+  },
+  {
+    sampleType: '帧时间与渲染',
+    category: 'perf',
+    weight: 0.11,
+    rates: { MIN: 0.993, DEFAULT: 0.998, MAX: 0.999, HIDDEN: 0.99 },
+  },
+  {
+    sampleType: 'TPS 与内存',
+    category: 'perf',
+    weight: 0.09,
+    rates: { MIN: 0.988, DEFAULT: 0.996, MAX: 0.999, HIDDEN: 0.984 },
+  },
+  {
+    sampleType: '协议握手',
+    category: 'network',
+    weight: 0.1,
+    rates: { MIN: 0.997, DEFAULT: 1, MAX: 1, HIDDEN: 0.996 },
+  },
+  {
+    sampleType: '延迟与丢包',
+    category: 'network',
+    weight: 0.09,
+    rates: { MIN: 0.992, DEFAULT: 0.997, MAX: 0.999, HIDDEN: 0.989 },
+  },
+  {
+    sampleType: '异常输入',
+    category: 'anomaly',
+    weight: 0.09,
+    rates: { MIN: 0.978, DEFAULT: 0.991, MAX: 0.997, HIDDEN: 0.972 },
+  },
+  {
+    sampleType: '依赖与资源回退',
+    category: 'anomaly',
+    weight: 0.08,
+    rates: { MIN: 0.994, DEFAULT: 0.998, MAX: 1, HIDDEN: 0.991 },
+  },
+]
+
+// 检测类样本：按检出项归类，样本总和与运行表的注入样本严格对齐。
+const CHEAT_SAMPLE_SEEDS: readonly SampleSeed[] = [
+  {
+    sampleType: '移动类检测',
+    category: 'cheat',
+    weight: 0.32,
+    rates: { MIN: 0.962, DEFAULT: 0.989, MAX: 0.998, HIDDEN: 0.912 },
+  },
+  {
+    sampleType: '战斗类检测',
+    category: 'cheat',
+    weight: 0.3,
+    rates: { MIN: 0.97, DEFAULT: 0.992, MAX: 0.999, HIDDEN: 0.928 },
+  },
+  {
+    sampleType: '交互类检测',
+    category: 'cheat',
+    weight: 0.23,
+    rates: { MIN: 0.976, DEFAULT: 0.994, MAX: 1, HIDDEN: 0.941 },
+  },
+  {
+    sampleType: '透视类检测',
+    category: 'cheat',
+    weight: 0.15,
+    rates: { MIN: 0.95, DEFAULT: 0.984, MAX: 0.996, HIDDEN: 0.888 },
+  },
+]
+
+/** 最大余数法分配整数，保证总和恰好等于 total。 */
+function allocate(total: number, weights: readonly number[]): number[] {
+  const out = weights.map(() => 0)
+  if (total <= 0 || weights.length === 0) return out
+  const sum = weights.reduce((a, w) => a + w, 0)
+  if (sum <= 0) return out
+
+  const raw = weights.map((w) => (w / sum) * total)
+  raw.forEach((value, index) => {
+    out[index] = Math.floor(value)
+  })
+  let remainder = total - out.reduce((a, v) => a + v, 0)
+  const order = raw
+    .map((value, index) => ({ index, frac: value - Math.floor(value) }))
+    .sort((a, b) => b.frac - a.frac)
+  let cursor = 0
+  while (remainder > 0) {
+    const slot = order[cursor % order.length]
+    if (slot) out[slot.index] = (out[slot.index] ?? 0) + 1
+    remainder -= 1
+    cursor += 1
+  }
+  return out
+}
+
+/**
+ * 先生成各档位样本数，再把命中数微调到给定的总数。
+ * 命中数不允许超过样本数，因此逐格 +1 / -1，而不是直接按比例缩放。
+ */
+function buildSampleGroup(
+  seeds: readonly SampleSeed[],
+  totalSamples: number,
+  totalHits: number,
+): SampleTypeRow[] {
+  const samplesByType = allocate(
+    totalSamples,
+    seeds.map((seed) => seed.weight),
+  )
+  const cells: Array<{ seed: SampleSeed; tier: SampleTier; samples: number }> = []
+
+  seeds.forEach((seed, seedIndex) => {
+    const tierSamples = allocate(
+      samplesByType[seedIndex] ?? 0,
+      TIERS.map((tier) => TIER_WEIGHTS[tier]),
+    )
+    TIERS.forEach((tier, tierIndex) => {
+      cells.push({ seed, tier, samples: tierSamples[tierIndex] ?? 0 })
+    })
+  })
+
+  const hits = cells.map((cell) =>
+    Math.min(cell.samples, Math.round(cell.samples * cell.seed.rates[cell.tier])),
+  )
+  let diff = totalHits - hits.reduce((a, h) => a + h, 0)
+  let cursor = 0
+  let guard = 0
+  while (diff !== 0 && guard < cells.length * 2000) {
+    const index = cursor % cells.length
+    const cell = cells[index]
+    const current = hits[index] ?? 0
+    if (cell && diff > 0 && current < cell.samples) {
+      hits[index] = current + 1
+      diff -= 1
+    } else if (cell && diff < 0 && current > 0) {
+      hits[index] = current - 1
+      diff += 1
+    }
+    cursor += 1
+    guard += 1
+  }
+
+  return seeds.map((seed, seedIndex) => ({
+    sampleType: seed.sampleType,
+    category: seed.category,
+    tiers: TIERS.map((tier, tierIndex) => {
+      const cellIndex = seedIndex * TIERS.length + tierIndex
+      return {
+        tier,
+        hits: hits[cellIndex] ?? 0,
+        samples: cells[cellIndex]?.samples ?? 0,
+      }
+    }),
+  }))
+}
+
+const sampleTypeBreakdown: SampleTypeRow[] = [
+  ...buildSampleGroup(FUNCTIONAL_SAMPLE_SEEDS, totalFunctionalSmoke, totalFunctionalPassed),
+  ...buildSampleGroup(CHEAT_SAMPLE_SEEDS, totalCheat, totalDetected),
+]
 
 /* ---------------- 指标趋势 ---------------- */
 
@@ -402,24 +649,52 @@ const modules: ModuleHealth[] = [
 
 /* ---------------- 门禁 ---------------- */
 
-const gateFailures = rawRuns.filter(
-  (r) => r.falsePositives > 0 || r.detectionRate < DETECTION_THRESHOLD,
-)
+// 与 ThresholdGate 同口径：门禁判的是合计指标，不是单条运行。
+const gateViolations: ConsoleData['gate']['violations'] = []
 
-const gateViolations = gateFailures.map((r) => {
-  const fpBreach = r.falsePositives > 0
-  const actual = fpBreach ? r.falsePositiveRate : r.detectionRate
-  const threshold = fpBreach ? FALSE_POSITIVE_THRESHOLD : DETECTION_THRESHOLD
-  return {
-    metric: fpBreach ? 'falsePositiveRate' : 'detectionRate',
-    operator: fpBreach ? '<=' : '>=',
-    actual,
-    threshold,
-    message: fpBreach
-      ? `falsePositiveRate 实测 ${(actual * 100).toFixed(4)}% 超过上限 ${(threshold * 100).toFixed(4)}%（${r.id}）`
-      : `detectionRate 实测 ${(actual * 100).toFixed(2)}% 低于下限 ${(threshold * 100).toFixed(2)}%（${r.id}）`,
-  }
-})
+if (aggregateFalsePositiveRate > FALSE_POSITIVE_THRESHOLD) {
+  gateViolations.push({
+    metric: 'false_positive_rate',
+    operator: '<=',
+    actual: aggregateFalsePositiveRate,
+    threshold: FALSE_POSITIVE_THRESHOLD,
+    message: `检测类误报率 ${(aggregateFalsePositiveRate * 100).toFixed(4)}% 超过上限 ${(
+      FALSE_POSITIVE_THRESHOLD * 100
+    ).toFixed(4)}%`,
+  })
+}
+
+if (totalCheat > 0 && aggregateDetectionRate < DETECTION_THRESHOLD) {
+  gateViolations.push({
+    metric: 'detection_rate',
+    operator: '>=',
+    actual: aggregateDetectionRate,
+    threshold: DETECTION_THRESHOLD,
+    message: `检测类检出率 ${(aggregateDetectionRate * 100).toFixed(2)}% 低于下限 ${(
+      DETECTION_THRESHOLD * 100
+    ).toFixed(2)}%`,
+  })
+}
+
+if (totalFunctionalSmoke > 0 && functionalPassRate < 1) {
+  gateViolations.push({
+    metric: 'functional_smoke_pass_rate',
+    operator: '>=',
+    actual: functionalPassRate,
+    threshold: 1,
+    message: `功能通过率 ${(functionalPassRate * 100).toFixed(2)}% 低于门禁 100.00%（${totalFunctionalPassed}/${totalFunctionalSmoke} 通过）`,
+  })
+}
+
+if (performanceBaselineDelta < 0) {
+  gateViolations.push({
+    metric: 'performance_baseline_delta',
+    operator: '>=',
+    actual: performanceBaselineDelta,
+    threshold: 0,
+    message: `性能相对上一版本基线劣化 ${Math.abs(performanceBaselineDelta * 100).toFixed(2)}%（TPS 相对变化）`,
+  })
+}
 
 const gate: ConsoleData['gate'] = {
   passed: gateViolations.length === 0,
@@ -1188,18 +1463,126 @@ const modpackLogs: LogEntry[] = [
   },
 ]
 
+/* ---------------- 13.6 全类型目标矩阵 ---------------- */
+
+const targetTypes: TargetTypeRow[] = [
+  {
+    type: 'CONTENT',
+    label: '内容型模组',
+    testFocus: ['注册表条目可加载且无 ID 冲突', '物品 / 方块 / 生物属性与交互', '维度传送与存档兼容'],
+    frameworks: ['Fabric GameTest', '原版 /test 命令', 'spark'],
+    risks: ['注册表 ID 冲突或跨版本漂移', 'NBT 结构变更导致旧存档读不出', '生物 AI 造成 MSPT 尖峰'],
+    projects: ['Cobblemon', 'Create'],
+  },
+  {
+    type: 'TECH_AUTOMATION',
+    label: '科技·自动化',
+    testFocus: ['方块实体 tick 与能量网络', '大规模机器阵列的 TPS / MSPT', '配方同步与区块卸载回收'],
+    frameworks: ['spark', 'JFR', 'GameTest'],
+    risks: ['方块实体或区块卸载不回收导致泄漏', '配方 ID 冲突覆盖其他模组', '高频 tick 把 MSPT 推过 50ms'],
+    projects: ['Create', 'Mekanism'],
+  },
+  {
+    type: 'OPTIMIZATION_RENDER',
+    label: '优化·渲染',
+    testFocus: ['替换渲染管线后行为等价', '帧率 / 帧时间相对基线不劣化', '光影与资源包组合可加载'],
+    frameworks: ['spark', 'JFR', 'Sodium 调试 HUD'],
+    risks: ['mixin 注入点与其他优化模组冲突', '渲染线程与逻辑线程竞争', '驱动差异导致画面错误但无异常'],
+    projects: ['Sodium', 'Lithium'],
+  },
+  {
+    type: 'CLIENT_QOL',
+    label: '客户端增强·QoL',
+    testFocus: ['UI、按键绑定与配置持久化', '服务端模组与原版协议兼容', '分辨率与无障碍适配'],
+    frameworks: ['客户端 GameTest', 'Loom runClient', 'Mod Menu / Cloth Config'],
+    risks: ['客户端崩溃或黑屏', '客户端与服务端版本不匹配', '配置迁移丢失'],
+    projects: ['JEI', 'Jade', "Xaero's Minimap"],
+  },
+  {
+    type: 'SERVER_PLUGIN',
+    label: '服务端专用',
+    testFocus: ['命令、权限与事件监听语义', '插件启停、重载与多实例部署', '并发玩家下状态不丢失'],
+    frameworks: ['MockBukkit', 'WatchWolf', 'Plugwright', 'spark'],
+    risks: ['主线程阻塞或同步 IO', '事件优先级与取消语义错误', '监听器未注销造成内存泄漏'],
+    projects: ['MockBukkit', 'WatchWolf', 'Plugwright'],
+  },
+  {
+    type: 'CROSS_LOADER_LIBRARY',
+    label: '跨加载器库',
+    testFocus: ['同一 API 在多加载器上行为一致', '版本范围与传递依赖解析', '下游模组装配后可启动'],
+    frameworks: ['Architectury API', '多加载器构建矩阵', '各加载器 GameTest'],
+    risks: ['映射差异导致平台分支漂移', '加载器 API 变更', '依赖被降级或重复打包'],
+    projects: ['Architectury API', 'Cloth Config', 'TerraBlender'],
+  },
+  {
+    type: 'RESOURCE_PACK_SHADER',
+    label: '资源包与光影',
+    testFocus: ['pack_format 与版本匹配', '纹理、模型、动画路径可解析', '加载失败回退原版资源'],
+    frameworks: ['Blockbench', '原版资源包日志', 'Iris + Sodium 矩阵'],
+    risks: ['pack_format 不匹配被静默忽略', '纹理图集溢出或内存暴涨', '光影与渲染模组版本冲突'],
+    projects: ['Fresh Animations', 'Complementary Shaders', 'Blockbench'],
+  },
+  {
+    type: 'DATAPACK',
+    label: '数据包',
+    testFocus: ['pack_format 与 data 命名空间正确', '函数、进度、战利品表可加载', '/reload 幂等且不重复注册'],
+    frameworks: ['PackTest', '原版 /test', 'pack format 对照表'],
+    risks: ['pack_format 跨版本失效', '函数每 tick 执行造成卡顿', '标签覆盖导致其他数据包失效'],
+    projects: ['Dungeons and Taverns', 'Terralith', 'PackTest'],
+  },
+  {
+    type: 'MODPACK',
+    label: '整合包',
+    testFocus: ['依赖解析与版本锁定可复现', '启动时间、内存与包体大小', '客户端 / 服务端清单一致'],
+    frameworks: ['packwiz', 'Prism / MultiMC', 'spark'],
+    risks: ['传递依赖冲突或重复模组', '客户端专用模组混进服务端', '版本漂移使问题无法复现'],
+    projects: ['Fabulously Optimized', 'packwiz'],
+  },
+  {
+    type: 'BEDROCK_ADDON',
+    label: '基岩版 Addon',
+    testFocus: ['manifest UUID、版本与 min_engine_version', '行为包 / 资源包配对', '实体、方块、物品组件 schema'],
+    frameworks: ['bridge. v2', 'Blockbench', 'Content Log'],
+    risks: ['manifest 版本不匹配导致包不加载', '组件 schema 跨版本变更', '行为包与资源包 UUID 冲突'],
+    projects: ['bridge.', 'Blockbench', 'Geyser'],
+  },
+  {
+    type: 'NETWORK_MULTIPLAYER',
+    label: '网络·多人',
+    testFocus: ['协议版本、握手与登录流程', '代理转发（Velocity / BungeeCord）', '延迟、丢包与重排下状态一致'],
+    frameworks: ['NetworkModel 网络条件注入', 'Geyser / Floodgate', 'Simple Voice Chat'],
+    risks: ['协议版本不兼容', '代理转发丢失玩家信息', 'UDP 端口或防火墙未放行'],
+    projects: ['Simple Voice Chat', 'Geyser', 'Floodgate'],
+  },
+  {
+    type: 'WORLDGEN',
+    label: '世界生成类',
+    testFocus: ['生物群系 / 结构注册与 seed 可复现', '区块生成耗时分位', '多模组 biome 与结构冲突'],
+    frameworks: ['spark', 'TerraBlender', 'Chunky'],
+    risks: ['世界生成死循环或卡区块', 'biome / 结构覆盖冲突', '预生成时内存暴涨'],
+    projects: ['Terralith', "Biomes O' Plenty", 'TerraBlender'],
+  },
+]
+
 /* ---------------- 汇总 ---------------- */
 
 export const consoleData: ConsoleData = {
   cards: {
     todayRuns: RUN_COUNT,
     simulatedPlayers: totalLegit,
+    sampleSpecCount: SAMPLE_SPEC_COUNT,
+    functionalPassRate,
+    performanceBaselineOk,
+    performanceBaselineDelta,
+    gatePassed: passedRuns,
+    gateTotal: RUN_COUNT,
     cheatSpecCount: CHEAT_SPEC_COUNT,
     falsePositiveRate: aggregateFalsePositiveRate,
     detectionRate: aggregateDetectionRate,
-    gatePassed: passedRuns,
   },
   runs,
+  sampleTypeBreakdown,
+  targetTypes,
   detectionByCheckTier: CHECK_TIER_RATE,
   detectionByTier,
   falsePositiveHistory,

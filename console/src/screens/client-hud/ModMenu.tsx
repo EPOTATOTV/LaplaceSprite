@@ -25,7 +25,7 @@ const TABS: Array<{ key: TabKey; label: string; icon: LucideIcon }> = [
 
 const BEHAVIOR_OPTIONS: BehaviorProfile[] = ['WALK', 'RUN', 'SPRINT', 'SNEAK', 'JUMP', 'MINE', 'PLACE', 'CLICKING']
 const CLICK_DISTRIBUTIONS = ['uniform-1-12', 'butterfly', 'drag'] as const
-const CHEAT_GROUPS = ['合法基线', '作弊注入', '阈值边界'] as const
+const CHEAT_GROUPS = ['行为基线', '作弊注入', '阈值边界'] as const
 
 const BATCH_LABEL: Record<BatchPattern, string> = {
   NONE: '无批处理',

@@ -1,0 +1,150 @@
+.wrap {
+  overflow-x: auto;
+  border-radius: var(--r-3);
+  border: 1px solid var(--ink-100);
+  background-color: color-mix(in srgb, var(--paper) 42%, transparent);
+}
+
+.table {
+  width: 100%;
+  min-width: 840px;
+  table-layout: fixed;
+  font-size: var(--fs-xs);
+}
+
+.table thead th {
+  padding: 8px var(--s-3);
+  text-align: left;
+  font-size: var(--fs-micro);
+  font-weight: 560;
+  letter-spacing: 0.06em;
+  color: var(--ink-400);
+  background-color: var(--glass-focus-bg);
+  border-bottom: 1px solid var(--ink-150);
+  white-space: nowrap;
+}
+
+/* 类型列与代表项目列定宽，测试重点 / 风险列吃掉剩余空间 */
+.table thead th:nth-child(1) {
+  width: 140px;
+}
+
+.table thead th:nth-child(3) {
+  width: 172px;
+}
+
+.table thead th:nth-child(4) {
+  width: 31%;
+}
+
+.table tbody tr {
+  animation: lc-rise var(--d-3) var(--ease-out) backwards;
+  transition: background-color var(--d-2) var(--ease-out);
+}
+
+.table tbody tr:hover {
+  background-color: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+.table tbody th,
+.table tbody td {
+  padding: 9px var(--s-3);
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--ink-100);
+}
+
+.table tbody tr:last-child th,
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table tbody th {
+  font-weight: 600;
+  color: var(--ink-800);
+}
+
+.typeName {
+  display: block;
+  line-height: 1.35;
+}
+
+.typeCode {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--ink-300);
+}
+
+.focus,
+.risks {
+  display: grid;
+  gap: 2px;
+}
+
+.focus li,
+.risks li {
+  position: relative;
+  padding-left: 10px;
+  line-height: 1.45;
+  color: var(--ink-600);
+}
+
+.focus li::before,
+.risks li::before {
+  content: '';
+  position: absolute;
+  left: 1px;
+  top: 0.62em;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+}
+
+.focus li::before {
+  background-color: var(--accent);
+}
+
+.risks li::before {
+  background-color: var(--warn-500);
+}
+
+.tools {
+  margin-top: 5px;
+  font-size: var(--fs-micro);
+  line-height: 1.45;
+  color: var(--ink-400);
+}
+
+.tools span {
+  margin-right: 6px;
+  padding: 0 5px;
+  border-radius: var(--r-1);
+  border: 1px solid var(--ink-150);
+  color: var(--ink-400);
+}
+
+.projects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.project {
+  padding: 2px 6px;
+  border-radius: var(--r-1);
+  border: 1px solid var(--ink-150);
+  background-color: var(--ink-050);
+  font-size: var(--fs-micro);
+  line-height: 1.4;
+  color: var(--ink-600);
+}
+
+/* 共享关键帧就地声明：CSS Modules 会把 animation 名改写成哈希名，引用全局 @keyframes 会解析不到、动画静默失效。 */
+@keyframes lc-rise {
+  from { opacity: 0; transform: translate3d(0, 8px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}

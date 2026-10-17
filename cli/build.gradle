@@ -16,6 +16,11 @@ dependencies {
     implementation project(':profile')
     implementation project(':crashdiag')
     implementation project(':protocol')
+    implementation project(':datapack')
+    implementation project(':loadtest')
+    implementation project(':replay')
+    implementation project(':mixin')
+    implementation project(':render')
     implementation project(':report')
 
     implementation "info.picocli:picocli:${rootProject.findProperty('picocliVersion')}"

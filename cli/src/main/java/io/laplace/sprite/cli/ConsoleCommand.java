@@ -1,8 +1,8 @@
 package io.laplace.sprite.cli;
 
-import io.laplace.sprite.cheats.CheatMatrix;
+import io.laplace.sprite.cheats.AnomalyMatrix;
 import io.laplace.sprite.core.engine.MetricAggregator;
-import io.laplace.sprite.core.model.CheatTierName;
+import io.laplace.sprite.core.model.SampleTierName;
 import io.laplace.sprite.core.model.LiveViewGrid;
 import io.laplace.sprite.core.model.LogEntry;
 import io.laplace.sprite.core.model.ModuleHealth;
@@ -64,7 +64,7 @@ final class ConsoleCommand implements Callable<Integer> {
         List<LogEntry> logs = new LogStreamWriter(ws.resolve("logs.log")).tail(200);
         List<ModuleHealth> modules = moduleHealth(ws, runs);
         Thresholds thresholds = Thresholds.defaults();
-        int cheatSpecs = new CheatMatrix().totalConfigurations();
+        int cheatSpecs = new AnomalyMatrix().totalConfigurations();
         int fingerprints = new ProcessScannerStub().fingerprintCount();
 
         ConsoleDataBuilder builder = new ConsoleDataBuilder();
@@ -81,12 +81,12 @@ final class ConsoleCommand implements Callable<Integer> {
 
         var writer = spec.commandLine().getOut();
         writer.printf("已导出控制台数据 %s%n", target.toAbsolutePath());
-        writer.printf("  运行 %d 次 · 模拟人数 %d · CheatSpec %d · 进程指纹 %d%n", data.cards().todayRuns(),
+        writer.printf("  运行 %d 次 · 模拟人数 %d · TestSpec %d · 进程指纹 %d%n", data.cards().todayRuns(),
                 data.cards().simulatedPlayers(), data.cards().cheatSpecCount(), fingerprints);
         writer.printf("  误报率 %.6f%% · 检出率 %.4f%% · 门禁 %s%n", data.cards().falsePositiveRate() * 100,
                 data.cards().detectionRate() * 100, data.gate().passed() ? "通过" : "未通过");
         writer.printf("  检出矩阵维度：%d 个检测项 × %d 个档位%n", data.detectionByCheckTier().size(),
-                CheatTierName.values().length);
+                SampleTierName.values().length);
         return 0;
     }
 
