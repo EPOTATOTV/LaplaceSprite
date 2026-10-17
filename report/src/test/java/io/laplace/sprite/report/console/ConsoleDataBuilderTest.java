@@ -1,6 +1,6 @@
 package io.laplace.sprite.report.console;
 
-import io.laplace.sprite.core.model.CheatTierName;
+import io.laplace.sprite.core.model.SampleTierName;
 import io.laplace.sprite.core.model.CheatType;
 import io.laplace.sprite.core.model.DetectionBreakdown;
 import io.laplace.sprite.core.model.LiveViewGrid;
@@ -48,7 +48,7 @@ class ConsoleDataBuilderTest {
     private static TestRun run(String id, int legit, int falsePositives, int cheat, int detected) {
         MetricSet metrics = new MetricSet(legit, falsePositives, cheat, detected, 0, 0, true, 0.75);
         DetectionBreakdown breakdown = new DetectionBreakdown(new LinkedHashMap<>(),
-                new EnumMap<>(CheatTierName.class), new EnumMap<>(CheatType.class), new EnumMap<>(CheatType.class));
+                new EnumMap<>(SampleTierName.class), new EnumMap<>(CheatType.class), new EnumMap<>(CheatType.class));
         return new TestRun(id, "detection-engine", "cheat",
                 PlatformKey.of(PlatformFamily.PAPER, "1.20.4"), metrics, breakdown,
                 List.of(), List.of(), RunStatus.PASSED, 1L, Instant.now(), 100L);

@@ -1,6 +1,6 @@
 package io.laplace.sprite.report;
 
-import io.laplace.sprite.core.model.CheatTierName;
+import io.laplace.sprite.core.model.SampleTierName;
 import io.laplace.sprite.core.model.CheatType;
 import io.laplace.sprite.core.model.DetectionBreakdown;
 import io.laplace.sprite.core.model.MetricSet;
@@ -49,15 +49,15 @@ class ReportGeneratorTest {
     }
 
     private static List<TestRun> runs() {
-        Map<String, Map<CheatTierName, Integer>> hitsByCheckTier = new LinkedHashMap<>();
-        Map<CheatTierName, Integer> speedHits = new EnumMap<>(CheatTierName.class);
-        speedHits.put(CheatTierName.MAX, 18);
-        speedHits.put(CheatTierName.DEFAULT, 2);
+        Map<String, Map<SampleTierName, Integer>> hitsByCheckTier = new LinkedHashMap<>();
+        Map<SampleTierName, Integer> speedHits = new EnumMap<>(SampleTierName.class);
+        speedHits.put(SampleTierName.MAX, 18);
+        speedHits.put(SampleTierName.DEFAULT, 2);
         hitsByCheckTier.put("speed", speedHits);
 
-        Map<CheatTierName, Integer> samplesByTier = new EnumMap<>(CheatTierName.class);
-        samplesByTier.put(CheatTierName.MAX, 18);
-        samplesByTier.put(CheatTierName.DEFAULT, 2);
+        Map<SampleTierName, Integer> samplesByTier = new EnumMap<>(SampleTierName.class);
+        samplesByTier.put(SampleTierName.MAX, 18);
+        samplesByTier.put(SampleTierName.DEFAULT, 2);
 
         Map<CheatType, Integer> hitsByType = new EnumMap<>(CheatType.class);
         hitsByType.put(CheatType.SPEED, 20);

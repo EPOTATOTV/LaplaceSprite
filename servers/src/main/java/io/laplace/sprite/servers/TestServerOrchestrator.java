@@ -79,7 +79,8 @@ public final class TestServerOrchestrator {
                     : agent.current();
             health.add(new ServerHealth(spec.instanceId(), spec.platform(), sample.tps(), sample.mspt(),
                     sample.heapUsedMb(), sample.heapMaxMb(), sample.connections(), 0, spec.pluginVersion(),
-                    driver.status(spec.instanceId())));
+                    driver.status(spec.instanceId()), sample.connections(), sample.bandwidthKbps(),
+                    sample.chunksLoaded(), sample.entities(), sample.pingP50Ms(), sample.pingP95Ms()));
         }
         return List.copyOf(health);
     }

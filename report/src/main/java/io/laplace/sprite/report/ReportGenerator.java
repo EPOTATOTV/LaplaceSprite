@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.util.RawValue;
 import io.laplace.sprite.core.engine.MetricAggregator;
 import io.laplace.sprite.core.engine.ThresholdGate;
 import io.laplace.sprite.core.io.Json;
-import io.laplace.sprite.core.model.CheatTierName;
+import io.laplace.sprite.core.model.SampleTierName;
 import io.laplace.sprite.core.model.CheatType;
 import io.laplace.sprite.core.model.GateResult;
 import io.laplace.sprite.core.model.MetricSet;
@@ -111,8 +111,8 @@ public final class ReportGenerator {
 
         md.append("## 检出率 · 按档位\n\n");
         md.append("| 档位 | 检出率 |\n| --- | ---: |\n");
-        Map<CheatTierName, Double> byTier = MetricAggregator.detectionRateByTier(runs);
-        for (CheatTierName tier : CheatTierName.values()) {
+        Map<SampleTierName, Double> byTier = MetricAggregator.detectionRateByTier(runs);
+        for (SampleTierName tier : SampleTierName.values()) {
             Double rate = byTier.get(tier);
             if (rate != null) {
                 md.append("| ").append(tier).append(" | ").append(pct(rate)).append(" |\n");
@@ -122,10 +122,10 @@ public final class ReportGenerator {
 
         md.append("## 检出率 · 按检测项 × 档位\n\n");
         md.append("| 检测项 | MIN | DEFAULT | MAX | HIDDEN |\n| --- | ---: | ---: | ---: | ---: |\n");
-        Map<String, Map<CheatTierName, Double>> byCheck = MetricAggregator.detectionRateByCheck(runs);
-        for (Map.Entry<String, Map<CheatTierName, Double>> entry : byCheck.entrySet()) {
+        Map<String, Map<SampleTierName, Double>> byCheck = MetricAggregator.detectionRateByCheck(runs);
+        for (Map.Entry<String, Map<SampleTierName, Double>> entry : byCheck.entrySet()) {
             md.append("| ").append(entry.getKey());
-            for (CheatTierName tier : CheatTierName.values()) {
+            for (SampleTierName tier : SampleTierName.values()) {
                 Double rate = entry.getValue().get(tier);
                 md.append(" | ").append(rate == null ? "-" : pct(rate));
             }
@@ -159,8 +159,8 @@ public final class ReportGenerator {
     public String toHtml(List<TestRun> runs, List<ReportSection> sections) {
         MetricSet total = MetricAggregator.sum(runs);
         GateResult gate = new ThresholdGate().evaluate(total, Thresholds.defaults());
-        Map<CheatTierName, Double> byTier = MetricAggregator.detectionRateByTier(runs);
-        Map<String, Map<CheatTierName, Double>> byCheck = MetricAggregator.detectionRateByCheck(runs);
+        Map<SampleTierName, Double> byTier = MetricAggregator.detectionRateByTier(runs);
+        Map<String, Map<SampleTierName, Double>> byCheck = MetricAggregator.detectionRateByCheck(runs);
         Map<CheatType, Double> byType = MetricAggregator.detectionRateByCheatType(runs);
 
         StringBuilder h = new StringBuilder();
@@ -221,7 +221,7 @@ public final class ReportGenerator {
         h.append("</tbody>\n</table>\n</section>\n");
 
         h.append("<section class=\"panel\">\n<h2>检出率 · 按档位</h2>\n<div class=\"bars\">\n");
-        for (CheatTierName tier : CheatTierName.values()) {
+        for (SampleTierName tier : SampleTierName.values()) {
             Double rate = byTier.get(tier);
             if (rate == null) {
                 continue;
@@ -232,13 +232,13 @@ public final class ReportGenerator {
 
         h.append("<section class=\"panel\">\n<h2>检出率 · 按检测项 × 档位</h2>\n<table class=\"matrix\">\n")
                 .append("<thead><tr><th>检测项</th>");
-        for (CheatTierName tier : CheatTierName.values()) {
+        for (SampleTierName tier : SampleTierName.values()) {
             h.append("<th class=\"num\">").append(tier).append("</th>");
         }
         h.append("</tr></thead>\n<tbody>\n");
-        for (Map.Entry<String, Map<CheatTierName, Double>> entry : byCheck.entrySet()) {
+        for (Map.Entry<String, Map<SampleTierName, Double>> entry : byCheck.entrySet()) {
             h.append("<tr><td>").append(esc(entry.getKey())).append("</td>");
-            for (CheatTierName tier : CheatTierName.values()) {
+            for (SampleTierName tier : SampleTierName.values()) {
                 Double rate = entry.getValue().get(tier);
                 h.append("<td class=\"num\">");
                 if (rate == null) {

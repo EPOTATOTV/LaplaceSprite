@@ -1,6 +1,7 @@
 package io.laplace.sprite.servers;
 
 import io.laplace.sprite.core.model.MetricSample;
+import io.laplace.sprite.core.model.NetworkLatencyDistribution;
 
 import java.time.Instant;
 import java.util.List;
@@ -112,6 +113,27 @@ public final class MetricsAgent implements AutoCloseable {
     /** 拐点采样（12.3 ⑤）：TPS < 20.0 或 MSPT > 50ms。 */
     public List<MetricSample> kneePoints() {
         return history.stream().filter(MetricSample::knee).toList();
+    }
+
+    /**
+     * 跨采样窗口的网络延迟分布。
+     *
+     * <p>每个窗口只上报 P50/P95，原始 Ping 样本没有随 MetricSample 保留，因此无法重新算分位；
+     * 这里取所有已测窗口的最大值，作为最差窗口口径交给 {@code LatencyGate}。</p>
+     */
+    public NetworkLatencyDistribution latencyDistribution() {
+        double p50 = 0.0;
+        double p95 = 0.0;
+        int measured = 0;
+        for (MetricSample sample : history) {
+            if (sample.hasLatencySample()) {
+                p50 = Math.max(p50, sample.pingP50Ms());
+                p95 = Math.max(p95, sample.pingP95Ms());
+                measured++;
+            }
+        }
+        return measured == 0 ? NetworkLatencyDistribution.empty()
+                : new NetworkLatencyDistribution(p50, p95, measured);
     }
 
     public int sampleCount() {
