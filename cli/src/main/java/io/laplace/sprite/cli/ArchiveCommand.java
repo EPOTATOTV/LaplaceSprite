@@ -4,6 +4,7 @@ import io.laplace.sprite.core.model.EvidenceRecord;
 import io.laplace.sprite.core.model.RegressionCase;
 import io.laplace.sprite.report.EvidenceChainVerifier;
 import io.laplace.sprite.report.EvidenceVault;
+import io.laplace.sprite.report.LocalMirrorRemoteStore;
 import io.laplace.sprite.report.RegressionLibrary;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -33,6 +34,15 @@ final class ArchiveCommand implements Callable<Integer> {
 
     @Option(names = "--verify-chain", description = "校验证据链 HMAC（防删改留痕）")
     boolean verifyChain;
+
+    @Option(names = "--sync-remote", description = "把本地证据同步到远端存储（默认本地镜像目录）")
+    boolean syncRemote;
+
+    @Option(names = "--verify-remote", description = "校验远端副本与链上 payloadHash 是否一致")
+    boolean verifyRemote;
+
+    @Option(names = "--remote-dir", description = "远端镜像目录，默认 <workspace>/evidence-remote")
+    Path remoteDir;
 
     @Option(names = "--limit", defaultValue = "50", description = "最多列出条数")
     int limit;
@@ -66,10 +76,34 @@ final class ArchiveCommand implements Callable<Integer> {
             return verification.valid() ? 0 : 1;
         }
 
+        if (syncRemote || verifyRemote) {
+            Path mirror = remoteDir != null ? remoteDir : ws.resolve("evidence-remote");
+            var store = new LocalMirrorRemoteStore(mirror);
+            if (syncRemote) {
+                var report = vault.syncRemote(store);
+                out.printf("远端同步 %s · 尝试 %d · 上传 %d · 跳过 %d · 失败 %d%n", mirror.toAbsolutePath(),
+                        report.attempted(), report.uploaded(), report.skipped(), report.failed());
+                report.failures().forEach(failure -> out.println("  - " + failure));
+                if (report.failed() > 0) {
+                    return 1;
+                }
+            }
+            if (verifyRemote) {
+                var verification = vault.verifyRemote(store);
+                out.printf("远端校验 %s · 检查 %d · 一致 %d · 不一致 %d · 缺失 %d%n",
+                        verification.consistent() ? "通过" : "未通过", verification.checked(),
+                        verification.matched(), verification.mismatched(), verification.missing());
+                verification.failures().forEach(failure -> out.println("  - " + failure));
+                return verification.consistent() ? 0 : 1;
+            }
+            return 0;
+        }
+
         List<EvidenceRecord> records = runId == null || runId.isBlank()
                 ? vault.all()
                 : vault.byRun(runId);
-        out.printf("证据库 %s（%d 条%s）%n", ws.resolve("evidence").toAbsolutePath(), records.size(),
+        out.printf("证据库 %s（本地 %d 条 · 已上云 %d 条%s）%n", ws.resolve("evidence").toAbsolutePath(),
+                records.size(), vault.remoteCount(),
                 runId == null || runId.isBlank() ? "" : "，运行 " + runId);
         records.stream()
                 .sorted(Comparator.comparing(EvidenceRecord::createdAt).reversed())

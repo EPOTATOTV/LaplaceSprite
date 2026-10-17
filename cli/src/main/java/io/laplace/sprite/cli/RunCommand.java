@@ -2,6 +2,12 @@ package io.laplace.sprite.cli;
 
 import io.laplace.sprite.adapters.AdapterRegistryFactory;
 import io.laplace.sprite.adapters.sim.SimAdapter;
+import io.laplace.sprite.cheats.CheatCatalog;
+import io.laplace.sprite.cheats.report.BypassAnalyzer;
+import io.laplace.sprite.cheats.report.BypassList;
+import io.laplace.sprite.cheats.report.DetectionRateReport;
+import io.laplace.sprite.cheats.report.DetectionRateReportBuilder;
+import io.laplace.sprite.core.engine.ExemptionPolicy;
 import io.laplace.sprite.core.engine.Orchestrator;
 import io.laplace.sprite.core.engine.RunRequest;
 import io.laplace.sprite.core.engine.Runner;
@@ -81,6 +87,13 @@ final class RunCommand implements Callable<Integer> {
     @Option(names = "--coverage", defaultValue = "0", description = "核心模块行覆盖率（JaCoCo 回填）")
     double coverage;
 
+    @Option(names = "--exemptions", defaultValue = "CREATIVE,SPECTATOR,ALLOW_FLIGHT,JOIN_GRACE",
+            description = "误报豁免规则（逗号分隔）；传 none 关闭全部豁免")
+    String exemptions;
+
+    @Option(names = "--join-grace-ticks", defaultValue = "100", description = "开局缓冲期 tick 数")
+    int joinGraceTicks;
+
     @Option(names = "--workspace", description = "工作目录，默认 build/laplace")
     Path workspace;
 
@@ -124,8 +137,11 @@ final class RunCommand implements Callable<Integer> {
         String id = runId != null && !runId.isBlank() ? runId
                 : "run-" + DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(LocalDateTime.now());
         Thresholds thresholds = Thresholds.defaults();
+        ExemptionPolicy exemptionPolicy = "none".equalsIgnoreCase(exemptions.trim())
+                ? ExemptionPolicy.none()
+                : ExemptionPolicy.parse(exemptions, joinGraceTicks);
         RunRequest request = new RunRequest(id, targetId, suite.toLowerCase(java.util.Locale.ROOT), key,
-                seed, thresholds, parallel, coverage);
+                seed, thresholds, parallel, coverage, exemptionPolicy);
 
         Orchestrator orchestrator = new Orchestrator(new Runner(), AdapterRegistryFactory.defaultRegistry());
         TestRun run = orchestrator.runSuite(request, scenario, sessions, new SimAdapter());
@@ -136,10 +152,18 @@ final class RunCommand implements Callable<Integer> {
         accumulated.add(run);
         Path reportDir = new ReportGenerator().write(ws.resolve("report"), accumulated);
 
+        // 4.2 输出：检出率三视图 + 绕过清单，随报告一起归档。
+        CheatCatalog catalog = new CheatCatalog();
+        DetectionRateReport rateReport = new DetectionRateReportBuilder().build(run, catalog);
+        BypassList bypass = new BypassAnalyzer().analyze(run, catalog);
+        write(reportDir.resolve("detection-rate.md"), rateReport.toMarkdown());
+        write(reportDir.resolve("bypass-list.md"), bypass.toMarkdown());
+
         EvidenceVault vault = new EvidenceVault(ws.resolve("evidence"));
         vault.archive(run.id(), "run", Json.write(run), "运行记录");
         run.flags().forEach(flag -> vault.archive(run.id(), "flag", flag.toString(),
-                flag.falsePositive() ? "误报明细" : "检出明细"));
+                flag.isExempted() ? "豁免明细（" + flag.exemption() + "）"
+                        : flag.falsePositive() ? "误报明细" : "检出明细"));
 
         RegressionLibrary library = new RegressionLibrary(ws.resolve("regression.json"));
         for (FlagEvent fp : run.falsePositives()) {
@@ -153,7 +177,7 @@ final class RunCommand implements Callable<Integer> {
         if (json) {
             spec.commandLine().getOut().println(Json.write(run));
         } else {
-            printSummary(run, gate, reportDir, vault.size(), library.size());
+            printSummary(run, gate, reportDir, vault.size(), library.size(), bypass.size());
         }
         return gate.passed() ? 0 : 1;
     }
@@ -166,16 +190,28 @@ final class RunCommand implements Callable<Integer> {
         return GateCommand.readRuns(reportPath);
     }
 
-    private void printSummary(TestRun run, GateResult gate, Path reportDir, int evidence, int regressions) {
+    private static void write(Path target, String content) {
+        try {
+            java.nio.file.Files.createDirectories(target.getParent());
+            java.nio.file.Files.writeString(target, content, java.nio.charset.StandardCharsets.UTF_8);
+        } catch (java.io.IOException ex) {
+            throw new java.io.UncheckedIOException(ex);
+        }
+    }
+
+    private void printSummary(TestRun run, GateResult gate, Path reportDir, int evidence, int regressions,
+                              int bypasses) {
         var out = spec.commandLine().getOut();
         out.printf("运行 %s（目标 %s / 套件 %s / 平台 %s）%n", run.id(), run.target(), run.suite(),
                 run.platform() == null ? "in-process" : run.platform().id());
         out.printf("  合法样本 %d · 误报 %d · 误报率 %.6f%%%n", run.metrics().legitPlayers(),
                 run.metrics().falsePositives(), run.metrics().falsePositiveRate() * 100);
+        out.printf("  豁免 flag %d 条（不计误报，已进证据链）%n", run.exemptedFlags().size());
         out.printf("  作弊样本 %d · 检出 %d · 检出率 %.4f%%%n", run.metrics().cheatSamples(),
                 run.metrics().detectedSamples(), run.metrics().detectionRate() * 100);
         out.printf("  边界样本 %d · 符合预期 %d%n", run.metrics().boundarySamples(),
                 run.metrics().boundaryPassed());
+        out.printf("  绕过项 %d 条（已实现但被绕过，见 bypass-list.md）%n", bypasses);
         out.printf("  状态 %s · 耗时 %d ms · 证据 %d 条 · 回归库 %d 条%n", run.status(),
                 run.durationMs(), evidence, regressions);
         out.printf("  报告目录 %s%n", reportDir.toAbsolutePath());
