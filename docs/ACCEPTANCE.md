@@ -72,15 +72,31 @@
 ## 五、单元测试与构建
 
 ```
-testcases=423 suites=83     全部通过（gradle test --rerun-tasks）
+testcases=498 suites=94     全部通过（gradle test）
 main-java=375  all-java=460
 ```
 
 - `gradle build` 通过，JaCoCo 报告生成于各模块 `build/reports/jacoco/`。
 - `console`：`npx tsc --noEmit` 无错误，`npm run lint` 零告警，`npm run build` 成功。
 - `samples/extract/extract_cheat_configs.py` 在合成样本上跑通，产出 CheatSpec 草案。
+- `core` 之前没有任何单元测试，本轮补上 `ExemptionPolicyTest`（9 个用例，含 Runner 集成）。
 
-## 六、未验证项与风险
+## 六、本轮补齐的文档要求（复核 v1.1.0 时发现 7 处「文档有、代码无」）
+
+复核 §4.1 / §4.2 / §4.6 / §12.2 / §14.5 / §14.6 / §14.7 时发现以下能力只有文档描述、代码里并不存在，本轮全部补上：
+
+| 缺口 | 文档依据 | 补齐内容 | 实测 |
+|-|-|-|-|
+| 误报豁免规则 | §4.1「创造/旁观/允许飞行/开局缓冲期/其它插件传送与击退不计误报（可配置）」 | `ExemptionRule` / `SessionContext` / `ExemptionPolicy`；`Runner` 在计数前判定；`run --exemptions` 可配 | 9 个用例通过；默认合法基准仍 0 误报、`--exemptions none` 下同样 0（默认队列无豁免触发） |
+| 检出率三视图 | §4.2「按检测项 / 按客户端 / 按档位三视图」 | `DetectionRateReport` + 三视图 Markdown，落 `report/detection-rate.md` | 实测「总样本 36，命中 36，100.0%」；修正了此前「命中 45 / 125%」的错口径 |
+| 绕过清单 | §4.2「已实现但被绕过的检测项 → backlog」 | `BypassAnalyzer` / `BypassList`，分「已实现但被绕过」与「引擎尚未实现」两节，落 `report/bypass-list.md` | 全档检出时 0 条；只跑单档时不再误报未注入档位为绕过 |
+| 证据可上云 | §4.6「本地 + 可上云存储」 | `EvidenceRemoteStore` / `LocalMirrorRemoteStore` / `HttpRemoteStore`（S3 兼容）+ `syncRemote` / `verifyRemote` | 实测同步 92/92、校验 92/92 一致；同步后 HMAC 链仍通过 |
+| SSH / Docker API 编排 | §12.2「编排控制（SSH / Docker API）」 | `SshCommandDriver` + `DockerApiDriver` + `ServerDriverKind` 工厂 | 请求/参数渲染与降级路径有测试；**未对真实主机执行** |
+| 装配流水线五步 | §14.5 resolve / layout / install / launch / verify | `InstallPipeline`，verify 四项健康检查，`test --pipeline` 可跑 | 实测 paper：前四步 PASS，verify 因「端口未监听」如实 FAIL |
+| GameTest 双向桥 | §14.6「原生 GameTest 与平台断言脚本可互转」 | `GameTestBridge` + `NativeGameTestResult` + `PlatformAssertionScript` | 7 个用例通过，含「退出码 = 失败用例数」强校验 |
+| 第一梯队 + 受影响族 | §14.7「PR 门禁跑第一梯队 + 受影响族子集」 | `FamilyTier` / `AffectedFamilySelector` / `MatrixPlan`，`test --plan --affected` 输出矩阵片段 | 实测只改 `bukkit/` 时收敛到 6 个 Bukkit 家族平台 |
+
+## 七、未验证项与风险
 
 按「先检查错误前提、信息缺失」的要求如实列出，以下都没有真实证据：
 
@@ -94,3 +110,7 @@ main-java=375  all-java=460
 8. **热重载「生效」**。文档要求「Dev Hot Loop 方法体热替换生效」，本平台做到的是「按 JVM × 改动类型判定能否热生效」，没有在真实 JVM 上完成一次热替换。
 9. **沙箱网络白名单**。docker 本身不提供按域名放行，白名单以 label 声明、需宿主防火墙或出口代理消费；代码与文档已写明，平台不假装 docker 能按域名放行。
 10. **证据链的边界**。密钥与数据同处一地时只能证明「归档后未被单独改写」；整段后缀连同索引一起删除无法发现。真正保证需要把密钥与链尾锚点放在 vault 之外。
+11. **SSH / Docker API 控制面**。两个驱动只在注入的通道上验证了请求与参数渲染、以及不可用时的降级；**没有对真实 SSH 主机或真实 docker daemon 执行过**。`DockerApiHttpTransport` 的 unix 分支按 `Content-Length` 读响应，未处理 chunked；`docker logs` 的多路复用帧按纯文本行处理。
+12. **对象存储**。`HttpRemoteStore` 的 AWS SigV4 签名与请求形态只在离线传输替身上验证，未对真实 S3 / MinIO 端点跑过；凭据只从环境变量读，代码与仓库里没有密钥。
+13. **GameTest 往返是有损的**。只有「用例名 / 期望 / 通过与否」保真；JUnit 栈帧、耗时、结构模板与环境定义不保留，`WARN` 往返后降级为 `PASS`。不要把它当成完整语义转换。
+14. **装配流水线的验签**只做「声明与落盘一致」的对齐，没有 PGP / JARSec 真实验签（需要公钥环）；`launch` 在进程内轨只走模拟生命周期钩子，未联调真实进程编排。

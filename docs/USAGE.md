@@ -39,12 +39,21 @@ laplace run --suite mixed --platform paper --mc 1.21.11 --parallel
 | `--cheat` | 只跑指定样本 id，可重复 |
 | `--parallel` | 并发灌入，用于并发安全断言 |
 | `--coverage` | 核心模块行覆盖率，由 JaCoCo 结果回填 |
+| `--exemptions` | 误报豁免规则（逗号分隔）：`CREATIVE` / `SPECTATOR` / `ALLOW_FLIGHT` / `JOIN_GRACE` / `PLUGIN_TELEPORT` / `PLUGIN_KNOCKBACK`；传 `none` 关闭 |
+| `--join-grace-ticks` | 开局缓冲期长度，默认 100 tick |
 | `--workspace` | 工作目录，默认 `build/laplace` |
 | `--json` | 以 JSON 输出本次运行 |
 
 退出码：门禁通过 0，未通过 1。
 
+**豁免规则（4.1）**：创造 / 旁观 / 允许飞行 / 开局缓冲期内 / 其它插件传送与击退造成的触发，不计入误报率，但仍以「豁免」形式留在证据链里——审计时看得到，门禁不会因为它放宽。默认豁免项与受测插件的安全默认配置一致；`--exemptions none` 可关闭全部豁免做对照。
+
 报告目录里累积历次运行（门禁按「一次完整基准」口径评估），所以连续跑 legit 与 cheat 后，`gate` 会同时看到两侧数据。想重新开始就换一个 `--workspace`，或删掉 `report/report.json`。
+
+除了 `report.md` / `report.json` / `report.html`，每次运行还会落两份资产：
+
+- `report/detection-rate.md` —— 检出率三视图（按检测项 / 按客户端 / 按档位）。分子按 `playerId` 去重算「检出样本数」，不按 flag 数，因此不会出现超过 100% 的检出率；只统计本次真正注入过的档位。
+- `report/bypass-list.md` —— 绕过清单。分两节：「已实现但被绕过」（预期检出却 0 检出）与「引擎尚未实现该检测项」（锚点标了 `undetectable`），两类 backlog 不混在一张表里。
 
 合法轨迹由「物理预测器 + 亚容差噪声」生成：位移来自按原版运动规则逐 tick 预测的结果，噪声预算严于检测阈值，因此正常玩家不误报是实现出来的性质，而不是调参调出来的。
 
@@ -73,11 +82,14 @@ laplace archive --limit 20
 laplace archive --run run-20261016-221747
 laplace archive --regression
 laplace archive --verify-chain
+laplace archive --sync-remote --verify-remote
 ```
 
 误报一旦入库（`run` 自动写入），同一轨迹不会重复入库——回归库对 `trajectoryRef` 幂等。
 
 `--verify-chain` 校验证据链：每条证据的 `payloadHash` 与 HMAC（`index | timestamp | payloadHash | prevMac`）逐环核对，能发现内容被改写、链接被删/被重排、mac 被伪造。**密钥策略**：优先用 `LAPLACE_EVIDENCE_HMAC_KEY`，没有就在 vault 里生成 `hmac.key`。密钥与数据放在一起只能证明「归档后未被单独改写」，要拿到真正的防删改保证，密钥必须放在 vault 之外。
+
+`--sync-remote` / `--verify-remote` 是「本地 + 可上云存储」的入口：默认镜像到 `<workspace>/evidence-remote`（本地镜像实现，可完整离线验证）；配了 `LAPLACE_OBJECTSTORE_ENDPOINT` / `_BUCKET` / `_ACCESS_KEY` / `_SECRET_KEY` 时走 S3 兼容对象存储。同步只写远端索引，**不改动 `index.json` 与 `chain.json`**，因此链在同步后照旧可校验；`--verify-remote` 以链上的 `payloadHash` 为基准复核远端字节，不一致或缺失都算失败，不会静默放过。
 
 ## test
 
@@ -86,9 +98,22 @@ laplace test --platform paper --mc 1.21.11
 laplace test --platform spongeneo --mc 1.21.10
 laplace test --platform arclight --mc 1.21.1
 laplace test --all --mc 1.21.11
+
+# 14.5 五步装配流水线（resolve / layout / install / launch / verify）
+laplace test --platform paper --pipeline
+
+# 14.7「第一梯队 + 受影响族」CI 矩阵片段
+laplace test --plan --affected adapters/src/main/java/io/laplace/sprite/adapters/bukkit/PaperAdapter.java
+laplace test --all --affected core/src/main/java/io/laplace/sprite/core/engine/Runner.java
 ```
 
 对每个适配器跑三个冒烟剧本：装配成功、核心事件归一（要求 ≥10 类）、生命周期全链路（`onLoad → onEnable → onTick → onShutdown`，不依赖 `/reload`）。当前 24 个适配器、6 类家族，`--all` 共 72 项检查。
+
+`--pipeline` 换成 14.5 的五步流水线，verify 会逐项检查「加载成功 / 端口就绪 / 日志无 ERROR / 无版本降级告警」。**进程内轨没有监听端口，所以 verify 的端口项会如实判失败**——这不是 bug，真实环境轨才有可探测端口。
+
+`--affected` 按改动路径选受影响族（如 `adapters/.../bukkit/**` 只影响 Bukkit 家族；改 `core` 或共享骨架则保守地取全家族），`--plan` 输出可直接进 workflow 的 `strategy.matrix.include` 片段。`--all --affected ...` 则会按选择结果收窄实际跑的适配器。
+
+14.6 的 GameTest 双向桥（原生 `/test runall` 退出码 = 失败用例数 ↔ 平台断言脚本）在 `adapters.gametest.GameTestBridge` 里，由适配器层与模组线冒烟使用，未单独开命令。
 
 ## console
 

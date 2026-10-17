@@ -3,6 +3,8 @@
 build/
 **/build/
 !gradle/wrapper/gradle-wrapper.jar
+# javac -d bin 的临时输出
+bin/
 
 # node
 node_modules/
@@ -24,6 +26,7 @@ laplace-evidence/
 # temp extraction dumps
 _doc*.md
 _docfetch.json
+.tmp_*
 
 # secrets
 *.pem

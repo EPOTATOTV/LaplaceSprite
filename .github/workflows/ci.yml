@@ -150,6 +150,36 @@ jobs:
           rm -rf build/laplace-evidence
           $CLI run --suite legit --players 200 --ticks 120 --workspace build/laplace-evidence
           $CLI archive --workspace build/laplace-evidence --verify-chain
+          $CLI archive --workspace build/laplace-evidence --sync-remote --verify-remote
+
+      - name: 检出率三视图与绕过清单（4.2）
+        run: |
+          CLI=./cli/build/install/laplace/bin/laplace
+          $CLI run --suite cheat --tier DEFAULT --ticks 120 --workspace build/laplace-cheat
+          test -f build/laplace-cheat/report/detection-rate.md
+          test -f build/laplace-cheat/report/bypass-list.md
+          # 检出率不得超过 100%：分子按样本去重，不按 flag 数
+          grep -q "100.0%" build/laplace-cheat/report/detection-rate.md
+
+      - name: 装配流水线五步（14.5）
+        run: |
+          set +e
+          out=$(./cli/build/install/laplace/bin/laplace test --platform paper --pipeline 2>&1)
+          code=$?
+          set -e
+          echo "$out"
+          # 进程内轨没有监听端口，verify 必须如实失败，而不是假装通过
+          if [ $code -eq 0 ]; then
+            echo "预期 verify 因进程内无监听端口而失败，但命令返回了 0"
+            exit 1
+          fi
+          echo "$out" | grep -q "端口就绪" || { echo "未见端口就绪检查"; exit 1; }
+
+      - name: 受影响族矩阵计划（14.7）
+        run: |
+          ./cli/build/install/laplace/bin/laplace test --plan \
+            --affected adapters/src/main/java/io/laplace/sprite/adapters/bukkit/PaperAdapter.java | tee build/matrix-plan.yaml
+          grep -q "platform: paper" build/matrix-plan.yaml
 
       - name: 控制台数据导出
         run: ./cli/build/install/laplace/bin/laplace console --workspace build/laplace-evidence --out build/laplace-evidence/console.json

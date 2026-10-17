@@ -68,6 +68,19 @@ laplace clienttest --screenshot build/shot.png
 | 协议兼容轨 | 服务端 × 客户端版本矩阵最小闭环、ViaProxy 统一入口、Geyser + Floodgate 基岩格、ProtocolLib 数据包级断言 |
 | CI 客户端测试轨 | 声明式用例 DSL（SEND / ENDS_WITH）、证据三件套（logs / XML / 截图）、MC × 加载器 × JDK × OS 矩阵、XVFB 自动启用 |
 
+## 判定口径与装配能力
+
+| 能力 | 位置 |
+|-|-|
+| 误报豁免规则 | 创造 / 旁观 / 允许飞行 / 开局缓冲 / 插件传送与击退不计误报，可配置；被豁免的 flag 仍进证据链（`ExemptionPolicy`） |
+| 检出率三视图 | 按检测项 / 按客户端 / 按档位；分子按样本去重，不会出现 >100%（`detection-rate.md`） |
+| 绕过清单 | 「已实现但被绕过」与「引擎尚未实现」两类 backlog 分开（`bypass-list.md`） |
+| 五步装配流水线 | resolve / layout / install / launch / verify（加载成功、端口就绪、日志无 ERROR、无版本降级告警） |
+| GameTest 双向桥 | 原生 `/test runall`（退出码 = 失败用例数）↔ 平台断言脚本 |
+| 第一梯队 + 受影响族 | 按改动路径收窄 CI 矩阵，输出 `strategy.matrix.include` 片段 |
+| 证据上云 | 本地 vault + 可镜像到远端；同步不动 HMAC 链，远端副本按链上哈希复核 |
+| 远端编排 | SSH 与 Docker Engine API 两种控制面，平台端与测试服节点分离部署 |
+
 ## 控制台（前端）
 
 ```bash

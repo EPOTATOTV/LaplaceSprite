@@ -20,8 +20,13 @@ crashdiag ← core
 - **适配器 SPI**（`core.spi`）：`ArtifactResolver` / `InstallLayout` / `LifecycleHook` / `EventBridge` / `AssertionContract`。注册中心 `AdapterRegistry` 按「平台 × Minecraft 版本 × 加载器版本」匹配，不中时走兼容链回退并输出告警。
 - **检测目标**（`core.engine.DetectionTarget`）：Runner 只面向这个接口。进程内轨是 `SimAdapter`（内部再面向 `adapters.sim.DetectionEngine`），真实环境轨由平台适配器端到端实现。接入真实检测引擎 = 实现 `DetectionEngine` 后替换，Runner 与场景剧本不用改。
 - **判定口径**（`ThresholdGate` / `Thresholds` / `MetricSet`）冻结，不为了跑绿而放宽。
-- **证据链**（`report.EvidenceChainLink`）：`mac = HMAC(key, index | timestamp | payloadHash | prevMac)`。改字段顺序会破坏既有 vault 的可校验性。
+- **证据链**（`report.EvidenceChainLink`）：`mac = HMAC(key, index | timestamp | payloadHash | prevMac)`。改字段顺序会破坏既有 vault 的可校验性。远端同步只写 `remote-index.json`，绝不改写 `index.json` / `chain.json`——链必须能在同步后继续验通。
 - **报告分节**（`report.ReportSection`）：任何轨道的结构化结果都可以作为报告一节嵌入，`report` 不需要反向依赖那些模块。
+- **误报豁免**（`core.engine.ExemptionPolicy`）：判定发生在 `Runner` 内、flag 分类之前。被豁免的触发以 `FlagEvent.exempted(...)` 记录（`falsePositive=false`、`exemption` 非空），因此既不进 `MetricSet.falsePositives`，也不进 `TestRun.detections()`，但仍留在 `flags()` 里可审计。新增豁免维度时改 `ExemptionRule` + `SessionContext`，不要让检测引擎去判断豁免。
+- **样本级口径**（`cheats.report`）：检出率与绕过清单的分子一律按 `playerId` 去重（一条样本可能产生多条 flag），分母只取 `DetectionBreakdown.samplesByTier()` 里实际注入过的档位。改动这两个口径会直接影响报告能不能读。
+- **装配流水线**（`adapters.pipeline.InstallPipeline`）：五阶段严格顺序，任一阶段失败即停止且不产生后续阶段。`verify` 的端口探测走 `PortProbe` 接缝——进程内轨没有监听端口，会如实失败，不要为了跑绿而返回 true。
+- **GameTest 双向桥**（`adapters.gametest.GameTestBridge`）：原生结果构造时强校验「退出码 = 失败用例数」。往返保真字段只有「用例名 / 期望 / 通过与否」，栈帧与耗时是有损的，别声称完美互转。
+- **受影响族**（`adapters.matrix.AffectedFamilySelector`）：路径 → 家族的映射必须保守；拿不准就返回全家族并置 `fullMatrixRequired`，不要猜窄集合。
 
 ## 新增平台接入（六步，14.8）
 
