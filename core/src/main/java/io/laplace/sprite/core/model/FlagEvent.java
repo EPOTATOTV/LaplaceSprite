@@ -1,7 +1,5 @@
 package io.laplace.sprite.core.model;
 
-import java.util.List;
-
 /**
  * 检测 flag 明细（4.6 报告与证据链 / 11.4 关联警告）。
  *
@@ -16,7 +14,8 @@ import java.util.List;
  * @param tick          触发 tick
  * @param trajectoryRef 触发轨迹引用（可回放）
  * @param evidenceRef   证据引用
- * @param falsePositive 是否为误报
+ * @param falsePositive 是否为误报（计入误报率）
+ * @param exemption     命中的豁免规则；未豁免为空。被豁免的 flag 不计入误报率，但仍进证据链
  */
 public record FlagEvent(
         String id,
@@ -30,18 +29,43 @@ public record FlagEvent(
         long tick,
         String trajectoryRef,
         String evidenceRef,
-        boolean falsePositive) {
+        boolean falsePositive,
+        ExemptionRule exemption) {
+
+    /** 兼容构造：无豁免信息。 */
+    public FlagEvent(String id, String runId, String playerId, PlayerType playerType, String checkName,
+                     CheatType cheatType, CheatTierName tier, double confidence, long tick,
+                     String trajectoryRef, String evidenceRef, boolean falsePositive) {
+        this(id, runId, playerId, playerType, checkName, cheatType, tier, confidence, tick,
+                trajectoryRef, evidenceRef, falsePositive, null);
+    }
 
     public static FlagEvent truePositive(String runId, String playerId, String checkName,
                                          CheatType cheatType, CheatTierName tier, double confidence,
                                          long tick, String trajectoryRef, String evidenceRef) {
         return new FlagEvent("flag-" + runId + "-" + tick + "-" + checkName, runId, playerId,
-                PlayerType.CHEAT, checkName, cheatType, tier, confidence, tick, trajectoryRef, evidenceRef, false);
+                PlayerType.CHEAT, checkName, cheatType, tier, confidence, tick, trajectoryRef, evidenceRef,
+                false, null);
     }
 
     public static FlagEvent falsePositive(String runId, String playerId, String checkName, long tick,
                                           String trajectoryRef, String evidenceRef) {
         return new FlagEvent("fp-" + runId + "-" + tick + "-" + checkName, runId, playerId,
-                PlayerType.LEGIT, checkName, null, null, 1.0, tick, trajectoryRef, evidenceRef, true);
+                PlayerType.LEGIT, checkName, null, null, 1.0, tick, trajectoryRef, evidenceRef, true, null);
+    }
+
+    /**
+     * 被豁免的合规 flag：玩家本是合法玩家、检测也触发了，但触发条件落在豁免范围内
+     * （创造 / 旁观 / 允许飞行 / 开局缓冲 / 插件传送与击退），因此不计入误报率。
+     */
+    public static FlagEvent exempted(String runId, String playerId, String checkName, long tick,
+                                     String trajectoryRef, String evidenceRef, ExemptionRule rule) {
+        return new FlagEvent("ex-" + runId + "-" + tick + "-" + checkName, runId, playerId,
+                PlayerType.LEGIT, checkName, null, null, 1.0, tick, trajectoryRef, evidenceRef, false, rule);
+    }
+
+    /** 是否被豁免。 */
+    public boolean isExempted() {
+        return exemption != null;
     }
 }

@@ -77,8 +77,17 @@ public final class Runner {
                 if (!cheat) {
                     if (hit) {
                         for (FlagEvent f : raw) {
-                            flags.add(FlagEvent.falsePositive(request.runId(), session.playerId(),
-                                    f.checkName(), f.tick(), session.trajectoryRef(), f.evidenceRef()));
+                            // 4.1 豁免规则：创造 / 旁观 / 允许飞行 / 开局缓冲 / 插件传送与击退
+                            // 内的触发不计误报，但仍以 exempted 形式进证据链。
+                            var rule = request.exemptions().exemptionFor(session, f.tick());
+                            if (rule.isPresent()) {
+                                flags.add(FlagEvent.exempted(request.runId(), session.playerId(),
+                                        f.checkName(), f.tick(), session.trajectoryRef(),
+                                        f.evidenceRef(), rule.get()));
+                            } else {
+                                flags.add(FlagEvent.falsePositive(request.runId(), session.playerId(),
+                                        f.checkName(), f.tick(), session.trajectoryRef(), f.evidenceRef()));
+                            }
                         }
                     }
                 } else if (hit) {

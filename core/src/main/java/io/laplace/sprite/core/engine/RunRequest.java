@@ -14,19 +14,39 @@ import io.laplace.sprite.core.model.Thresholds;
  * @param thresholds  门禁阈值
  * @param parallel    是否并发灌入（并发安全断言）
  * @param coverage    核心模块行覆盖率（由 JaCoCo 报告回填）
+ * @param exemptions  误报豁免策略（4.1 豁免规则）
  */
 public record RunRequest(String runId, String targetId, String suite, PlatformKey platform, long seed,
-                         Thresholds thresholds, boolean parallel, double coverage) {
+                         Thresholds thresholds, boolean parallel, double coverage,
+                         ExemptionPolicy exemptions) {
+
+    public RunRequest {
+        exemptions = exemptions == null ? ExemptionPolicy.none() : exemptions;
+    }
+
+    /** 兼容构造：不启用任何豁免，所有 flag 都按真实结果计入。 */
+    public RunRequest(String runId, String targetId, String suite, PlatformKey platform, long seed,
+                      Thresholds thresholds, boolean parallel, double coverage) {
+        this(runId, targetId, suite, platform, seed, thresholds, parallel, coverage,
+                ExemptionPolicy.none());
+    }
 
     public static RunRequest inProcess(String runId, String targetId, String suite, long seed) {
         return new RunRequest(runId, targetId, suite, null, seed, Thresholds.defaults(), false, 0.0);
     }
 
     public RunRequest withParallel(boolean value) {
-        return new RunRequest(runId, targetId, suite, platform, seed, thresholds, value, coverage);
+        return new RunRequest(runId, targetId, suite, platform, seed, thresholds, value, coverage,
+                exemptions);
     }
 
     public RunRequest withCoverage(double value) {
-        return new RunRequest(runId, targetId, suite, platform, seed, thresholds, parallel, value);
+        return new RunRequest(runId, targetId, suite, platform, seed, thresholds, parallel, value,
+                exemptions);
+    }
+
+    public RunRequest withExemptions(ExemptionPolicy policy) {
+        return new RunRequest(runId, targetId, suite, platform, seed, thresholds, parallel, coverage,
+                policy);
     }
 }

@@ -43,7 +43,13 @@ public record TestRun(
         return flags.stream().filter(FlagEvent::falsePositive).toList();
     }
 
+    /** 被豁免的合规 flag：不计入误报率，但仍留在证据链里供审计。 */
+    public List<FlagEvent> exemptedFlags() {
+        return flags.stream().filter(FlagEvent::isExempted).toList();
+    }
+
+    /** 真检出：既不是误报，也不是被豁免的合规触发。 */
     public List<FlagEvent> detections() {
-        return flags.stream().filter(f -> !f.falsePositive()).toList();
+        return flags.stream().filter(f -> !f.falsePositive() && !f.isExempted()).toList();
     }
 }
