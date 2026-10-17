@@ -13,7 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * JSON / YAML 读写（第五章：CheatSpec、LegitTrajectory 等声明式定义）。
+ * JSON / YAML 读写（第五章：TestSpec、BehaviorTrajectory 等声明式定义）。
  */
 public final class Json {
 

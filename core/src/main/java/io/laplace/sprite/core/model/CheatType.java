@@ -1,7 +1,7 @@
 package io.laplace.sprite.core.model;
 
 /**
- * 作弊类型（4.2 / 第五章 CheatSpec.type）。取自开源作弊客户端真实模块。
+ * 作弊类型（4.2 / 第五章 TestSpec.type）。取自开源作弊客户端真实模块。
  */
 public enum CheatType {
     SPEED,

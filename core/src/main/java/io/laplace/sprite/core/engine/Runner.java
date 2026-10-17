@@ -1,6 +1,6 @@
 package io.laplace.sprite.core.engine;
 
-import io.laplace.sprite.core.model.CheatTierName;
+import io.laplace.sprite.core.model.SampleTierName;
 import io.laplace.sprite.core.model.CheatType;
 import io.laplace.sprite.core.model.DetectionBreakdown;
 import io.laplace.sprite.core.model.FlagEvent;
@@ -44,8 +44,8 @@ public final class Runner {
         AtomicInteger boundaryPassed = new AtomicInteger();
         AtomicBoolean concurrencyOk = new AtomicBoolean(true);
 
-        Map<String, Map<CheatTierName, Integer>> hitsByCheckTier = new LinkedHashMap<>();
-        Map<CheatTierName, Integer> samplesByTier = new EnumMap<>(CheatTierName.class);
+        Map<String, Map<SampleTierName, Integer>> hitsByCheckTier = new LinkedHashMap<>();
+        Map<SampleTierName, Integer> samplesByTier = new EnumMap<>(SampleTierName.class);
         Map<CheatType, Integer> hitsByCheatType = new EnumMap<>(CheatType.class);
         Map<CheatType, Integer> samplesByCheatType = new EnumMap<>(CheatType.class);
         Object breakdownLock = new Object();
@@ -98,7 +98,7 @@ public final class Runner {
                                 f.confidence(), f.tick(), session.trajectoryRef(), f.evidenceRef()));
                         synchronized (breakdownLock) {
                             hitsByCheckTier
-                                    .computeIfAbsent(f.checkName(), k -> new EnumMap<>(CheatTierName.class))
+                                    .computeIfAbsent(f.checkName(), k -> new EnumMap<>(SampleTierName.class))
                                     .merge(session.tier(), 1, Integer::sum);
                             hitsByCheatType.merge(session.cheatSpec().type(), 1, Integer::sum);
                         }

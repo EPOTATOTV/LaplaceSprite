@@ -5,7 +5,7 @@ import io.laplace.sprite.core.event.Event;
 import java.util.List;
 
 /**
- * 合法会话定义（第五章 LegitTrajectory），可复现（seed 随机化）。
+ * 合法会话定义（第五章 BehaviorTrajectory），可复现（seed 随机化）。
  *
  * @param id             轨迹 id
  * @param behaviorProfile 行为模型
@@ -14,7 +14,7 @@ import java.util.List;
  * @param events         逐 tick 事件流
  * @param networkModelRef 网络模型 id
  */
-public record LegitTrajectory(
+public record BehaviorTrajectory(
         String id,
         BehaviorProfile behaviorProfile,
         String scenario,
@@ -22,7 +22,7 @@ public record LegitTrajectory(
         List<Event> events,
         String networkModelRef) {
 
-    public LegitTrajectory {
+    public BehaviorTrajectory {
         events = events == null ? List.of() : List.copyOf(events);
     }
 

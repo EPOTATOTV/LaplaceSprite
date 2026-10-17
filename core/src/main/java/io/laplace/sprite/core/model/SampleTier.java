@@ -9,9 +9,9 @@ import java.util.Map;
  * @param params 模块参数（键值对，如 {@code speed=1.35}）
  * @param expected 预期检出
  */
-public record CheatTier(CheatTierName tier, Map<String, Object> params, ExpectedDetection expected) {
+public record SampleTier(SampleTierName tier, Map<String, Object> params, ExpectedDetection expected) {
 
-    public CheatTier {
+    public SampleTier {
         params = params == null ? Map.of() : Map.copyOf(params);
     }
 

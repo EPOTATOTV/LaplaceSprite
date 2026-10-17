@@ -1,6 +1,6 @@
 package io.laplace.sprite.core.engine;
 
-import io.laplace.sprite.core.model.CheatTierName;
+import io.laplace.sprite.core.model.SampleTierName;
 import io.laplace.sprite.core.model.CheatType;
 import io.laplace.sprite.core.model.DetectionBreakdown;
 import io.laplace.sprite.core.model.MetricHistory;
@@ -26,7 +26,25 @@ public final class MetricAggregator {
                 boundarySamples, boundaryPassed, concurrencyOk, coverage);
     }
 
-    /** 多次运行的合计指标（夜间基准 / 全量基准）。 */
+    /** 带功能类指标的聚合（4.5 全部七个维度）。 */
+    public MetricSet aggregate(int legitPlayers, int falsePositives, int cheatSamples,
+                               int detectedSamples, int boundarySamples, int boundaryPassed,
+                               boolean concurrencyOk, double coverage, int functionalSmokePassed,
+                               int functionalSmokeTotal, boolean performanceBaselineOk,
+                               double performanceBaselineDelta, boolean dependencyResolved,
+                               boolean versionMatrixDegraded, boolean resourcePackLoadOk) {
+        return new MetricSet(legitPlayers, falsePositives, cheatSamples, detectedSamples,
+                boundarySamples, boundaryPassed, concurrencyOk, coverage, functionalSmokePassed,
+                functionalSmokeTotal, performanceBaselineOk, performanceBaselineDelta,
+                dependencyResolved, versionMatrixDegraded, resourcePackLoadOk);
+    }
+
+    /**
+     * 多次运行的合计指标（夜间基准 / 全量基准）。
+     *
+     * <p>计数项求和、布尔项取与、覆盖率取最大值；性能基线变化取最小值，因为只要有一次运行劣化，
+     * 合计口径就应判为劣化，不能用平均值把问题摊平。</p>
+     */
     public static MetricSet sum(List<TestRun> runs) {
         int legit = 0;
         int fp = 0;
@@ -36,6 +54,13 @@ public final class MetricAggregator {
         int boundaryPassed = 0;
         boolean concurrencyOk = true;
         double coverage = 0.0;
+        int smokePassed = 0;
+        int smokeTotal = 0;
+        boolean performanceBaselineOk = true;
+        double performanceBaselineDelta = Double.POSITIVE_INFINITY;
+        boolean dependencyResolved = true;
+        boolean versionMatrixDegraded = false;
+        boolean resourcePackLoadOk = true;
         for (TestRun run : runs) {
             MetricSet m = run.metrics();
             legit += m.legitPlayers();
@@ -46,24 +71,34 @@ public final class MetricAggregator {
             boundaryPassed += m.boundaryPassed();
             concurrencyOk &= m.concurrencyOk();
             coverage = Math.max(coverage, m.coverage());
+            smokePassed += m.functionalSmokePassed();
+            smokeTotal += m.functionalSmokeTotal();
+            performanceBaselineOk &= m.performanceBaselineOk();
+            performanceBaselineDelta = Math.min(performanceBaselineDelta, m.performanceBaselineDelta());
+            dependencyResolved &= m.dependencyResolved();
+            versionMatrixDegraded |= m.versionMatrixDegraded();
+            resourcePackLoadOk &= m.resourcePackLoadOk();
         }
-        return new MetricSet(legit, fp, cheat, detected, boundary, boundaryPassed, concurrencyOk, coverage);
+        return new MetricSet(legit, fp, cheat, detected, boundary, boundaryPassed, concurrencyOk,
+                coverage, smokePassed, smokeTotal, performanceBaselineOk,
+                Double.isFinite(performanceBaselineDelta) ? performanceBaselineDelta : 0.0,
+                dependencyResolved, versionMatrixDegraded, resourcePackLoadOk);
     }
 
     /** 按检测项 × 档位的检出率（分母为该档位注入样本数）。 */
-    public static Map<String, Map<CheatTierName, Double>> detectionRateByCheck(List<TestRun> runs) {
-        Map<String, Map<CheatTierName, Double>> out = new LinkedHashMap<>();
-        Map<CheatTierName, Integer> samples = samplesByTier(runs);
+    public static Map<String, Map<SampleTierName, Double>> detectionRateByCheck(List<TestRun> runs) {
+        Map<String, Map<SampleTierName, Double>> out = new LinkedHashMap<>();
+        Map<SampleTierName, Integer> samples = samplesByTier(runs);
         for (String check : checkNames(runs)) {
-            Map<CheatTierName, Integer> hits = new EnumMap<>(CheatTierName.class);
+            Map<SampleTierName, Integer> hits = new EnumMap<>(SampleTierName.class);
             for (TestRun run : runs) {
-                Map<CheatTierName, Integer> row = run.breakdown().hitsByCheckTier().get(check);
+                Map<SampleTierName, Integer> row = run.breakdown().hitsByCheckTier().get(check);
                 if (row != null) {
                     row.forEach((tier, count) -> hits.merge(tier, count, Integer::sum));
                 }
             }
-            Map<CheatTierName, Double> rates = new EnumMap<>(CheatTierName.class);
-            for (CheatTierName tier : CheatTierName.values()) {
+            Map<SampleTierName, Double> rates = new EnumMap<>(SampleTierName.class);
+            for (SampleTierName tier : SampleTierName.values()) {
                 int denominator = samples.getOrDefault(tier, 0);
                 if (denominator > 0) {
                     rates.put(tier, (double) hits.getOrDefault(tier, 0) / denominator);
@@ -75,15 +110,15 @@ public final class MetricAggregator {
     }
 
     /** 按档位的整体检出率。 */
-    public static Map<CheatTierName, Double> detectionRateByTier(List<TestRun> runs) {
-        Map<CheatTierName, Integer> samples = samplesByTier(runs);
-        Map<CheatTierName, Integer> hits = new EnumMap<>(CheatTierName.class);
+    public static Map<SampleTierName, Double> detectionRateByTier(List<TestRun> runs) {
+        Map<SampleTierName, Integer> samples = samplesByTier(runs);
+        Map<SampleTierName, Integer> hits = new EnumMap<>(SampleTierName.class);
         for (TestRun run : runs) {
             run.breakdown().hitsByCheckTier().values()
                     .forEach(row -> row.forEach((tier, count) -> hits.merge(tier, count, Integer::sum)));
         }
-        Map<CheatTierName, Double> rates = new EnumMap<>(CheatTierName.class);
-        for (CheatTierName tier : CheatTierName.values()) {
+        Map<SampleTierName, Double> rates = new EnumMap<>(SampleTierName.class);
+        for (SampleTierName tier : SampleTierName.values()) {
             int denominator = samples.getOrDefault(tier, 0);
             if (denominator > 0) {
                 rates.put(tier, (double) hits.getOrDefault(tier, 0) / denominator);
@@ -110,8 +145,8 @@ public final class MetricAggregator {
         return rates;
     }
 
-    public static Map<CheatTierName, Integer> samplesByTier(List<TestRun> runs) {
-        Map<CheatTierName, Integer> samples = new EnumMap<>(CheatTierName.class);
+    public static Map<SampleTierName, Integer> samplesByTier(List<TestRun> runs) {
+        Map<SampleTierName, Integer> samples = new EnumMap<>(SampleTierName.class);
         for (TestRun run : runs) {
             run.breakdown().samplesByTier().forEach((tier, c) -> samples.merge(tier, c, Integer::sum));
         }

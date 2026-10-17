@@ -24,7 +24,7 @@ public record FlagEvent(
         PlayerType playerType,
         String checkName,
         CheatType cheatType,
-        CheatTierName tier,
+        SampleTierName tier,
         double confidence,
         long tick,
         String trajectoryRef,
@@ -34,14 +34,14 @@ public record FlagEvent(
 
     /** 兼容构造：无豁免信息。 */
     public FlagEvent(String id, String runId, String playerId, PlayerType playerType, String checkName,
-                     CheatType cheatType, CheatTierName tier, double confidence, long tick,
+                     CheatType cheatType, SampleTierName tier, double confidence, long tick,
                      String trajectoryRef, String evidenceRef, boolean falsePositive) {
         this(id, runId, playerId, playerType, checkName, cheatType, tier, confidence, tick,
                 trajectoryRef, evidenceRef, falsePositive, null);
     }
 
     public static FlagEvent truePositive(String runId, String playerId, String checkName,
-                                         CheatType cheatType, CheatTierName tier, double confidence,
+                                         CheatType cheatType, SampleTierName tier, double confidence,
                                          long tick, String trajectoryRef, String evidenceRef) {
         return new FlagEvent("flag-" + runId + "-" + tick + "-" + checkName, runId, playerId,
                 PlayerType.CHEAT, checkName, cheatType, tier, confidence, tick, trajectoryRef, evidenceRef,

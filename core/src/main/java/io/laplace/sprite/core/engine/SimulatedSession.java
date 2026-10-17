@@ -1,8 +1,8 @@
 package io.laplace.sprite.core.engine;
 
 import io.laplace.sprite.core.event.EventStream;
-import io.laplace.sprite.core.model.CheatSpec;
-import io.laplace.sprite.core.model.CheatTierName;
+import io.laplace.sprite.core.model.TestSpec;
+import io.laplace.sprite.core.model.SampleTierName;
 import io.laplace.sprite.core.model.ExpectedDetection;
 import io.laplace.sprite.core.model.PlayerType;
 import io.laplace.sprite.core.model.ProbeSnapshot;
@@ -25,8 +25,8 @@ import io.laplace.sprite.core.model.SessionContext;
 public record SimulatedSession(
         String playerId,
         PlayerType playerType,
-        CheatSpec cheatSpec,
-        CheatTierName tier,
+        TestSpec cheatSpec,
+        SampleTierName tier,
         String scenarioId,
         EventStream stream,
         ProbeSnapshot probe,
@@ -39,8 +39,8 @@ public record SimulatedSession(
     }
 
     /** 兼容构造：未声明判定上下文时按默认（生存 / 不允许飞行 / 无插件干预）。 */
-    public SimulatedSession(String playerId, PlayerType playerType, CheatSpec cheatSpec,
-                            CheatTierName tier, String scenarioId, EventStream stream,
+    public SimulatedSession(String playerId, PlayerType playerType, TestSpec cheatSpec,
+                            SampleTierName tier, String scenarioId, EventStream stream,
                             ProbeSnapshot probe, String trajectoryRef, ExpectedDetection expected) {
         this(playerId, playerType, cheatSpec, tier, scenarioId, stream, probe, trajectoryRef, expected,
                 SessionContext.defaults());
@@ -53,7 +53,7 @@ public record SimulatedSession(
                 SessionContext.defaults());
     }
 
-    public static SimulatedSession cheat(String playerId, CheatSpec spec, CheatTierName tier,
+    public static SimulatedSession cheat(String playerId, TestSpec spec, SampleTierName tier,
                                          String scenarioId, EventStream stream, ProbeSnapshot probe,
                                          String trajectoryRef, ExpectedDetection expected) {
         return new SimulatedSession(playerId, PlayerType.CHEAT, spec, tier, scenarioId, stream, probe,

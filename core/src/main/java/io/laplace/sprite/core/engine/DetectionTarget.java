@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * 检测目标（4.4）：检测引擎进程内直连、客户端扫描器探针桩、各平台插件端到端。
  *
- * <p>实现由适配器提供（SimAdapter / 平台适配器），Runner 只面向本接口。</p>
+ * <p>实现由适配器提供（SimServerAdapter / 平台适配器），Runner 只面向本接口。</p>
  */
 public interface DetectionTarget {
 

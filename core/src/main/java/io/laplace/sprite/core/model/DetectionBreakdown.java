@@ -11,15 +11,15 @@ import java.util.Map;
  * 由 Runner 在会话执行时累计，避免前端二次取数（11.1 设计原则 2）。</p>
  */
 public record DetectionBreakdown(
-        Map<String, Map<CheatTierName, Integer>> hitsByCheckTier,
-        Map<CheatTierName, Integer> samplesByTier,
+        Map<String, Map<SampleTierName, Integer>> hitsByCheckTier,
+        Map<SampleTierName, Integer> samplesByTier,
         Map<CheatType, Integer> hitsByCheatType,
         Map<CheatType, Integer> samplesByCheatType) {
 
     public DetectionBreakdown {
         hitsByCheckTier = deepCopy(hitsByCheckTier);
         samplesByTier = samplesByTier == null || samplesByTier.isEmpty()
-                ? new EnumMap<>(CheatTierName.class)
+                ? new EnumMap<>(SampleTierName.class)
                 : new EnumMap<>(samplesByTier);
         hitsByCheatType = hitsByCheatType == null || hitsByCheatType.isEmpty()
                 ? new EnumMap<>(CheatType.class)
@@ -33,8 +33,8 @@ public record DetectionBreakdown(
         return new DetectionBreakdown(Map.of(), Map.of(), Map.of(), Map.of());
     }
 
-    private static Map<String, Map<CheatTierName, Integer>> deepCopy(Map<String, Map<CheatTierName, Integer>> src) {
-        Map<String, Map<CheatTierName, Integer>> out = new LinkedHashMap<>();
+    private static Map<String, Map<SampleTierName, Integer>> deepCopy(Map<String, Map<SampleTierName, Integer>> src) {
+        Map<String, Map<SampleTierName, Integer>> out = new LinkedHashMap<>();
         if (src != null) {
             src.forEach((k, v) -> out.put(k, new EnumMap<>(v)));
         }

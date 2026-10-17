@@ -1,8 +1,8 @@
 package io.laplace.sprite.core.engine;
 
 import io.laplace.sprite.core.event.EventStream;
-import io.laplace.sprite.core.model.CheatSpec;
-import io.laplace.sprite.core.model.CheatTierName;
+import io.laplace.sprite.core.model.TestSpec;
+import io.laplace.sprite.core.model.SampleTierName;
 import io.laplace.sprite.core.model.PlatformKey;
 import io.laplace.sprite.core.model.PlayerType;
 import io.laplace.sprite.core.model.ProbeSnapshot;
@@ -19,6 +19,6 @@ public record DetectionContext(
         ProbeSnapshot probe,
         String playerId,
         PlayerType playerType,
-        CheatSpec cheatSpec,
-        CheatTierName tier) {
+        TestSpec cheatSpec,
+        SampleTierName tier) {
 }

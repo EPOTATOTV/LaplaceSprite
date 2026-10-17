@@ -1,7 +1,7 @@
 package io.laplace.sprite.core.model;
 
 /**
- * 单个配置档位的预期检出（第五章 CheatTier）。
+ * 单个配置档位的预期检出（第五章 SampleTier）。
  *
  * @param expectedDetected 预期是否被检出
  * @param minConfidence    最低置信度（0-1）；检出率统计的下限
