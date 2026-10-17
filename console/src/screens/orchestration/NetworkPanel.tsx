@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { Switch } from '../../components/Switch'
 import { cx } from '../../lib/cx'
@@ -22,12 +22,6 @@ export function NetworkPanel({ models }: { models: NetworkModel[] }) {
   const [lossOn, setLossOn] = useState(model.packetLossRate > 0)
   const [reorderOn, setReorderOn] = useState(model.reorderRate > 0)
 
-  // 换预设时把开关同步回该档位的默认口径
-  useEffect(() => {
-    setLossOn(model.packetLossRate > 0)
-    setReorderOn(model.reorderRate > 0)
-  }, [model])
-
   const rangeLeft = (model.latencyMinMs / SPAN_MAX) * 100
   const rangeWidth = ((model.latencyMaxMs - model.latencyMinMs) / SPAN_MAX) * 100
 
@@ -40,7 +34,11 @@ export function NetworkPanel({ models }: { models: NetworkModel[] }) {
             type="button"
             className={cx(styles.model, item.id === activeId && styles.modelOn)}
             aria-pressed={item.id === activeId}
-            onClick={() => setActiveId(item.id)}
+            onClick={() => {
+              setActiveId(item.id)
+              setLossOn(item.packetLossRate > 0)
+              setReorderOn(item.reorderRate > 0)
+            }}
           >
             <span className={styles.modelId}>{item.id}</span>
             <span className={cx(styles.modelRange, 'tabular')}>
