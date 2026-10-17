@@ -10,9 +10,10 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** 分类路由与产出（15.5）：四条分支各走一遍，外加签名顺序。 */
+/** 分类路由与产出（15.5 / 15.8）：各分支各走一遍，外加签名顺序。 */
 class CrashDiagnoserTest {
 
     private static final String MIXIN_LOG = """
@@ -42,6 +43,24 @@ class CrashDiagnoserTest {
     private static final String NATIVE_LOG = """
             # A fatal error has been detected by the Java Runtime Environment:
             #  SIGSEGV (0xb) at pc=0x00007f, pid=4321, tid=4322
+            """;
+
+    private static final String PACK_JSON_LOG = """
+            [Server thread/ERROR]: Failed to parse world/datapacks/broken/pack.mcmeta
+            com.google.gson.JsonSyntaxException: com.google.gson.stream.MalformedJsonException: \
+            Unterminated object at line 1 column 45 path $.pack.description
+            \tat net.minecraft.server.packs.PackResources.getMetadata(PackResources.java:120)
+            """;
+
+    private static final String PACK_MISSING_LOG = """
+            [Server thread/ERROR]: java.lang.IllegalStateException: \
+            Couldn't find pack meta in world/datapacks/broken
+            """;
+
+    private static final String PACK_WORLD_LOAD_LOG = """
+            [Render thread/ERROR]: Failed to load datapacks, can't proceed with server load
+            com.google.gson.JsonSyntaxException: com.google.gson.stream.MalformedJsonException: \
+            Expected value at line 1 column 2 path $
             """;
 
     @TempDir
@@ -124,13 +143,87 @@ class CrashDiagnoserTest {
     @Test
     void signatureOrderingIsExplicitAndStable() {
         List<CrashSignature> ordered = CrashSignature.ordered();
-        assertEquals(List.of("hs-err-native", "out-of-memory", "incompatible-mod-set", "mixin-apply-failed"),
+        assertEquals(List.of("hs-err-native", "out-of-memory", "pack-world-load-failure",
+                        "pack-meta-json-syntax", "pack-meta-missing", "incompatible-mod-set",
+                        "mixin-apply-failed"),
                 ordered.stream().map(CrashSignature::id).toList());
         for (int i = 1; i < ordered.size(); i++) {
             assertTrue(ordered.get(i - 1).order() < ordered.get(i).order());
         }
         assertTrue(ordered.get(0).requiresNativeFile(), "第一条看 hs_err 文件而不是日志文本");
         assertTrue(ordered.get(0).rationale().contains("优先"));
+    }
+
+    @Test
+    void routesDatapackJsonSyntaxErrorAndExtractsFileAndPath() {
+        CrashDiagnosis diagnosis = diagnoser.diagnose("inst-pack", withoutHsErr(), PACK_JSON_LOG);
+
+        assertEquals(CrashCategory.RESOURCE_PACK_LOAD_FAILURE, diagnosis.category());
+        assertEquals("pack-meta-json-syntax", diagnosis.signature());
+        assertEquals("MC-123460", diagnosis.mojiraId());
+        assertEquals("world/datapacks/broken/pack.mcmeta", diagnosis.packFile());
+        assertEquals("$.pack.description", diagnosis.jsonPath());
+        assertTrue(diagnosis.humanAdvice().stream().anyMatch(advice -> advice.contains("$.pack.description")),
+                "文件与 JSON 路径要进建议: " + diagnosis.humanAdvice());
+        assertTrue(diagnosis.humanAdvice().stream().anyMatch(advice -> advice.contains("MC-123460")));
+    }
+
+    @Test
+    void routesMissingPackMeta() {
+        CrashDiagnosis diagnosis = diagnoser.diagnose("inst-pack", withoutHsErr(), PACK_MISSING_LOG);
+
+        assertEquals(CrashCategory.RESOURCE_PACK_LOAD_FAILURE, diagnosis.category());
+        assertEquals("pack-meta-missing", diagnosis.signature());
+        assertEquals("MC-123459", diagnosis.mojiraId());
+        assertEquals("world/datapacks/broken", diagnosis.packFile());
+        assertEquals("$.pack", diagnosis.jsonPath());
+    }
+
+    @Test
+    void routesWorldLoadFailureFromUnparsablePack() {
+        CrashDiagnosis diagnosis = diagnoser.diagnose("inst-pack", withoutHsErr(), PACK_WORLD_LOAD_LOG);
+
+        assertEquals(CrashCategory.RESOURCE_PACK_LOAD_FAILURE, diagnosis.category());
+        assertEquals("pack-world-load-failure", diagnosis.signature());
+        assertEquals("MC-310240", diagnosis.mojiraId());
+    }
+
+    @Test
+    void jsonSyntaxWithoutPackContextStaysUnknown() {
+        CrashDiagnosis diagnosis = diagnoser.diagnose("inst", withoutHsErr(),
+                "com.google.gson.JsonSyntaxException: MalformedJsonException: bad config");
+
+        assertEquals(CrashCategory.UNKNOWN, diagnosis.category(),
+                "没有 pack 上下文的 JSON 异常可能来自模组配置，不能归到数据包分类");
+    }
+
+    @Test
+    void hsErrWinsOverPackJsonError() {
+        CrashDiagnosis diagnosis = diagnoser.diagnose("inst-pack", withHsErr(), PACK_JSON_LOG);
+
+        assertEquals(CrashCategory.JVM_NATIVE, diagnosis.category(),
+                "现场有 hs_err_pid 时仍判原生崩溃，包 JSON 特征不得抢先");
+        assertEquals("hs-err-native", diagnosis.signature());
+        assertNull(diagnosis.mojiraId());
+    }
+
+    @Test
+    void resourcePackCategoryIsRenderedInJsonAndMarkdown() {
+        CrashDiagnosis diagnosis = diagnoser.diagnose("inst-pack", withoutHsErr(), PACK_JSON_LOG);
+        DiagnosisRenderer renderer = new DiagnosisRenderer(diagnosis);
+
+        String json = renderer.toJson();
+        assertTrue(json.contains("RESOURCE_PACK_LOAD_FAILURE"));
+        assertTrue(json.contains("\"mojiraId\""));
+        assertTrue(json.contains("MC-123460"));
+        assertTrue(json.contains("\"jsonPath\""));
+        assertTrue(json.contains("$.pack.description"));
+        assertTrue(json.contains("\"packFile\""));
+
+        String markdown = renderer.toMarkdown();
+        assertTrue(markdown.contains("资源包 / 数据包加载失败"));
+        assertTrue(markdown.contains("Mojira 编号：MC-123460"));
+        assertTrue(markdown.contains("JSON 路径：$.pack.description"));
     }
 
     @Test

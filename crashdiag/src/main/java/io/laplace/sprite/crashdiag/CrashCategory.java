@@ -13,6 +13,12 @@ public enum CrashCategory {
     JVM_NATIVE("JVM 原生崩溃"),
     /** 堆内存不足。 */
     OUT_OF_MEMORY("内存不足"),
+    /**
+     * 资源包 / 数据包加载失败（15.8）。
+     *
+     * <p>插在 UNKNOWN 之前，兜底类别仍排最后；其余类别的相对顺序不变。</p>
+     */
+    RESOURCE_PACK_LOAD_FAILURE("资源包 / 数据包加载失败"),
     /** 未命中任何已登记签名。 */
     UNKNOWN("未分类");
 

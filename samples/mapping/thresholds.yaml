@@ -30,7 +30,7 @@ coefficients:
   HIDDEN:  1.2
 
 # 主参数与锚点不同量纲的类型需要按类型覆盖：这里只列刻度换算的说明，
-# 具体系数以 Java 侧 TierCoefficient.of(CheatType, CheatTierName) 为准。
+# 具体系数以 Java 侧 TierCoefficient.of(CheatType, SampleTierName) 为准。
 scaleConversions:
   SPEED:        "锚点是位移阈值（格/tick），注入器吃的是位移倍率；按疾跑基线换算"
   TIMER:        "锚点是重复位置包计数，注入器吃的是计时倍率"

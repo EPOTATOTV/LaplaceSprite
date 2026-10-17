@@ -77,6 +77,15 @@ public final class ScenePackageExporter {
         sb.append("diagnosisId=").append(diagnosis.id()).append('\n');
         sb.append("category=").append(diagnosis.category().name()).append('\n');
         sb.append("signature=").append(diagnosis.signature()).append('\n');
+        if (diagnosis.mojiraId() != null) {
+            sb.append("mojiraId=").append(diagnosis.mojiraId()).append('\n');
+        }
+        if (diagnosis.packFile() != null) {
+            sb.append("packFile=").append(diagnosis.packFile()).append('\n');
+        }
+        if (diagnosis.jsonPath() != null) {
+            sb.append("jsonPath=").append(diagnosis.jsonPath()).append('\n');
+        }
         sb.append("classIndexCoverage=").append("%.4f".formatted(diagnosis.classIndexCoverage())).append('\n');
         sb.append("collectedAt=").append(diagnosis.collectedAt()).append('\n');
         sb.append("entries=").append(entries.size() + 1).append('\n');

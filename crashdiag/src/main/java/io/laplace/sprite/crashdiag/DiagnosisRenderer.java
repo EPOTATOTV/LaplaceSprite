@@ -32,6 +32,15 @@ public final class DiagnosisRenderer {
         root.put("collectedAt", diagnosis.collectedAt().toString());
         root.put("suspects", suspects());
         root.put("humanAdvice", diagnosis.humanAdvice());
+        if (diagnosis.packFile() != null) {
+            root.put("packFile", diagnosis.packFile());
+        }
+        if (diagnosis.jsonPath() != null) {
+            root.put("jsonPath", diagnosis.jsonPath());
+        }
+        if (diagnosis.mojiraId() != null) {
+            root.put("mojiraId", diagnosis.mojiraId());
+        }
         root.put("artifacts", CrashDiagnoser.describeArtifacts(diagnosis.artifacts()));
         return Json.write(root);
     }
@@ -45,6 +54,15 @@ public final class DiagnosisRenderer {
         md.append("- 分类：").append(diagnosis.category().label())
                 .append("（").append(diagnosis.category().name()).append("）\n");
         md.append("- 命中签名：").append(diagnosis.signature()).append('\n');
+        if (diagnosis.mojiraId() != null) {
+            md.append("- Mojira 编号：").append(diagnosis.mojiraId()).append('\n');
+        }
+        if (diagnosis.packFile() != null) {
+            md.append("- 出错文件：").append(diagnosis.packFile()).append('\n');
+        }
+        if (diagnosis.jsonPath() != null) {
+            md.append("- JSON 路径：").append(diagnosis.jsonPath()).append('\n');
+        }
         md.append("- 类索引覆盖率：").append("%.0f%%".formatted(diagnosis.classIndexCoverage() * 100))
                 .append(diagnosis.lowCoverage() ? "（偏低，未做绝对定罪）" : "").append('\n');
         md.append("- 采集时间：").append(diagnosis.collectedAt()).append("\n\n");

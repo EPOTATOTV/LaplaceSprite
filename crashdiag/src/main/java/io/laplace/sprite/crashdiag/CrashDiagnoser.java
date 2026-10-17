@@ -30,6 +30,16 @@ public final class CrashDiagnoser {
     private static final Pattern INSTALLED_PRESENT =
             Pattern.compile("but ([0-9][A-Za-z0-9.+\\-]*) is present");
 
+    /** 报错行里的 pack.mcmeta 路径。 */
+    private static final Pattern PACK_META_FILE = Pattern.compile("([\\w./\\\\:-]*pack\\.mcmeta)");
+
+    /** MC-123459 的措辞：Couldn't find pack meta in <目录>。 */
+    private static final Pattern PACK_META_IN = Pattern.compile("pack meta in\\s+([^\\s,;)]+)",
+            Pattern.CASE_INSENSITIVE);
+
+    /** Gson / Jackson 报错里的 JSON 路径。 */
+    private static final Pattern JSON_PATH = Pattern.compile("\\$(?:\\.[A-Za-z0-9_]+|\\[[0-9]+])+");
+
     private final ClassIndex classIndex;
     private final FrameAttributor attributor = new FrameAttributor();
 
@@ -67,12 +77,77 @@ public final class CrashDiagnoser {
         List<VersionDiff> diffs = category == CrashCategory.DEPENDENCY_MISMATCH
                 ? versionDiffs(content)
                 : List.of();
+        PackFailure packFailure = category == CrashCategory.RESOURCE_PACK_LOAD_FAILURE
+                ? packFailure(content, signature).orElse(null)
+                : null;
 
-        List<String> advice = new ArrayList<>(adviceFor(category, attribution, diffs, heapGc));
+        List<String> advice = new ArrayList<>(adviceFor(category, attribution, diffs, heapGc, packFailure));
         advice.addAll(attribution.warnings());
 
         return new CrashDiagnosis("diag-" + UUID.randomUUID(), instanceId, category, signature,
-                attribution.suspects(), attribution.classIndexCoverage(), advice, artifacts, Instant.now());
+                attribution.suspects(), attribution.classIndexCoverage(), advice, artifacts, Instant.now(),
+                packFailure == null ? null : packFailure.file(),
+                packFailure == null ? null : packFailure.jsonPath(),
+                packFailure == null ? null : packFailure.mojiraId());
+    }
+
+    /**
+     * 从日志里提取包失败的文件与 JSON 路径（15.8）。
+     *
+     * <p>Mojira 编号由签名 id 决定：世界加载失败 MC-310240、reload 解析异常 MC-123460、
+     * 找不到 pack.mcmeta MC-123459。路径优先取报错文本里现成的 {@code $.xxx}；没有就按签名给默认值。</p>
+     */
+    public static Optional<PackFailure> packFailure(String text, String signatureId) {
+        String mojiraId = mojiraId(signatureId);
+        if (mojiraId == null || text == null || text.isBlank()) {
+            return Optional.empty();
+        }
+        String file = packFile(text);
+        String jsonPath = jsonPath(text);
+        if (jsonPath == null) {
+            jsonPath = "pack-meta-missing".equals(signatureId) ? "$.pack" : "$";
+        }
+        return Optional.of(new PackFailure(mojiraId, file, jsonPath));
+    }
+
+    private static String mojiraId(String signatureId) {
+        if (signatureId == null) {
+            return null;
+        }
+        return switch (signatureId) {
+            case "pack-world-load-failure" -> "MC-310240";
+            case "pack-meta-json-syntax" -> "MC-123460";
+            case "pack-meta-missing" -> "MC-123459";
+            default -> null;
+        };
+    }
+
+    private static String packFile(String text) {
+        Matcher file = PACK_META_FILE.matcher(text);
+        if (file.find()) {
+            return trimToken(file.group(1));
+        }
+        Matcher directory = PACK_META_IN.matcher(text);
+        if (directory.find()) {
+            return trimToken(directory.group(1));
+        }
+        return "pack.mcmeta";
+    }
+
+    private static String jsonPath(String text) {
+        Matcher path = JSON_PATH.matcher(text);
+        return path.find() ? path.group() : null;
+    }
+
+    private static String trimToken(String raw) {
+        String trimmed = raw;
+        while (!trimmed.isEmpty() && "\\\"'<>,;()[]".indexOf(trimmed.charAt(0)) >= 0) {
+            trimmed = trimmed.substring(1);
+        }
+        while (!trimmed.isEmpty() && "\\\"'<>,;()[]".indexOf(trimmed.charAt(trimmed.length() - 1)) >= 0) {
+            trimmed = trimmed.substring(0, trimmed.length() - 1);
+        }
+        return trimmed.isEmpty() ? "pack.mcmeta" : trimmed;
     }
 
     /** 只做分类，方便按签名顺序写测试。 */
@@ -112,7 +187,8 @@ public final class CrashDiagnoser {
     }
 
     private static List<String> adviceFor(CrashCategory category, Attribution attribution,
-                                          List<VersionDiff> diffs, HeapGcSummary heapGc) {
+                                          List<VersionDiff> diffs, HeapGcSummary heapGc,
+                                          PackFailure packFailure) {
         List<String> advice = new ArrayList<>();
         String primary = attribution.primarySuspect().orElse("未解析出嫌疑 mod");
         switch (category) {
@@ -143,6 +219,17 @@ public final class CrashDiagnoser {
                         : heapGc.describe()));
                 advice.add("调大 -Xmx，或按剖析轨的堆与 GC p99/max 曲线区分配额不足与泄漏");
                 advice.add("落 heap dump 后按支配树定位持有者，重点看区块缓存与玩家数据");
+            }
+            case RESOURCE_PACK_LOAD_FAILURE -> {
+                if (packFailure == null) {
+                    advice.add("资源包 / 数据包加载失败，但没从日志里提取到文件名与 JSON 路径，"
+                            + "请打开问题现场包逐行核对");
+                } else {
+                    advice.add("出错文件 %s 的 %s 解析失败，对应 %s"
+                            .formatted(packFailure.file(), packFailure.jsonPath(), packFailure.mojiraId()));
+                    advice.add("用 JSON 校验器打开该 pack.mcmeta，按上述路径修语法；JSON 不允许注释与尾逗号");
+                }
+                advice.add("修好后先 /reload 验证；若世界已经进不去，先把该包移出 datapacks/ 再启动");
             }
             case UNKNOWN -> advice.add("未命中已登记的特征签名，请打开问题现场包人工逐段查看");
         }

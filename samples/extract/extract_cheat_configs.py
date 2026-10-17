@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""从开源作弊客户端的源码里提取参数，按「检测阈值 × 档位系数」生成 CheatSpec 草案。
+"""从开源作弊客户端的源码里提取参数，按「检测阈值 × 档位系数」生成 TestSpec 草案。
 
 用法::
 
@@ -191,7 +191,7 @@ def to_spec(hit: ModuleHit, client: str, anchors: dict[str, dict],
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="从开源作弊客户端源码提取 CheatSpec 草案")
+    parser = argparse.ArgumentParser(description="从开源作弊客户端源码提取 TestSpec 草案")
     parser.add_argument("--client", required=True, help="客户端名（Wurst/LiquidBounce/Meteor/...）")
     parser.add_argument("--source", required=True, type=Path, help="该客户端的源码目录")
     base = Path(__file__).resolve().parents[1] / "mapping"
