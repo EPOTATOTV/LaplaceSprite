@@ -29,4 +29,6 @@ jobs:
       - run: ./cli/build/install/laplace/bin/laplace test --platform ${{ matrix.platform }} --mc ${{ matrix.mc }} --adapter ${{ matrix.adapter || matrix.loader }}
       - uses: actions/upload-artifact@v4
         if: failure()
-        with: { name: evidence-${{ matrix.platform }}-${{ matrix.mc }}, path: build/laplace-evidence }
+        with:
+          name: evidence-${{ matrix.platform }}-${{ matrix.mc }}
+          path: build/laplace-evidence
