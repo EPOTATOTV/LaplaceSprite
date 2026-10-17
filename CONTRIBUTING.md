@@ -70,5 +70,5 @@ protocol ← adapters + servers
 ## 报告问题
 
 - 缺陷与功能请求走 issue 模板；
-- 用法与设计讨论走 Discussions；
+- 设计取舍与用法疑问先开 issue 讨论，结论再落到 `docs/`；
 - 安全问题走 `SECURITY.md` 的私密渠道。
