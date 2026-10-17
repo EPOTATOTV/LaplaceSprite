@@ -187,6 +187,48 @@ laplace clienttest [--suite path/to/suite.json] [--screenshot build/shot.png]
 
 跑声明式用例（`SEND` / `EXPECT_LOG_ENDS_WITH` / `WAIT_TICKS` / `WAIT_FOR_RENDER` / `SCREENSHOT`）。**截图是硬要求**：不给 `--screenshot` 时 SCREENSHOT 步骤直接判失败，这正是「失败必传截图」的落地。还会报告 MC × 加载器 × JDK × OS 矩阵格数、XVFB 是否自动启用，以及 Loom 任务命令行（网络同步器报错时自动追加 `-Dfabric.client.gametest.disableNetworkSynchronizer=true`）。离线用脚本替身推演，不声称跑过真实客户端。
 
+### datapack — 数据包 / 资源包测试轨（15.8）
+
+```bash
+laplace datapack --pack world/datapacks/mypack --versions 1.20.6,1.21.4,1.21.5
+```
+
+解析 `pack.mcmeta` 并对一组服务端版本判定 `pack_format` 兼容性。不兼容的版本列按文档口径记为「加载阶段失败」，不进入冒烟执行。解析失败时输出结构化错误（文件、JSON 路径、类别、Mojira 编号），例如 BOM 或语法错误会路由到 `MC-123460`。
+
+### loadtest — 假玩家压测轨（15.9）
+
+```bash
+laplace loadtest --scenario build/load/scenario.json
+```
+
+解析声明式压测剧本（并发数、爬坡曲线、动作类型、时长）并渲染 bot 后端调用与门禁口径：**稳态 TPS ≥19.5 且 P95 MSPT ≤50ms**。采样依赖真实服务端与 spark / MCBenchmark，本命令只渲染计划，不产出伪造采样。
+
+### mixin — Mixin 生态适配轨（15.11）
+
+```bash
+laplace mixin                                  # 打印 CI 启动参数
+laplace mixin --declarations mixins.json       # 追加注入声明与 target→mod 冲突图
+laplace mixin --log logs/latest.log            # 启动日志里扫注入失败（硬门禁）
+```
+
+CI 默认带 `-Dmixin.debug.countInjections=true -Dmixin.debug.export=true`：`require` 的注入点数量与声明不符即启动失败，`expect` 只告警。注入点数量核对需要真实实例的观测计数，命令行不编造这个数字。
+
+### render — 客户端渲染级测试轨（15.12）
+
+```bash
+laplace render --golden golden/1.21.11/vanilla.png --actual build/shot.png
+```
+
+像素 diff，默认 **0.5%** 容差（与 Fabric 客户端 Gametest 的 `TestScreenshotComparisonOptions` 口径一致）。尺寸不一致直接判失败，不缩放对齐。VulkanMod 格按文档只做「启动 + 渲染一帧」冒烟，不进入视觉 diff 门禁。
+
+### replay --mcpr — 世界快照回放轨（15.10）
+
+```bash
+laplace replay --mcpr recordings/bug.mcpr
+```
+
+解析 ReplayMod `.mcpr`（ZIP：`metaData.json` + 包流），抽出移动与指令序列成为可重放剧本；配合世界快照四元组 `{世界种子, MC 版本, 清单 hash, 场景 id}` 绑定。**边界**：原版不保证 tick 级确定性，重放结论以「复现同类崩溃 / 同一日志特征」为准。
+
 ## 加一个作弊样本
 
 样本是声明式的，放在 `cheats/src/main/resources/cheats/samples/*.yaml`。注入幅度由「检测阈值锚点 × 档位系数」派生：

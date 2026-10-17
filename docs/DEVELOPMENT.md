@@ -18,7 +18,7 @@ crashdiag ← core
 
 - **事件流**（`core.event.EventStream`）：唯一归一化出口。所有平台事件经 `EventBridge` 收敛成 `core.event.Event` 的 22 种记录（`PlayerJoin` / `Move` / `Combat` / `Packet` / `RegionTick` / `GameTestSuite` …），事件只带玩家、Tick、时间戳与平台标签，平台特有上下文放进 `context()`。
 - **适配器 SPI**（`core.spi`）：`ArtifactResolver` / `InstallLayout` / `LifecycleHook` / `EventBridge` / `AssertionContract`。注册中心 `AdapterRegistry` 按「平台 × Minecraft 版本 × 加载器版本」匹配，不中时走兼容链回退并输出告警。
-- **检测目标**（`core.engine.DetectionTarget`）：Runner 只面向这个接口。进程内轨是 `SimAdapter`（内部再面向 `adapters.sim.DetectionEngine`），真实环境轨由平台适配器端到端实现。接入真实检测引擎 = 实现 `DetectionEngine` 后替换，Runner 与场景剧本不用改。
+- **检测目标**（`core.engine.DetectionTarget`）：Runner 只面向这个接口。进程内轨是 `SimServerAdapter`（内部再面向 `adapters.sim.DetectionEngine`），真实环境轨由平台适配器端到端实现。接入真实检测引擎 = 实现 `DetectionEngine` 后替换，Runner 与场景剧本不用改。
 - **判定口径**（`ThresholdGate` / `Thresholds` / `MetricSet`）冻结，不为了跑绿而放宽。
 - **证据链**（`report.EvidenceChainLink`）：`mac = HMAC(key, index | timestamp | payloadHash | prevMac)`。改字段顺序会破坏既有 vault 的可校验性。远端同步只写 `remote-index.json`，绝不改写 `index.json` / `chain.json`——链必须能在同步后继续验通。
 - **报告分节**（`report.ReportSection`）：任何轨道的结构化结果都可以作为报告一节嵌入，`report` 不需要反向依赖那些模块。
@@ -27,6 +27,12 @@ crashdiag ← core
 - **装配流水线**（`adapters.pipeline.InstallPipeline`）：五阶段严格顺序，任一阶段失败即停止且不产生后续阶段。`verify` 的端口探测走 `PortProbe` 接缝——进程内轨没有监听端口，会如实失败，不要为了跑绿而返回 true。
 - **GameTest 双向桥**（`adapters.gametest.GameTestBridge`）：原生结果构造时强校验「退出码 = 失败用例数」。往返保真字段只有「用例名 / 期望 / 通过与否」，栈帧与耗时是有损的，别声称完美互转。
 - **受影响族**（`adapters.matrix.AffectedFamilySelector`）：路径 → 家族的映射必须保守；拿不准就返回全家族并置 `fullMatrixRequired`，不要猜窄集合。
+- **样本类别**（`cheats.SampleCategory`）：`CONTENT / TECH / PERF / NETWORK / ANOMALY / CHEAT`。`TestSpec` 的 `type` 是稳定样本类型 id，`category` 决定它走功能冒烟口径还是检出率口径；只有 `CHEAT` 进绕过清单，非作弊样本 0 命中属于功能性失败。
+- **指标口径**（`core.model.MetricSet`）：检测类与功能类同表——功能冒烟通过率、性能基线（相对 delta）、资源与装配三个维度是 v1.3.0 新增。`functionalSmokeTotal == 0` 视为「不适用」并通过，不要当成 0 分。
+- **目标类型矩阵**（`core.model.TargetTypeMatrix`）：12 类被测目标各有测试重点 / 框架工具 / 典型风险 / 代表项目 / 来源，新增类型必须补齐这五项，`coveredCount()` 会被验收测试卡住。
+- **事件流回放**（`core.engine.replay.EventReplaySession`）：绑定 `FlagEvent` → 完整事件流，支持 `replayRange`、`withBreakpoint`（按 tick 切段）、`step()`、`export`。core 不依赖 report，导出的 JSON / Markdown 由调用方交给 EvidenceVault。
+- **渲染判定**（`render.PixelDiff`）：默认 0.5% 像素容差；尺寸不一致直接失败，不缩放对齐；VulkanMod 格强制 `diffEnabled=false`。
+- **压测门禁**（`loadtest.LoadGate`）：稳态 TPS ≥19.5 且 P95 MSPT ≤50ms；`breakingConcurrency` 取第一个破线并发，这是「多少人进服开始掉 TPS」的复算口径。
 
 ## 新增平台接入（六步，14.8）
 

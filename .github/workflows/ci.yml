@@ -181,6 +181,42 @@ jobs:
             --affected adapters/src/main/java/io/laplace/sprite/adapters/bukkit/PaperAdapter.java | tee build/matrix-plan.yaml
           grep -q "platform: paper" build/matrix-plan.yaml
 
+      - name: 数据包冒烟轨（15.8）
+        run: |
+          mkdir -p build/dp
+          printf '%s' '{"pack":{"pack_format":61,"description":"ci"}}' > build/dp/pack.mcmeta
+          ./cli/build/install/laplace/bin/laplace datapack --pack build/dp --versions 1.21.4
+
+      - name: Mixin 注入计数门禁（15.11）
+        run: |
+          CLI=./cli/build/install/laplace/bin/laplace
+          $CLI mixin | grep -q "mixin.debug.countInjections=true"
+          $CLI mixin --declarations build/mixins.json || true
+
+      - name: 渲染像素 diff（15.12）
+        run: |
+          python3 - <<'PY'
+          import zlib, struct
+          w = h = 4
+          raw = b"".join(b"\x00" + bytes([200, 120, 80] * w) for _ in range(h))
+          def chunk(t, d):
+              c = t + d
+              return struct.pack(">I", len(d)) + c + struct.pack(">I", zlib.crc32(c) & 0xffffffff)
+          png = (b"\x89PNG\r\n\x1a\n"
+                 + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0))
+                 + chunk(b"IDAT", zlib.compress(raw))
+                 + chunk(b"IEND", b""))
+          open("build/golden.png", "wb").write(png)
+          open("build/actual.png", "wb").write(png)
+          PY
+          ./cli/build/install/laplace/bin/laplace render --golden build/golden.png --actual build/actual.png
+
+      - name: 压测剧本渲染（15.9）
+        run: |
+          mkdir -p build/load
+          printf '%s' '{"id":"ci","backend":"CARPET","actions":["JOIN","WALK"],"durationTicks":1200,"ramp":{"startConcurrency":10,"step":10,"stepTicks":200,"maxConcurrency":50},"note":"ci"}' > build/load/scenario.json
+          ./cli/build/install/laplace/bin/laplace loadtest --scenario build/load/scenario.json
+
       - name: 控制台数据导出
         run: ./cli/build/install/laplace/bin/laplace console --workspace build/laplace-evidence --out build/laplace-evidence/console.json
 
