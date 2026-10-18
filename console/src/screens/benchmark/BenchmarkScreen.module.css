@@ -9,6 +9,25 @@
   width: 100%;
 }
 
+/* 指标带：主指标占两列，其余两张各一列 */
+.summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-3);
+}
+
+@media (max-width: 1180px) {
+  .summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* ---------- 排行列表：不用等宽卡片网格，按名次自然分层 ---------- */
 
 .rankList {

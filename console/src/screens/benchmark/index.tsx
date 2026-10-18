@@ -1,7 +1,9 @@
 import type { CSSProperties } from 'react'
+import { Boxes, FlaskConical, Trophy } from 'lucide-react'
 
 import { Glass } from '../../components/glass/Glass'
 import { Section } from '../../components/Section'
+import { MetricCard } from '../dashboard/MetricCard'
 import { cx } from '../../lib/cx'
 import { formatInt, formatPercent } from '../../lib/format'
 import styles from './BenchmarkScreen.module.css'
@@ -88,6 +90,8 @@ function scoreOf(project: BenchmarkProject): number {
 }
 
 const RANKED = [...PROJECTS].sort((left, right) => scoreOf(right) - scoreOf(left))
+const BEST = RANKED[0] as BenchmarkProject
+const AVERAGE_MSPT = PROJECTS.reduce((sum, project) => sum + project.msptP95, 0) / PROJECTS.length
 
 function metricText(key: (typeof METRICS)[number]['key'], project: BenchmarkProject): string {
   if (key === 'msptP95') return `${project.msptP95.toFixed(1)} ms`
@@ -106,6 +110,36 @@ function isBest(key: (typeof METRICS)[number]['key'], project: BenchmarkProject)
 export default function BenchmarkScreen() {
   return (
     <div className={styles.page}>
+      <div className={styles.summary}>
+        <MetricCard
+          hero
+          label="最高综合分"
+          value={formatPercent(scoreOf(BEST), 1)}
+          caption={`${BEST.name} · ${BEST.kind} ${BEST.version}`}
+          icon={Trophy}
+          tone="accent"
+          delay={0}
+          ratio={{ value: scoreOf(BEST), label: '功能 40 · 检出 30 · 性能 20 · 回归 10' }}
+        />
+        <MetricCard
+          label="参与项目"
+          value={String(PROJECTS.length)}
+          unit="个"
+          caption="模组 / 插件 / 整合包同一口径"
+          icon={Boxes}
+          delay={70}
+        />
+        <MetricCard
+          label="平均 P95 MSPT"
+          value={AVERAGE_MSPT.toFixed(1)}
+          unit="ms"
+          caption="越低越好 · 门禁上限 50ms"
+          icon={FlaskConical}
+          tone={AVERAGE_MSPT > 50 ? 'danger' : 'warn'}
+          delay={140}
+        />
+      </div>
+
       <Section
         title="多项目基准排行"
         note="功能 / 检出 / 性能 / 回归四条线加权 · 同一套样本与门禁口径"
