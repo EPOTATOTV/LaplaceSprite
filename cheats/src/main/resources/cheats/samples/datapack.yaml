@@ -1,0 +1,49 @@
+# 数据包轨样本（升级实施文档 L-02）：对齐 PackTest 的 data/<ns>/test/*.mcfunction 约定。
+# 这些样本验证数据包加载期与函数执行期的鲁棒性，expectedDetected 恒为 false，
+# 不计入检出率；未注入的档位会进入报告的「未覆盖项清单」。
+
+- id: datapack.pack-format-mismatch.default
+  name: pack_format 跨版本失配
+  category: DATAPACK
+  sampleType: PACK_FORMAT_MISMATCH
+  target: datapack-runtime
+  source: 内置数据包样本
+  injector: datapack
+  baseline: baseline:walk
+  notes: 声明与实际目标版本不符的 pack_format，探测加载器是否显式拒绝而不是静默忽略整个包
+  tiers:
+    - tier: MIN
+      params: {declaredFormat: 81, targetFormat: 85}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: true, note: 相差一档，边界输入}
+    - tier: DEFAULT
+      params: {declaredFormat: 71, targetFormat: 85}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: MAX
+      params: {declaredFormat: 15, targetFormat: 86}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: HIDDEN
+      params: {declaredFormat: 85, targetFormat: 86}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+
+- id: datapack.function-recursion.default
+  name: 函数递归与每 tick 重入
+  category: DATAPACK
+  sampleType: FUNCTION_RECURSION
+  target: datapack-runtime
+  source: 内置数据包样本
+  injector: datapack
+  baseline: baseline:walk
+  notes: 测试函数互相调用或在 tick 标签里重复挂载，探测函数栈深度与单 tick 预算是否被耗尽
+  tiers:
+    - tier: MIN
+      params: {depth: 2, tickRepeat: 1}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: true, note: 两层递归，边界输入}
+    - tier: DEFAULT
+      params: {depth: 8, tickRepeat: 4}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: MAX
+      params: {depth: 32, tickRepeat: 16}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}
+    - tier: HIDDEN
+      params: {depth: 16, tickRepeat: 8}
+      expected: {expectedDetected: false, minConfidence: 0.0, boundary: false}

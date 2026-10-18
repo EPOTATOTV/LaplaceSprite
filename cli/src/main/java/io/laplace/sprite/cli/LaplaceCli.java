@@ -12,12 +12,13 @@ import picocli.CommandLine.Command;
  * {@code profile}（剖析轨）、{@code crash}（崩溃诊断器）、{@code protocol}（协议兼容轨）、
  * {@code clienttest}（CI 客户端测试轨）、{@code datapack}（数据包冒烟轨）、
  * {@code loadtest}（假玩家压测轨）、{@code mixin}（Mixin 生态适配轨）、
- * {@code render}（客户端渲染级测试轨）。</p>
+ * {@code render}（客户端渲染级测试轨）、{@code market}（样本市场）、
+ * {@code pacc}（PACC 夜间基准）。</p>
  */
 @Command(
         name = "laplace",
         mixinStandardHelpOptions = true,
-        version = "Laplace Sprite 1.3.0",
+        version = "Laplace Sprite 1.4.0",
         description = "面向全体 Minecraft 开发者的通用测试平台",
         subcommands = {
                 RunCommand.class,
@@ -35,7 +36,9 @@ import picocli.CommandLine.Command;
                 DatapackCommand.class,
                 LoadtestCommand.class,
                 MixinCommand.class,
-                RenderCommand.class
+                RenderCommand.class,
+                MarketCommand.class,
+                PaccCommand.class
         })
 public final class LaplaceCli implements Runnable {
 

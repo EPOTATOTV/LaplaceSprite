@@ -25,15 +25,34 @@ fi
 
 run_gate() {
     "$LAPLACE" run --suite "$1" --players "${PLAYERS:-2000}" --ticks "${TICKS:-600}" --workspace "$WORKSPACE"
-    "$LAPLACE" gate --workspace "$WORKSPACE"
+    # 回归库健康度：工作区里存在回归快照时一并门禁（L-03）。
+    gate_args=""
+    if [ -f "$WORKSPACE/regression/library.json" ]; then
+        gate_args="--regression $WORKSPACE/regression/library.json"
+        if [ -f "$WORKSPACE/regression/flags.json" ]; then
+            gate_args="$gate_args --regression-flags $WORKSPACE/regression/flags.json"
+        fi
+        if [ -f "$WORKSPACE/regression/bypass.json" ]; then
+            gate_args="$gate_args --bypass-reports $WORKSPACE/regression/bypass.json"
+        fi
+        gate_args="$gate_args --require-regression-health"
+    fi
+    # shellcheck disable=SC2086
+    "$LAPLACE" gate --workspace "$WORKSPACE" $gate_args
 }
 
 run_smoke() {
     mc="$1"
+    health_args=""
+    if [ -n "${MATRIX_HEALTH:-}" ]; then
+        health_args="--health $MATRIX_HEALTH"
+    fi
     if [ -n "${PLATFORM:-}" ]; then
-        "$LAPLACE" test --platform "$PLATFORM" --mc "$mc" --adapter "${ADAPTER:-$PLATFORM}"
+        # shellcheck disable=SC2086
+        "$LAPLACE" test --platform "$PLATFORM" --mc "$mc" --adapter "${ADAPTER:-$PLATFORM}" $health_args
     else
-        "$LAPLACE" test --all --mc "$mc"
+        # shellcheck disable=SC2086
+        "$LAPLACE" test --all --mc "$mc" $health_args
     fi
 }
 
@@ -63,12 +82,12 @@ case "$TIER" in
         run_smoke "$MC"
         ;;
     daily)
-        for version in ${MC_LIST:-26.1 1.21.11 1.21.1}; do
+        for version in ${MC_LIST:-26.2 26.1 1.21.11 1.21.1}; do
             run_smoke "$version"
         done
         ;;
     weekly)
-        for version in ${MC_LIST:-26.1 1.21.11 1.21.1 1.20.1}; do
+        for version in ${MC_LIST:-26.2 26.1 1.21.11 1.21.1 1.20.1}; do
             run_smoke "$version"
         done
         ;;

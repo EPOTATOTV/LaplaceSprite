@@ -3,6 +3,7 @@ package io.laplace.sprite.cli;
 import io.laplace.sprite.adapters.AbstractLaplaceAdapter;
 import io.laplace.sprite.adapters.AdapterRegistryFactory;
 import io.laplace.sprite.adapters.SmokeScenarios;
+import io.laplace.sprite.adapters.ecosystem.MatrixHealthRegistry;
 import io.laplace.sprite.adapters.matrix.AffectedFamilySelector;
 import io.laplace.sprite.adapters.matrix.MatrixPlan;
 import io.laplace.sprite.adapters.matrix.VersionMatrixRegistry;
@@ -67,6 +68,9 @@ final class TestCommand implements Callable<Integer> {
     @Option(names = "--workspace", description = "流水线工作目录，默认 build/laplace/install")
     Path workspace;
 
+    @Option(names = "--health", description = "矩阵健康度文件；提供后把本次冒烟结果写回")
+    Path health;
+
     @Spec
     CommandSpec spec;
 
@@ -74,6 +78,7 @@ final class TestCommand implements Callable<Integer> {
     public Integer call() {
         AdapterRegistry registry = AdapterRegistryFactory.defaultRegistry();
         var out = spec.commandLine().getOut();
+        MatrixHealthRegistry healthRegistry = health == null ? null : new MatrixHealthRegistry(health);
 
         AffectedFamilySelector.Selection selection = null;
         if (affected != null && !affected.isEmpty()) {
@@ -104,9 +109,14 @@ final class TestCommand implements Callable<Integer> {
                 }
                 PlatformKey adapterKey = keyOf(adapter, mc, loader);
                 if (pipeline) {
-                    pipelines.add(runPipeline(adapter, adapterKey));
+                    InstallPipelineResult result = runPipeline(adapter, adapterKey);
+                    pipelines.add(result);
+                    recordHealth(healthRegistry, adapterKey, result.allOk());
                 } else {
-                    results.addAll(smoke.run(adapter, adapterKey));
+                    List<SmokeScenarios.SmokeResult> adapterResults = smoke.run(adapter, adapterKey);
+                    results.addAll(adapterResults);
+                    recordHealth(healthRegistry, adapterKey,
+                            adapterResults.stream().allMatch(SmokeScenarios.SmokeResult::passed));
                 }
             }
         } else {
@@ -117,9 +127,14 @@ final class TestCommand implements Callable<Integer> {
                 return 1;
             }
             if (pipeline) {
-                pipelines.add(runPipeline(adapter.get(), key));
+                InstallPipelineResult result = runPipeline(adapter.get(), key);
+                pipelines.add(result);
+                recordHealth(healthRegistry, key, result.allOk());
             } else {
-                results.addAll(smoke.run(adapter.get(), key));
+                List<SmokeScenarios.SmokeResult> adapterResults = smoke.run(adapter.get(), key);
+                results.addAll(adapterResults);
+                recordHealth(healthRegistry, key,
+                        adapterResults.stream().allMatch(SmokeScenarios.SmokeResult::passed));
             }
         }
 
@@ -139,7 +154,18 @@ final class TestCommand implements Callable<Integer> {
             out.printf("冒烟结果：%d 项，失败 %d 项%n", results.size(), failed);
         }
         registry.warnings().forEach(w -> out.println("  告警：" + w));
+        if (healthRegistry != null) {
+            out.printf("矩阵健康度：%s（%d 格）%n", health.toAbsolutePath(), healthRegistry.health().size());
+            healthRegistry.health().forEach(cell -> out.printf("  %s — 连续通过 %d / 连续失败 %d / %s%n",
+                    cell.cellId(), cell.consecutivePasses(), cell.consecutiveFailures(), cell.mode()));
+        }
         return failed == 0 ? 0 : 1;
+    }
+
+    private static void recordHealth(MatrixHealthRegistry registry, PlatformKey key, boolean passed) {
+        if (registry != null) {
+            registry.record(key.id(), passed);
+        }
     }
 
     private InstallPipelineResult runPipeline(io.laplace.sprite.core.spi.LaplaceAdapter adapter,

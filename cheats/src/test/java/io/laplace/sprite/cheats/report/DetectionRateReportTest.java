@@ -25,7 +25,7 @@ class DetectionRateReportTest {
 
     private static final double DELTA = 1e-9;
     private static final int CHEAT_SPECS = 36;
-    private static final int NON_CHEAT_SPECS = 16;
+    private static final int NON_CHEAT_SPECS = 18;
 
     @Test
     void aggregatesThreeViewsFromBreakdown() {

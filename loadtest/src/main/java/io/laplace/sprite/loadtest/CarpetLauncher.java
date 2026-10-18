@@ -83,8 +83,8 @@ public final class CarpetLauncher {
     public static Optional<String> carpetAction(BotAction action) {
         return switch (action) {
             case JOIN, CHAT, IDLE -> Optional.empty();
-            case WALK -> Optional.of("move forward");
-            case MINE, ATTACK -> Optional.of("attack continuous");
+            case WALK, CHUNK_LOAD -> Optional.of("move forward");
+            case MINE, ATTACK, ENTITY_LOAD -> Optional.of("attack continuous");
             case PLACE -> Optional.of("use continuous");
         };
     }

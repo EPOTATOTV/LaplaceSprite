@@ -28,7 +28,7 @@ public final class CheatCatalog {
     private static final String BUNDLED_DIR = "cheats/samples/";
     /** 内置样本文件清单；新增文件时同步登记，避免依赖 jar 内目录遍历。 */
     private static final List<String> BUNDLED_FILES = List.of(
-            "movement.yaml", "combat.yaml", "world.yaml", "client.yaml", "generic.yaml");
+            "movement.yaml", "combat.yaml", "world.yaml", "client.yaml", "generic.yaml", "datapack.yaml");
 
     private List<SampleSpec> defaults;
 

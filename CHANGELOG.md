@@ -2,6 +2,28 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循语义化版本。
 
+## [1.4.0] - 2026-10-18
+
+下一步升级实施（L-01 ~ L-10）。
+
+### 新增
+
+- **26.x 版本矩阵**：四个加载器快照加入 26.1 / 26.2，`PackFormatTable` 支持 26.2 的 86 与 26.1 的 85，渲染矩阵默认版本切到 26.2 / 26.1 / 1.21.1，CI 冒烟清单同步。
+- **GameTest 生态全覆盖**：`GameTestLoader` 登记 Fabric / Quilt / Forge / NeoForge 四个入口；`PackTestConvention` 扫描 `data/<ns>/test/*.mcfunction`；样本类别新增 `DATAPACK` 与对应注入器。
+- **回归库健康度**：`RegressionHealth` 计算用例规模、绕过报告转化率、误报复现覆盖率与超期报告；`gate` 增加 `--regression` / `--bypass-reports` / `--require-regression-health`。
+- **26.x 压测剧本**：新增 `ENTITY_LOAD` / `CHUNK_LOAD` 动作与实体、区块负载剧本。
+- **矩阵健康度写回**：`laplace test --health` 把每格冒烟结果写入 `MatrixHealthRegistry`，每周门禁归档健康度文件。
+- **26.2 渲染金标准库**：`RenderGoldenLibrary` 覆盖硫磺洞穴、新维度、新效果；26.x 容差收紧到 0.5%。
+- **分布式压测**：`DistributedLoadPlan` 把峰值并发拆到 SSH / Docker 节点并聚合判定；`laplace loadtest --nodes` 输出拆分计划。
+- **样本市场**：`SamplePackage` + HMAC 签名、`SampleMarket` 安装 / 回滚 / 历史；`laplace market` 支持安装、回滚、校验并写入证据链。
+- **评测报告门户**：控制台新增多项目基准排行与指标横评页（`/benchmark`）。
+- **PACC 夜间基准**：`DetectionTrend` 产出误报 / 检出趋势 SVG 与 Markdown；`laplace pacc` 支撑 `--baseline` 或 `report.json` 两种输入；nightly 增加合法基线 + 作弊矩阵步骤。
+
+### 变更
+
+- 版本号升至 1.4.0；`daily` / `weekly` 冒烟版本清单加入 26.2。
+- 生态版本快照加入 26.2 的 Fabric / NeoForge / Forge / Paper 与 Sodium / Lithium / Iris / JEI 等构建。
+
 ## [1.3.0] - 2026-10-17
 
 全类型模组测试通用化修订。

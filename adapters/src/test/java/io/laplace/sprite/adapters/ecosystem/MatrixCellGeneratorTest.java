@@ -67,6 +67,17 @@ class MatrixCellGeneratorTest {
     }
 
     @Test
+    void twentySixTwoCellsUseTheLatestLoadersAndJava25() {
+        GenerationResult result = generator.generate(GateTier.DAILY);
+
+        assertEquals(25, cell("fabric/26.2/0.21.0", result.cells()).jdk());
+        assertEquals("26.2.0", cell("neoforge/26.2/26.2.0", result.cells()).loader());
+        assertEquals("66.0.10", cell("forge/26.2/66.0.10", result.cells()).loader());
+        assertTrue(result.cells().stream().anyMatch(cell -> "paper".equals(cell.platform())
+                && "26.2".equals(cell.mc())));
+    }
+
+    @Test
     void optifineProbeNeverEntersTheGeneratedMatrix() {
         GenerationResult result = generator.generate(GateTier.WEEKLY_FULL);
 

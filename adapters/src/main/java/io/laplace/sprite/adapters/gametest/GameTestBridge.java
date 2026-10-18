@@ -31,6 +31,12 @@ public final class GameTestBridge {
         this.suite = Objects.requireNonNull(suite, "suite");
     }
 
+    /** 按加载器取桥：套件名带上加载器，失败时能看出是哪一家的 GameTest 输出的。 */
+    public static GameTestBridge forLoader(GameTestLoader loader) {
+        Objects.requireNonNull(loader, "loader");
+        return new GameTestBridge(loader.suite());
+    }
+
     /** 原生运行结果 → 平台断言脚本。 */
     public PlatformAssertionScript toPlatform(NativeGameTestResult result) {
         List<PlatformAssertion> assertions = new ArrayList<>(result.cases().size());

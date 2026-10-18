@@ -1,0 +1,13 @@
+{
+  "id": "chunks-26.2",
+  "backend": "MINEFLAYER",
+  "actions": ["JOIN", "CHUNK_LOAD", "WALK"],
+  "durationTicks": 6000,
+  "ramp": {
+    "startConcurrency": 10,
+    "step": 10,
+    "stepTicks": 1200,
+    "maxConcurrency": 50
+  },
+  "note": "26.2 区块负载：真实登录后按固定半径绕圈，持续推动 26.x 新区块加载与卸载。"
+}

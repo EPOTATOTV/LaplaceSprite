@@ -8,6 +8,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - { platform: paper,        mc: "26.2",    adapter: paper-v2 }     # 26.x 版本矩阵
+          - { platform: fabric,       mc: "26.2",    loader: "0.21.0" }
+          - { platform: neoforge,     mc: "26.2",    loader: "26.2.0" }
+          - { platform: forge,        mc: "26.2",    loader: "66.0.10" }
+          - { platform: paper,        mc: "26.1",    adapter: paper-v2 }
+          - { platform: fabric,       mc: "26.1",    loader: "0.20.0" }
+          - { platform: neoforge,     mc: "26.1",    loader: "26.1.0" }
+          - { platform: forge,        mc: "26.1",    loader: "66.0.8" }
           - { platform: paper,        mc: "1.21.11", adapter: paper-v2 }     # 第一梯队
           - { platform: folia,        mc: "1.21.11", adapter: folia-v1 }     # 并发变体分支
           - { platform: velocity,     mc: "1.21.11", adapter: velocity-v3 }  # 代理端

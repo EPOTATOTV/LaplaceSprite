@@ -1,6 +1,8 @@
 {
   "source": "quilt-meta",
   "entries": [
+    { "minecraftVersion": "26.2", "loaderVersion": "0.31.0" },
+    { "minecraftVersion": "26.1", "loaderVersion": "0.30.0" },
     { "minecraftVersion": "1.21.11", "loaderVersion": "0.30.0" },
     { "minecraftVersion": "1.21.11", "loaderVersion": "0.29.1" },
     { "minecraftVersion": "1.21.1", "loaderVersion": "0.26.0" },

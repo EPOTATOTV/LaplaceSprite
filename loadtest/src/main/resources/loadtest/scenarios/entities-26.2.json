@@ -1,0 +1,13 @@
+{
+  "id": "entities-26.2",
+  "backend": "CARPET",
+  "actions": ["JOIN", "ENTITY_LOAD", "IDLE"],
+  "durationTicks": 6000,
+  "ramp": {
+    "startConcurrency": 10,
+    "step": 10,
+    "stepTicks": 1200,
+    "maxConcurrency": 50
+  },
+  "note": "26.2 实体负载：服务端内假人持续牵引实体群，观察实体 tick 对 MSPT 的影响。"
+}

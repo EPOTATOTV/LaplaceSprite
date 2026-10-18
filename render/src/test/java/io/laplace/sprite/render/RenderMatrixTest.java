@@ -16,9 +16,9 @@ class RenderMatrixTest {
     void defaultsCoverThreeBackendsForEachMinecraftVersion() {
         RenderMatrix matrix = RenderMatrix.defaults();
 
-        assertEquals(6, matrix.size());
-        assertEquals(6, matrix.cells().size());
-        assertEquals(2, matrix.mcVersions().size());
+        assertEquals(9, matrix.size());
+        assertEquals(9, matrix.cells().size());
+        assertEquals(3, matrix.mcVersions().size());
         assertEquals(3, matrix.backends().size());
     }
 
@@ -65,9 +65,20 @@ class RenderMatrixTest {
     void matrixKeepsMinecraftOuterAndBackendInnerOrder() {
         List<RenderMatrixCell> cells = RenderMatrix.defaults().cells();
 
-        assertEquals("1.21.1", cells.get(0).mcVersion());
+        assertEquals("26.2", cells.get(0).mcVersion());
         assertEquals(RenderBackend.VANILLA_OPENGL, cells.get(0).backend());
         assertEquals(RenderBackend.VULKANMOD, cells.get(2).backend());
-        assertEquals("1.20.6", cells.get(3).mcVersion());
+        assertEquals("26.1", cells.get(3).mcVersion());
+        assertEquals("1.21.1", cells.get(6).mcVersion());
+    }
+
+    @Test
+    void twentySixVersionsUseTheTighterTolerance() {
+        List<RenderMatrixCell> cells = RenderMatrix.defaults().cells();
+
+        assertTrue(cells.stream().filter(cell -> cell.mcVersion().startsWith("26."))
+                .allMatch(cell -> cell.tolerancePercent() == 0.5));
+        assertTrue(cells.stream().filter(cell -> !cell.mcVersion().startsWith("26."))
+                .allMatch(cell -> cell.tolerancePercent() == 1.0));
     }
 }

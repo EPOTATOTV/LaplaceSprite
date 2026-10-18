@@ -5,6 +5,7 @@ import {
   MonitorPlay,
   Package,
   ShieldCheck,
+  Trophy,
   Waypoints,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -75,6 +76,14 @@ export const NAV_ENTRIES: NavEntry[] = [
     label: '画面监控墙',
     hint: '一键查看 · 多路',
     icon: MonitorPlay,
+    ready: true,
+  },
+  {
+    code: '11.9',
+    path: '/benchmark',
+    label: '评测报告门户',
+    hint: '多项目 · 基准排行',
+    icon: Trophy,
     ready: true,
   },
 ]

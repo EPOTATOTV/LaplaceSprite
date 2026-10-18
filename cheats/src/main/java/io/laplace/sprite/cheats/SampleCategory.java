@@ -13,5 +13,7 @@ public enum SampleCategory {
     PERF,
     NETWORK,
     ANOMALY,
-    CHEAT
+    CHEAT,
+    /** 数据包轨：pack_format、函数与标签的加载期行为（升级实施文档 L-02）。 */
+    DATAPACK
 }

@@ -21,6 +21,8 @@ class PackFormatTableTest {
         assertEquals(61, table.formatFor("1.21.4").orElseThrow());
         assertEquals(71, table.formatFor("1.21.5").orElseThrow());
         assertEquals(81, table.formatFor("1.21.8").orElseThrow());
+        assertEquals(85, table.formatFor("26.1").orElseThrow());
+        assertEquals(86, table.formatFor("26.2").orElseThrow());
     }
 
     @Test
