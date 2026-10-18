@@ -1,5 +1,6 @@
 package io.laplace.sprite.cheats.market;
 
+import io.laplace.sprite.cheats.CheatCatalog;
 import io.laplace.sprite.cheats.SampleCategory;
 import io.laplace.sprite.cheats.SampleSpec;
 import io.laplace.sprite.core.io.Json;
@@ -93,6 +94,19 @@ class SampleMarketTest {
         assertEquals(signed.signature(), parsed.signature());
         assertEquals(signed.sampleIds(), parsed.sampleIds());
         assertTrue(SamplePackageSigner.verify(parsed, KEY));
+    }
+
+    @Test
+    void installedSamplesMergeIntoTheCatalog() {
+        SampleMarket market = new SampleMarket(tempDir, KEY);
+        market.install(signed("1.0.0"));
+
+        CheatCatalog catalog = new CheatCatalog(market.installedSamples());
+
+        assertTrue(catalog.sampleById("sample.a").isPresent());
+        assertTrue(catalog.byCategory(SampleCategory.DATAPACK).stream()
+                .anyMatch(sample -> sample.id().equals("sample.a")));
+        assertTrue(catalog.totalSpecs() > new CheatCatalog().totalSpecs());
     }
 
     private static SamplePackage signed(String version) {

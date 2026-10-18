@@ -24,6 +24,32 @@ public final class GameTestSuites {
     }
 
     public static NativeGameTestResult fromNative(int exitCode, List<String> lines) {
+        Parsed parsed = parse(lines);
+        if (parsed.failed() != exitCode) {
+            throw new IllegalArgumentException("退出码与日志不一致：退出码 %d，日志解析出的失败用例 %d 项"
+                    .formatted(exitCode, parsed.failed()));
+        }
+        return new NativeGameTestResult(parsed.total(), parsed.failed(), exitCode, parsed.cases());
+    }
+
+    /**
+     * 只按日志解析，不校验进程退出码。
+     *
+     * <p>Gradle 的 GameTest 任务失败时退出码是 1，而不是失败用例数，不能套用
+     * {@link #fromNative(int, List)} 的硬约束。没有解析到任何用例时仍拒绝返回空结果。</p>
+     */
+    public static NativeGameTestResult fromLog(List<String> lines) {
+        Parsed parsed = parse(lines);
+        if (parsed.total() == 0 && parsed.cases().isEmpty()) {
+            throw new IllegalArgumentException("日志中没有可识别的 GameTest 用例");
+        }
+        return new NativeGameTestResult(parsed.total(), parsed.failed(), parsed.failed(), parsed.cases());
+    }
+
+    private record Parsed(int total, int failed, List<GameTestCaseResult> cases) {
+    }
+
+    private static Parsed parse(List<String> lines) {
         List<GameTestCaseResult> cases = new ArrayList<>();
         Integer reportedTotal = null;
         Integer reportedFailed = null;
@@ -48,11 +74,7 @@ public final class GameTestSuites {
         int failed = reportedFailed != null ? reportedFailed
                 : (int) cases.stream().filter(test -> !test.passed()).count();
         int total = reportedTotal != null ? reportedTotal : cases.size();
-        if (failed != exitCode) {
-            throw new IllegalArgumentException("退出码与日志不一致：退出码 %d，日志解析出的失败用例 %d 项"
-                    .formatted(exitCode, failed));
-        }
-        return new NativeGameTestResult(total, failed, exitCode, cases);
+        return new Parsed(total, failed, List.copyOf(cases));
     }
 
     /** 去掉 {@code [12:00:01] [Server thread/INFO]: } 前缀；没有前缀的行原样返回。 */

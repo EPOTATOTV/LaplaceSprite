@@ -3,6 +3,7 @@ package io.laplace.sprite.cli;
 import io.laplace.sprite.render.PixelDiff;
 import io.laplace.sprite.render.PixelDiffOptions;
 import io.laplace.sprite.render.PixelDiffResult;
+import io.laplace.sprite.render.RenderSuiteRunner;
 import io.laplace.sprite.render.Screenshot;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -10,6 +11,9 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 import picocli.CommandLine.Model.CommandSpec;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
@@ -25,20 +29,39 @@ import java.util.concurrent.Callable;
         mixinStandardHelpOptions = true)
 final class RenderCommand implements Callable<Integer> {
 
-    @Option(names = "--golden", required = true, description = "金标准截图 PNG")
+    @Option(names = "--golden", description = "金标准截图 PNG（单图比对）")
     Path golden;
 
-    @Option(names = "--actual", required = true, description = "实拍截图 PNG")
+    @Option(names = "--actual", description = "实拍截图 PNG（单图比对）")
     Path actual;
 
     @Option(names = "--tolerance", defaultValue = "0.5", description = "允许的差异像素百分比")
     double tolerance;
+
+    @Option(names = "--suite", description = "按 golden / actual 目录跑完整渲染套件")
+    boolean suite;
+
+    @Option(names = "--golden-root", description = "套件模式：golden 根目录")
+    Path goldenRoot;
+
+    @Option(names = "--actual-root", description = "套件模式：实拍截图根目录")
+    Path actualRoot;
+
+    @Option(names = "--report", description = "套件模式：可选 Markdown 报告路径")
+    Path report;
 
     @Spec
     CommandSpec spec;
 
     @Override
     public Integer call() {
+        if (suite) {
+            return runSuite();
+        }
+        if (golden == null || actual == null) {
+            throw new CommandLine.ParameterException(spec.commandLine(),
+                    "单图比对需要 --golden 与 --actual；批量比对用 --suite --golden-root --actual-root");
+        }
         if (!Files.isRegularFile(golden) || !Files.isRegularFile(actual)) {
             throw new CommandLine.ParameterException(spec.commandLine(),
                     "截图不存在: " + (Files.isRegularFile(golden) ? actual : golden).toAbsolutePath());
@@ -61,5 +84,40 @@ final class RenderCommand implements Callable<Integer> {
         writer.println("  结果：" + (result.passed() ? "通过" : "未通过"));
         writer.println("  说明：VulkanMod 格按文档只做「启动 + 渲染一帧」冒烟，不进入视觉 diff 门禁");
         return result.passed() ? 0 : 1;
+    }
+
+    private int runSuite() {
+        if (goldenRoot == null || actualRoot == null) {
+            throw new CommandLine.ParameterException(spec.commandLine(),
+                    "--suite 需要 --golden-root 与 --actual-root");
+        }
+        var writer = spec.commandLine().getOut();
+        RenderSuiteRunner.Report result = new RenderSuiteRunner().run(goldenRoot, actualRoot);
+        writer.println("渲染套件（L-06）");
+        writer.printf("  golden %s%n  actual %s%n", goldenRoot.toAbsolutePath(), actualRoot.toAbsolutePath());
+        writer.printf("  通过 %d · 失败 %d · 缺失 %d%n",
+                result.count(RenderSuiteRunner.Status.PASSED),
+                result.count(RenderSuiteRunner.Status.FAILED),
+                result.count(RenderSuiteRunner.Status.MISSING));
+        result.cases().forEach(testCase -> writer.printf("  [%s] %s/%s/%s — %s%n",
+                testCase.status(), testCase.mcVersion(), testCase.backend().id(), testCase.caseId(),
+                testCase.reason()));
+        if (report != null) {
+            writeReport(result, report);
+            writer.printf("  报告 %s%n", report.toAbsolutePath());
+        }
+        writer.println("  结果：" + (result.passed() ? "通过" : "未通过"));
+        return result.passed() ? 0 : 1;
+    }
+
+    private static void writeReport(RenderSuiteRunner.Report result, Path target) {
+        try {
+            if (target.getParent() != null) {
+                Files.createDirectories(target.getParent());
+            }
+            Files.writeString(target, result.toMarkdown(), StandardCharsets.UTF_8);
+        } catch (IOException ex) {
+            throw new UncheckedIOException("写入渲染报告失败: " + target, ex);
+        }
     }
 }

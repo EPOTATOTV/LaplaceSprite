@@ -53,9 +53,14 @@ public final class RegressionHealth {
             Objects.requireNonNull(bypassWindow, "bypassWindow");
         }
 
-        /** 升级实施文档的口径：绕过报告 30 天内进库、误报复现 100% 覆盖。 */
+        /**
+         * 升级实施文档的口径：绕过报告 30 天内进库、误报复现 100% 覆盖。
+         *
+         * <p>转化率只上报不设硬下限：新报告在窗口期内允许尚未转化，真正拦截的是超期未转化。
+         * 规模同样只上报，避免新项目因用例数少而被拦。</p>
+         */
         public static Thresholds defaults() {
-            return new Thresholds(10, 0.8, 1.0, Duration.ofDays(30));
+            return new Thresholds(0, 0.0, 1.0, Duration.ofDays(30));
         }
     }
 

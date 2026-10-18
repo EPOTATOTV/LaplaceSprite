@@ -5,12 +5,14 @@ import io.laplace.sprite.datapack.PackMeta;
 import io.laplace.sprite.datapack.PackMetaError;
 import io.laplace.sprite.datapack.PackMetaParser;
 import io.laplace.sprite.datapack.PackMetaResult;
+import io.laplace.sprite.datapack.PackTestConvention;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 import picocli.CommandLine.Model.CommandSpec;
 
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -35,9 +37,12 @@ final class DatapackCommand implements Callable<Integer> {
     @Option(names = "--pack-meta", description = "直接指定 pack.mcmeta 文件，覆盖 --pack")
     Path packMeta;
 
-    @Option(names = "--versions", defaultValue = "1.20.6,1.21,1.21.4,1.21.5,1.21.7",
+    @Option(names = "--versions", defaultValue = "1.20.6,1.21,1.21.4,1.21.5,1.21.7,26.1,26.2",
             description = "待判定兼容性的服务端版本，逗号分隔")
     String versions;
+
+    @Option(names = "--tests", description = "扫描并校验 PackTest 约定（data/<ns>/test/*.mcfunction）")
+    boolean tests;
 
     @Spec
     CommandSpec spec;
@@ -45,6 +50,7 @@ final class DatapackCommand implements Callable<Integer> {
     @Override
     public Integer call() {
         var writer = spec.commandLine().getOut();
+        PackTestConvention.Validation validation = tests ? validatePackTests(writer) : null;
         PackMetaParser parser = new PackMetaParser();
         PackMetaResult result = packMeta != null ? parser.parseFile(packMeta) : parser.parsePack(pack);
 
@@ -81,6 +87,21 @@ final class DatapackCommand implements Callable<Integer> {
         if (!Files.isDirectory(pack) && packMeta == null) {
             writer.println("  提示：--pack 指向的目录不存在");
         }
-        return failed == 0 ? 0 : 1;
+        return failed == 0 && (validation == null || validation.valid()) ? 0 : 1;
+    }
+
+    private PackTestConvention.Validation validatePackTests(PrintWriter writer) {
+        if (!Files.isDirectory(pack)) {
+            throw new CommandLine.ParameterException(spec.commandLine(),
+                    "--tests 需要 --pack 指向数据包目录: " + pack.toAbsolutePath());
+        }
+        PackTestConvention.Validation validation = new PackTestConvention(pack).validate();
+        writer.println("PackTest 约定校验（L-02）");
+        writer.printf("  测试函数 %d 个，问题 %d 个%n", validation.testFunctions(),
+                validation.issues().size());
+        validation.cases().forEach(testCase -> writer.printf("    %-32s %s%n",
+                testCase.functionReference(), testCase.assertBackend()));
+        validation.issues().forEach(issue -> writer.println("  - " + issue));
+        return validation;
     }
 }

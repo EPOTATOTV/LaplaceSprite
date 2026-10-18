@@ -79,6 +79,11 @@ public final class DetectionTrend {
         return new DetectionTrend(points);
     }
 
+    /** 直接用已算好的点构建，供趋势历史复用。 */
+    public static DetectionTrend ofPoints(List<Point> points) {
+        return new DetectionTrend(Objects.requireNonNull(points, "points"));
+    }
+
     public List<Point> points() {
         return points;
     }
