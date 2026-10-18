@@ -84,7 +84,7 @@ final class LoadtestCommand implements Callable<Integer> {
             writer.println("  聚合口径：任一节点失败即整体失败，破线并发取失败节点中的最小值");
             if (execute) {
                 DistributedLoadOrchestrator.Dispatch dispatch = new DistributedLoadOrchestrator(
-                        (node, command) -> runNode(command)).dispatch(plan, parsed);
+                        (node, command) -> runNode(node, command)).dispatch(plan, parsed);
                 dispatch.outcomes().forEach(outcome -> writer.printf("  [%s] %s — 退出码 %d%n",
                         outcome.execution().exitCode() == 0 ? "PASS" : "FAIL",
                         outcome.node().id(), outcome.execution().exitCode()));
@@ -98,14 +98,18 @@ final class LoadtestCommand implements Callable<Integer> {
     }
 
     /** 节点命令执行：用系统 shell 下发，输出落临时文件避免管道写满。 */
-    private static DistributedLoadOrchestrator.Execution runNode(String command) {
+    private static DistributedLoadOrchestrator.Execution runNode(DistributedLoadPlan.Node node,
+                                                                 String command) {
         Path output = null;
         try {
             output = Files.createTempFile("laplace-loadtest-", ".log");
             boolean windows = System.getProperty("os.name", "").toLowerCase().contains("win");
+            String shell = windows
+                    ? System.getenv().getOrDefault("ComSpec", "C:\\Windows\\System32\\cmd.exe")
+                    : "/bin/sh";
             ProcessBuilder builder = windows
-                    ? new ProcessBuilder("cmd.exe", "/c", command)
-                    : new ProcessBuilder("sh", "-c", command);
+                    ? new ProcessBuilder(shell, "/c", command)
+                    : new ProcessBuilder(shell, "-c", command);
             Process process = builder.redirectErrorStream(true)
                     .redirectOutput(output.toFile())
                     .start();
@@ -118,10 +122,11 @@ final class LoadtestCommand implements Callable<Integer> {
             String summary = String.join(" | ", text.lines().limit(20).toList());
             return DistributedLoadOrchestrator.Execution.fromExitCode(exitCode, summary);
         } catch (IOException ex) {
-            return DistributedLoadOrchestrator.Execution.fromExitCode(-1, "下发失败: " + ex.getMessage());
+            return DistributedLoadOrchestrator.Execution.fromExitCode(-1,
+                    node.id() + " 下发失败: " + ex.getMessage());
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
-            return DistributedLoadOrchestrator.Execution.fromExitCode(-1, "执行被中断");
+            return DistributedLoadOrchestrator.Execution.fromExitCode(-1, node.id() + " 执行被中断");
         } finally {
             if (output != null) {
                 try {

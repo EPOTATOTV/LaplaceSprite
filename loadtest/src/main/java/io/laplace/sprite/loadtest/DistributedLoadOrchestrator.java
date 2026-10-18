@@ -100,11 +100,22 @@ public final class DistributedLoadOrchestrator {
      * <p>命令只表达参数，不负责引号转义；真实执行器应按目标 shell 规则处理。</p>
      */
     public static String command(DistributedLoadPlan.Node node, String scenarioId) {
-        String base = "laplace loadtest --scenario " + scenarioId + " --bots " + node.bots()
-                + " --node-id " + node.id();
+        String base = "laplace loadtest --scenario " + safeToken(scenarioId) + " --bots " + node.bots()
+                + " --node-id " + safeToken(node.id());
         return switch (node.transport()) {
-            case SSH -> "ssh " + node.host() + " " + base;
+            case SSH -> "ssh " + safeToken(node.host()) + " " + base;
             case DOCKER -> "docker run --rm laplace-cli " + base;
         };
+    }
+
+    /** 只允许主机名 / 标识符里常见的字符，避免节点清单把 shell 元字符带进命令。 */
+    private static String safeToken(String value) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("节点命令参数不能为空");
+        }
+        if (!value.matches("[A-Za-z0-9._:-]+")) {
+            throw new IllegalArgumentException("节点命令参数包含不安全字符: " + value);
+        }
+        return value;
     }
 }
