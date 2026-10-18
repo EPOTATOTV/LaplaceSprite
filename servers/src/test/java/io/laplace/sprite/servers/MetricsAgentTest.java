@@ -38,11 +38,12 @@ class MetricsAgentTest {
 
     @Test
     void tpsBreachAlsoCountsAsKnee() {
-        MetricsAgent agent = new MetricsAgent("tps", 5000L,
+        try (MetricsAgent agent = new MetricsAgent("tps", 5000L,
                 step -> new MetricSample(java.time.Instant.parse("2026-01-01T00:00:00Z"), 19.4 - step, 12.0,
-                        256, 4096, 2.0, 20.0, 30.0, 0, 100));
-        agent.sampleNow();
-        assertEquals(1, agent.kneePoints().size());
+                        256, 4096, 2.0, 20.0, 30.0, 0, 100))) {
+            agent.sampleNow();
+            assertEquals(1, agent.kneePoints().size());
+        }
     }
 
     @Test

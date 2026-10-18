@@ -1,7 +1,6 @@
 package io.laplace.sprite.cli;
 
 import io.laplace.sprite.core.model.EvidenceRecord;
-import io.laplace.sprite.core.model.RegressionCase;
 import io.laplace.sprite.report.EvidenceChainVerifier;
 import io.laplace.sprite.report.EvidenceVault;
 import io.laplace.sprite.report.LocalMirrorRemoteStore;

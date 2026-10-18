@@ -17,7 +17,6 @@ import io.laplace.sprite.report.LogStreamWriter;
 import io.laplace.sprite.report.console.ConsoleData;
 import io.laplace.sprite.report.console.ConsoleDataBuilder;
 import io.laplace.sprite.servers.LiveViewService;
-import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;

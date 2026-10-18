@@ -61,13 +61,14 @@ class PerformanceMetricsTest {
 
     @Test
     void legacySamplesDoNotPretendToHaveLatency() {
-        MetricsAgent agent = new MetricsAgent("legacy", 5000L,
+        try (MetricsAgent agent = new MetricsAgent("legacy", 5000L,
                 step -> new MetricSample(Instant.EPOCH, 20.0, 12.0, 512, 4096, 4.0, 25.0, 30.0,
-                        8, 320));
-        agent.sampleNow();
+                        8, 320))) {
+            agent.sampleNow();
 
-        assertFalse(agent.current().hasLatencySample());
-        assertFalse(agent.latencyDistribution().measured());
+            assertFalse(agent.current().hasLatencySample());
+            assertFalse(agent.latencyDistribution().measured());
+        }
     }
 
     @Test
