@@ -5,6 +5,7 @@ import io.laplace.sprite.cheats.inject.AutoClickerInjector;
 import io.laplace.sprite.cheats.inject.AutoTotemInjector;
 import io.laplace.sprite.cheats.inject.BlinkInjector;
 import io.laplace.sprite.cheats.inject.ContentAnomalyInjector;
+import io.laplace.sprite.cheats.inject.DatapackInjector;
 import io.laplace.sprite.cheats.inject.FastEatInjector;
 import io.laplace.sprite.cheats.inject.FastPlaceInjector;
 import io.laplace.sprite.cheats.inject.FlyInjector;
@@ -65,6 +66,7 @@ public final class CheatInjectorRegistry {
         register(new PerfAnomalyInjector());
         register(new NetworkAnomalyInjector());
         register(new AnomalyInjector());
+        register(new DatapackInjector());
     }
 
     private void register(SampleInjector injector) {
@@ -113,6 +115,7 @@ public final class CheatInjectorRegistry {
             case NETWORK -> "network";
             case ANOMALY -> "anomaly";
             case CHEAT -> throw new IllegalArgumentException("作弊样本必须声明 injector");
+            case DATAPACK -> "datapack";
         };
     }
 }

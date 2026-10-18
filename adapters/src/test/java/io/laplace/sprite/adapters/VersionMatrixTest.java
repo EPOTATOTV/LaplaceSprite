@@ -44,6 +44,11 @@ class VersionMatrixTest {
         assertTrue(registry.supports(new PlatformKey(PlatformFamily.FORGE, "1.21.11", "61.2.3")));
         assertTrue(registry.supports(new PlatformKey(PlatformFamily.NEOFORGE, "1.21.11", "21.11.0")));
 
+        assertTrue(registry.supports(new PlatformKey(PlatformFamily.FABRIC, "26.2", "0.21.0")));
+        assertTrue(registry.supports(new PlatformKey(PlatformFamily.QUILT, "26.1", "0.30.0")));
+        assertTrue(registry.supports(new PlatformKey(PlatformFamily.FORGE, "26.2", "66.0.10")));
+        assertTrue(registry.supports(new PlatformKey(PlatformFamily.NEOFORGE, "26.1", "26.1.0")));
+
         assertFalse(registry.supports(new PlatformKey(PlatformFamily.FABRIC, "1.21.11", "0.99.0")));
         assertFalse(registry.supports(new PlatformKey(PlatformFamily.FABRIC, "1.22.0", "0.19.5")));
         assertFalse(registry.supports(PlatformKey.of(PlatformFamily.PAPER, "1.21.11")));

@@ -18,6 +18,8 @@ public final class LoadScenarioParser {
 
     public static final String MINEFLAYER_RESOURCE = "loadtest/scenarios/mineflayer.json";
     public static final String CARPET_RESOURCE = "loadtest/scenarios/carpet.json";
+    public static final String ENTITIES_26_2_RESOURCE = "loadtest/scenarios/entities-26.2.json";
+    public static final String CHUNKS_26_2_RESOURCE = "loadtest/scenarios/chunks-26.2.json";
 
     public LoadScenario parse(String json) {
         return Json.read(json, LoadScenario.class);
@@ -48,5 +50,10 @@ public final class LoadScenarioParser {
             case MINEFLAYER -> parseResource(MINEFLAYER_RESOURCE);
             case CARPET -> parseResource(CARPET_RESOURCE);
         };
+    }
+
+    /** 26.x 的实体 / 区块负载剧本（升级实施文档 L-04）。 */
+    public List<LoadScenario> bundledTwentySixLoads() {
+        return List.of(parseResource(ENTITIES_26_2_RESOURCE), parseResource(CHUNKS_26_2_RESOURCE));
     }
 }

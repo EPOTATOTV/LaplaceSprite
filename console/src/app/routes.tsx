@@ -8,6 +8,7 @@ import AdminViewScreen from '../screens/admin-view'
 import ClientHudScreen from '../screens/client-hud'
 import ModpackScreen from '../screens/modpack'
 import LiveViewScreen from '../screens/live-view'
+import BenchmarkScreen from '../screens/benchmark'
 
 export const appRoutes: RouteObject[] = [
   { path: '/', element: <DashboardScreen /> },
@@ -17,5 +18,6 @@ export const appRoutes: RouteObject[] = [
   { path: '/modpack', element: <ModpackScreen /> },
   { path: '/ci', element: <CiScreen /> },
   { path: '/live-view', element: <LiveViewScreen /> },
+  { path: '/benchmark', element: <BenchmarkScreen /> },
   { path: '*', element: <NotFoundScreen /> },
 ]

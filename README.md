@@ -58,7 +58,11 @@ laplace console                              # 导出前端控制台数据契约
 | `laplace loadtest` | 假玩家压测轨：压测剧本、bot 后端渲染、TPS/P95 MSPT 门禁口径 |
 | `laplace mixin` | Mixin 生态适配轨：注入计数启动参数、启动日志失败扫描、冲突归因图 |
 | `laplace render` | 渲染级测试轨：金标准截图与实拍截图的像素 diff（默认 0.5% 容差） |
+| `laplace market` | 样本市场：签名校验、安装、回滚与证据归档 |
+| `laplace pacc` | PACC 夜间基准：误报 / 检出趋势图 |
 | `laplace replay --mcpr` | 世界快照回放轨：ReplayMod 录像抽成可重放剧本 |
+
+`laplace test --health <file>` 会把每格冒烟结果写进矩阵健康度文件；`laplace gate --regression <json>` 增加回归库健康度门禁。
 
 ## 控制台（前端）
 
@@ -66,7 +70,7 @@ laplace console                              # 导出前端控制台数据契约
 cd console && npm install && npm run dev
 ```
 
-七个界面：平台管理后台、TestServer 编排控制台、管理员游戏界面、受测玩家 HUD、整合包后台面板、CI 指标看板、Live View 画面墙。
+八个界面：平台管理后台、TestServer 编排控制台、管理员游戏界面、受测玩家 HUD、整合包后台面板、CI 指标看板、Live View 画面墙、评测报告门户。
 
 ## 模块
 

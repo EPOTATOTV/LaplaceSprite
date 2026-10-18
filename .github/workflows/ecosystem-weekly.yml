@@ -84,7 +84,15 @@ jobs:
       - name: laplace gate + 全版本冒烟
         env:
           LAPLACE: ./cli/build/install/laplace/bin/laplace
+          MATRIX_HEALTH: build/laplace/matrix-health.json
         run: sh ci/gate.sh weekly
+      - name: 矩阵健康度归档
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: matrix-health-weekly
+          path: build/laplace/matrix-health.json
+          if-no-files-found: warn
       - name: 归档
         if: always()
         uses: actions/upload-artifact@v4

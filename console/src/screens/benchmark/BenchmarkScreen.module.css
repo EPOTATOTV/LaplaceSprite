@@ -1,0 +1,301 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  padding-top: var(--s-2);
+}
+
+.spanFull {
+  width: 100%;
+}
+
+/* 指标带：主指标占两列，其余两张各一列 */
+.summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-3);
+}
+
+@media (max-width: 1180px) {
+  .summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- 排行列表：不用等宽卡片网格，按名次自然分层 ---------- */
+
+.rankList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rankRow {
+  display: grid;
+  grid-template-columns: 46px minmax(150px, 1.1fr) minmax(110px, 0.72fr) minmax(180px, 1.25fr) auto;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-3) var(--s-4);
+  border-left: 2px solid transparent;
+  animation: bench-rise var(--d-4) var(--ease-out) backwards;
+  transition:
+    transform var(--d-2) var(--ease-out),
+    border-color var(--d-2) var(--ease-out),
+    background-color var(--d-2) var(--ease-out);
+}
+
+.rankRow:hover {
+  transform: translate3d(0, -2px, 0);
+}
+
+.lead {
+  border-left-color: var(--accent);
+  background-color: var(--accent-soft);
+}
+
+.rankNo {
+  font-family: var(--font-mono);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  color: var(--ink-300);
+}
+
+.lead .rankNo {
+  color: var(--accent);
+}
+
+.identity {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.projectName {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--ink-900);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.projectMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+}
+
+.projectMeta em {
+  padding: 1px 7px;
+  border: 1px solid var(--ink-150);
+  border-radius: var(--r-pill);
+  font-family: var(--font-ui);
+  font-style: normal;
+  letter-spacing: 0.04em;
+  color: var(--muted-600);
+}
+
+.score {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.scoreValue {
+  font-size: var(--fs-md);
+  font-weight: 620;
+  color: var(--ink-800);
+}
+
+.scoreTrack,
+.barTrack {
+  position: relative;
+  display: block;
+  height: 3px;
+  overflow: hidden;
+  border-radius: var(--r-pill);
+  background-color: var(--ink-100);
+}
+
+.scoreFill,
+.barFill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--space-500), var(--space-300));
+  animation: bench-grow var(--d-5) var(--ease-out) backwards;
+  animation-delay: 140ms;
+}
+
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.barItem {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.barLabel {
+  font-size: var(--fs-micro);
+  color: var(--ink-400);
+  letter-spacing: 0.04em;
+}
+
+.barAccent {
+  background: linear-gradient(90deg, var(--space-600), var(--space-400));
+}
+
+.barWarn {
+  background: linear-gradient(90deg, var(--warn-600), var(--warn-500));
+}
+
+.trail {
+  font-size: var(--fs-micro);
+  color: var(--muted-500);
+  white-space: nowrap;
+}
+
+/* ---------- 横评表 ---------- */
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+
+.table thead th {
+  padding: var(--s-2) var(--s-3);
+  border-bottom: 1px solid var(--ink-150);
+  font-size: var(--fs-micro);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: var(--ink-400);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.table thead th:first-child {
+  text-align: left;
+}
+
+.better {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--fs-micro);
+  font-weight: 400;
+  color: var(--ink-300);
+  letter-spacing: 0;
+}
+
+.table tbody th,
+.table tbody td {
+  padding: var(--s-3);
+  border-bottom: 1px solid var(--ink-100);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.table tbody th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--ink-800);
+}
+
+.table tbody tr {
+  animation: bench-rise var(--d-4) var(--ease-out) backwards;
+  transition: background-color var(--d-2) var(--ease-out);
+}
+
+.table tbody tr:hover {
+  background-color: var(--ink-050);
+}
+
+.bestRow {
+  background-color: var(--accent-soft);
+}
+
+.bestCell {
+  font-weight: 650;
+  color: var(--accent-strong);
+}
+
+.rowKind {
+  margin-left: var(--s-2);
+  padding: 1px 6px;
+  border: 1px solid var(--ink-150);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-micro);
+  font-weight: 400;
+  color: var(--muted-600);
+}
+
+@media (max-width: 1180px) {
+  .rankRow {
+    grid-template-columns: 36px minmax(120px, 1fr) minmax(100px, 0.7fr) auto;
+  }
+
+  .bars {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .rankRow {
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+    gap: var(--s-3);
+  }
+
+  .trail {
+    display: none;
+  }
+}
+
+@keyframes bench-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes bench-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rankRow,
+  .scoreFill,
+  .barFill,
+  .table tbody tr {
+    animation: none;
+  }
+}

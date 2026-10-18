@@ -115,6 +115,18 @@ class LoadScenarioTest {
         bundled.forEach(scenario -> assertFalse(scenario.note().isBlank()));
     }
 
+    @Test
+    void bundledTwentySixLoadsCoverEntitiesAndChunks() {
+        List<LoadScenario> scenarios = new LoadScenarioParser().bundledTwentySixLoads();
+
+        assertEquals(2, scenarios.size());
+        assertEquals(List.of("entities-26.2", "chunks-26.2"),
+                scenarios.stream().map(LoadScenario::id).toList());
+        assertTrue(scenarios.get(0).actions().contains(BotAction.ENTITY_LOAD));
+        assertTrue(scenarios.get(1).actions().contains(BotAction.CHUNK_LOAD));
+        scenarios.forEach(scenario -> assertTrue(scenario.note().contains("26.2")));
+    }
+
     private static LoadSample sample(int tick, int concurrency) {
         return new LoadSample(tick, concurrency, 20.0, 10.0, 12.0, 15.0, concurrency, 400, 20);
     }

@@ -4,11 +4,14 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import io.laplace.sprite.core.engine.MetricAggregator;
 import io.laplace.sprite.core.engine.ThresholdGate;
 import io.laplace.sprite.core.io.Json;
+import io.laplace.sprite.core.model.FlagEvent;
 import io.laplace.sprite.core.model.GateResult;
 import io.laplace.sprite.core.model.MetricSet;
+import io.laplace.sprite.core.model.RegressionCase;
 import io.laplace.sprite.core.model.TestRun;
 import io.laplace.sprite.core.model.Thresholds;
 import io.laplace.sprite.core.model.Violation;
+import io.laplace.sprite.report.RegressionHealth;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -55,11 +58,27 @@ final class GateCommand implements Callable<Integer> {
     @Option(names = "--allow-boundary-failure", description = "不要求边界样本全通过")
     boolean allowBoundaryFailure;
 
+    @Option(names = "--regression", description = "回归库 JSON（RegressionCase 数组）")
+    Path regression;
+
+    @Option(names = "--regression-flags", description = "误报 flag JSON（FlagEvent 数组），用于算复现覆盖率")
+    Path regressionFlags;
+
+    @Option(names = "--bypass-reports", description = "绕过报告 JSON（BypassReport 数组）")
+    Path bypassReports;
+
+    @Option(names = "--require-regression-health", description = "回归库健康度不达标时门禁失败")
+    boolean requireRegressionHealth;
+
     @Spec
     CommandSpec spec;
 
     @Override
     public Integer call() {
+        if (requireRegressionHealth && regression == null) {
+            throw new CommandLine.ParameterException(spec.commandLine(),
+                    "--require-regression-health 必须同时提供 --regression");
+        }
         Path source = report != null ? report
                 : Support.workspace(workspace).resolve("report").resolve("report.json");
         List<TestRun> runs = readRuns(source);
@@ -84,7 +103,20 @@ final class GateCommand implements Callable<Integer> {
                 total.performanceBaselineDelta() * 100,
                 total.resourceAndAssemblyOk() ? "通过" : "未通过");
 
-        if (gate.passed()) {
+        boolean regressionOk = true;
+        if (regression != null) {
+            RegressionHealth.Health health = evaluateRegression();
+            out.printf("  回归库 %d 条 · 绕过报告 %d 条（已转化 %d，%.2f%%）· 误报复现 %d/%d（%.2f%%）%n",
+                    health.caseCount(), health.bypassReports(), health.convertedBypasses(),
+                    health.bypassConversionRate() * 100, health.coveredFalsePositives(),
+                    health.falsePositiveFlags(), health.falsePositiveCoverage() * 100);
+            out.println("  回归库健康度：" + (health.healthy() ? "通过" : "未通过")
+                    + (health.overdueBypasses() > 0 ? "（超期 " + health.overdueBypasses() + " 条）" : ""));
+            health.violations().forEach(line -> out.println("    - " + line));
+            regressionOk = health.healthy();
+        }
+
+        if (gate.passed() && regressionOk) {
             out.println("门禁结果：通过");
             return 0;
         }
@@ -92,7 +124,33 @@ final class GateCommand implements Callable<Integer> {
         for (Violation v : gate.violations()) {
             out.println("  - [" + v.metric() + "] " + v.message());
         }
+        if (!regressionOk) {
+            out.println("  - [regression-health] 回归库健康度未通过");
+        }
         return 1;
+    }
+
+    private RegressionHealth.Health evaluateRegression() {
+        List<RegressionCase> cases = readArray(regression, RegressionCase[].class);
+        List<FlagEvent> flags = regressionFlags == null ? List.of()
+                : readArray(regressionFlags, FlagEvent[].class);
+        List<RegressionHealth.BypassReport> bypasses = bypassReports == null ? List.of()
+                : readArray(bypassReports, RegressionHealth.BypassReport[].class);
+        return RegressionHealth.evaluate(cases, flags, bypasses,
+                RegressionHealth.Thresholds.defaults(), java.time.Instant.now());
+    }
+
+    private static <T> List<T> readArray(Path file, Class<T[]> type) {
+        if (file == null || !Files.isRegularFile(file)) {
+            throw new CommandLine.ParameterException(new CommandLine(new Object()),
+                    "找不到回归库文件: " + (file == null ? "(null)" : file.toAbsolutePath()));
+        }
+        try {
+            String content = Files.readString(file, StandardCharsets.UTF_8);
+            return List.of(Json.jsonMapper().readValue(content, type));
+        } catch (IOException ex) {
+            throw new UncheckedIOException("解析回归库文件失败: " + file, ex);
+        }
     }
 
     static List<TestRun> readRuns(Path source) {

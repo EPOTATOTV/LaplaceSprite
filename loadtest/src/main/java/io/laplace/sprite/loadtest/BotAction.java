@@ -20,6 +20,10 @@ public enum BotAction {
     ATTACK,
     /** 发送聊天 / 指令包。 */
     CHAT,
+    /** 在 26.x 世界里批量生成 / 牵引实体，压实体 tick。 */
+    ENTITY_LOAD,
+    /** 以固定半径绕圈推进，持续加载新区块。 */
+    CHUNK_LOAD,
     /** 原地待机。 */
     IDLE
 }
