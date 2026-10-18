@@ -31,9 +31,18 @@ final class SuiteFactory {
     private final ScenarioLibrary scenarios = new ScenarioLibrary();
     private final BehaviorTrajectoryGenerator generator = new BehaviorTrajectoryGenerator();
     private final BehaviorSessionFactory legitSessions = new BehaviorSessionFactory();
-    private final CheatCatalog catalog = new CheatCatalog();
+    private final CheatCatalog catalog;
     private final CheatSessionFactory cheatSessions = new CheatSessionFactory();
     private final NetworkModelRegistry networks = new NetworkModelRegistry();
+
+    SuiteFactory() {
+        this(new CheatCatalog());
+    }
+
+    /** 市场安装的样本由调用方合并进 catalog。 */
+    SuiteFactory(CheatCatalog catalog) {
+        this.catalog = catalog;
+    }
 
     Scenario scenario(String id) {
         return scenarios.byId(id).orElseGet(scenarios::defaultScenario);

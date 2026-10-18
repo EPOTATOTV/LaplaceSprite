@@ -9,6 +9,26 @@
   width: 100%;
 }
 
+.loading {
+  position: relative;
+  overflow: hidden;
+  padding: var(--s-7);
+  display: grid;
+  gap: var(--s-3);
+  color: var(--ink-500);
+  animation: bench-fade var(--d-3) var(--ease-out) backwards;
+}
+
+.loadingBar {
+  display: block;
+  height: 3px;
+  width: 168px;
+  border-radius: var(--r-pill);
+  background: linear-gradient(90deg, var(--space-500), var(--space-300), transparent);
+  transform-origin: left center;
+  animation: bench-progress 1.1s var(--ease-inout) infinite alternate;
+}
+
 /* 指标带：主指标占两列，其余两张各一列 */
 .summary {
   display: grid;
@@ -282,6 +302,24 @@
   to {
     opacity: 1;
     transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes bench-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes bench-progress {
+  from {
+    transform: scaleX(0.35);
+  }
+  to {
+    transform: scaleX(1);
   }
 }
 

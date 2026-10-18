@@ -13,7 +13,7 @@ import picocli.CommandLine.Command;
  * {@code clienttest}（CI 客户端测试轨）、{@code datapack}（数据包冒烟轨）、
  * {@code loadtest}（假玩家压测轨）、{@code mixin}（Mixin 生态适配轨）、
  * {@code render}（客户端渲染级测试轨）、{@code market}（样本市场）、
- * {@code pacc}（PACC 夜间基准）。</p>
+ * {@code pacc}（PACC 夜间基准）、{@code gametest}（四加载器 GameTest）。</p>
  */
 @Command(
         name = "laplace",
@@ -38,7 +38,8 @@ import picocli.CommandLine.Command;
                 MixinCommand.class,
                 RenderCommand.class,
                 MarketCommand.class,
-                PaccCommand.class
+                PaccCommand.class,
+                GameTestCommand.class
         })
 public final class LaplaceCli implements Runnable {
 

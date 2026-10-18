@@ -3,6 +3,7 @@ package io.laplace.sprite.cli;
 import io.laplace.sprite.adapters.AdapterRegistryFactory;
 import io.laplace.sprite.adapters.sim.SimServerAdapter;
 import io.laplace.sprite.cheats.CheatCatalog;
+import io.laplace.sprite.cheats.market.SampleMarket;
 import io.laplace.sprite.cheats.report.BypassAnalyzer;
 import io.laplace.sprite.cheats.report.BypassList;
 import io.laplace.sprite.cheats.report.DetectionRateReport;
@@ -25,6 +26,8 @@ import io.laplace.sprite.core.model.TestRun;
 import io.laplace.sprite.core.model.Thresholds;
 import io.laplace.sprite.core.model.Violation;
 import io.laplace.sprite.report.EvidenceVault;
+import io.laplace.sprite.report.RegressionHealth;
+import io.laplace.sprite.report.RegressionLedger;
 import io.laplace.sprite.report.RegressionLibrary;
 import io.laplace.sprite.report.ReportGenerator;
 import picocli.CommandLine;
@@ -33,10 +36,13 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 import picocli.CommandLine.Model.CommandSpec;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -97,6 +103,12 @@ final class RunCommand implements Callable<Integer> {
     @Option(names = "--workspace", description = "工作目录，默认 build/laplace")
     Path workspace;
 
+    @Option(names = "--market", description = "样本市场目录；提供后把已安装样本并入本次运行")
+    Path market;
+
+    @Option(names = "--market-key", description = "市场签名密钥（64 位 hex 或原始字符串）")
+    String marketKey;
+
     @Option(names = "--run-id", description = "指定运行 id")
     String runId;
 
@@ -108,7 +120,8 @@ final class RunCommand implements Callable<Integer> {
 
     @Override
     public Integer call() {
-        SuiteFactory factory = new SuiteFactory();
+        CheatCatalog catalog = catalogForRun();
+        SuiteFactory factory = new SuiteFactory(catalog);
         if (!factory.scenarioExists(scenarioId)) {
             throw new CommandLine.ParameterException(spec.commandLine(),
                     "未知场景剧本: " + scenarioId + "（可选: " + String.join(", ", factory.scenarioIds()) + "）");
@@ -153,7 +166,6 @@ final class RunCommand implements Callable<Integer> {
         Path reportDir = new ReportGenerator().write(ws.resolve("report"), accumulated);
 
         // 4.2 输出：检出率三视图 + 绕过清单，随报告一起归档。
-        CheatCatalog catalog = new CheatCatalog();
         DetectionRateReport rateReport = new DetectionRateReportBuilder().build(run, catalog);
         BypassList bypass = new BypassAnalyzer().analyze(run, catalog);
         write(reportDir.resolve("detection-rate.md"), rateReport.toMarkdown());
@@ -173,13 +185,45 @@ final class RunCommand implements Callable<Integer> {
             }
         }
 
+        // 回归台账：把本轮 flag、绕过报告与回归用例落到同一目录，gate 阶段直接读取。
+        RegressionLedger ledger = new RegressionLedger(ws.resolve("regression"));
+        ledger.recordCases(library.all());
+        ledger.recordFlags(run.flags());
+        ledger.recordBypasses(bypass.entries().stream()
+                .map(entry -> new RegressionHealth.BypassReport(
+                        "bypass-" + run.id() + "-" + entry.cheatType() + "-" + entry.tier(),
+                        entry.cheatType().name(), Instant.now(), false))
+                .toList());
+        RegressionHealth.Health regressionHealth = ledger.writeHealth();
+
         GateResult gate = new ThresholdGate().evaluate(run.metrics(), thresholds);
         if (json) {
             spec.commandLine().getOut().println(Json.write(run));
         } else {
             printSummary(run, gate, reportDir, vault.size(), library.size(), bypass.size());
+            spec.commandLine().getOut().printf("  回归台账 %s · 健康度 %s（用例 %d / 绕过 %d）%n",
+                    ledger.root().toAbsolutePath(), regressionHealth.healthy() ? "通过" : "未通过",
+                    regressionHealth.caseCount(), regressionHealth.bypassReports());
         }
         return gate.passed() ? 0 : 1;
+    }
+
+    /** 合并市场已安装样本；未提供 --market 时只用内置样本。 */
+    private CheatCatalog catalogForRun() {
+        if (market == null) {
+            return new CheatCatalog();
+        }
+        String raw = marketKey != null ? marketKey : System.getenv(MarketCommand.KEY_ENV);
+        if (raw == null || raw.isBlank()) {
+            throw new CommandLine.ParameterException(spec.commandLine(),
+                    "使用 --market 需要 --market-key 或环境变量 " + MarketCommand.KEY_ENV);
+        }
+        String trimmed = raw.trim();
+        byte[] key = trimmed.matches("[0-9a-fA-F]{64}")
+                ? HexFormat.of().parseHex(trimmed)
+                : trimmed.getBytes(StandardCharsets.UTF_8);
+        SampleMarket sampleMarket = new SampleMarket(market, key);
+        return new CheatCatalog(sampleMarket.installedSamples());
     }
 
     /** 门禁按「一次完整基准」口径评估，因此报告目录累积历次运行而不是每次覆盖。 */

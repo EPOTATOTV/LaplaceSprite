@@ -11,7 +11,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -31,15 +33,30 @@ public final class CheatCatalog {
             "movement.yaml", "combat.yaml", "world.yaml", "client.yaml", "generic.yaml", "datapack.yaml");
 
     private List<SampleSpec> defaults;
+    /** 市场安装的额外样本；同 id 覆盖内置样本，便于社区修正。 */
+    private final List<SampleSpec> extras;
 
-    /** 全量样本（含作弊与通用异常），顺序与内置文件登记顺序一致。 */
+    public CheatCatalog() {
+        this(List.of());
+    }
+
+    public CheatCatalog(List<SampleSpec> extras) {
+        this.extras = extras == null ? List.of() : List.copyOf(extras);
+    }
+
+    /** 全量样本（内置 + 市场安装），顺序与内置文件登记顺序一致。 */
     public synchronized List<SampleSpec> allSamples() {
         if (defaults == null) {
-            List<SampleSpec> all = new ArrayList<>();
+            Map<String, SampleSpec> merged = new LinkedHashMap<>();
             for (String file : BUNDLED_FILES) {
-                all.addAll(readResource(BUNDLED_DIR + file));
+                for (SampleSpec sample : readResource(BUNDLED_DIR + file)) {
+                    merged.put(sample.id(), sample);
+                }
             }
-            defaults = List.copyOf(all);
+            for (SampleSpec sample : extras) {
+                merged.put(sample.id(), sample);
+            }
+            defaults = List.copyOf(merged.values());
         }
         return defaults;
     }

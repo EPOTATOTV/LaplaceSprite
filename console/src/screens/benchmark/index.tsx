@@ -1,74 +1,15 @@
+import { useMemo } from 'react'
 import type { CSSProperties } from 'react'
 import { Boxes, FlaskConical, Trophy } from 'lucide-react'
 
 import { Glass } from '../../components/glass/Glass'
 import { Section } from '../../components/Section'
 import { MetricCard } from '../dashboard/MetricCard'
+import { useConsoleData } from '../../data/useConsoleData'
 import { cx } from '../../lib/cx'
 import { formatInt, formatPercent } from '../../lib/format'
+import type { BenchmarkProjectRow } from '../../types'
 import styles from './BenchmarkScreen.module.css'
-
-type ProjectKind = '模组' | '插件' | '整合包'
-
-interface BenchmarkProject {
-  id: string
-  name: string
-  kind: ProjectKind
-  version: string
-  functional: number
-  detection: number
-  msptP95: number
-  regressionCases: number
-  evidenceLinks: number
-}
-
-/** 离线示例基准：接入真实数据后由 report 模块的 report.json 汇总替换。 */
-const PROJECTS: BenchmarkProject[] = [
-  {
-    id: 'cobblemon',
-    name: 'Cobblemon',
-    kind: '模组',
-    version: '1.7.2',
-    functional: 0.982,
-    detection: 0.961,
-    msptP95: 38.4,
-    regressionCases: 42,
-    evidenceLinks: 386,
-  },
-  {
-    id: 'create',
-    name: 'Create',
-    kind: '模组',
-    version: '6.0.9',
-    functional: 0.974,
-    detection: 0.948,
-    msptP95: 41.9,
-    regressionCases: 37,
-    evidenceLinks: 341,
-  },
-  {
-    id: 'essentialsx',
-    name: 'EssentialsX Suite',
-    kind: '插件',
-    version: '2.21.0',
-    functional: 0.991,
-    detection: 0.972,
-    msptP95: 31.2,
-    regressionCases: 55,
-    evidenceLinks: 512,
-  },
-  {
-    id: 'fabulously-optimized',
-    name: 'Fabulously Optimized',
-    kind: '整合包',
-    version: '6.2.0',
-    functional: 0.996,
-    detection: 0.955,
-    msptP95: 27.8,
-    regressionCases: 48,
-    evidenceLinks: 468,
-  },
-]
 
 const METRICS = [
   { key: 'functional', label: '功能通过率', better: 'higher' },
@@ -83,47 +24,80 @@ function clamp01(value: number): number {
 }
 
 /** 综合分：功能 40% + 检出 30% + 性能 20% + 回归规模 10%。 */
-function scoreOf(project: BenchmarkProject): number {
+function scoreOf(project: BenchmarkProjectRow): number {
   const perf = clamp01((60 - project.msptP95) / 35)
   const regression = clamp01(project.regressionCases / 60)
   return project.functional * 0.4 + project.detection * 0.3 + perf * 0.2 + regression * 0.1
 }
 
-const RANKED = [...PROJECTS].sort((left, right) => scoreOf(right) - scoreOf(left))
-const BEST = RANKED[0] as BenchmarkProject
-const AVERAGE_MSPT = PROJECTS.reduce((sum, project) => sum + project.msptP95, 0) / PROJECTS.length
+function averageMspt(projects: BenchmarkProjectRow[]): number {
+  if (projects.length === 0) return 0
+  return projects.reduce((sum, project) => sum + project.msptP95, 0) / projects.length
+}
 
-function metricText(key: (typeof METRICS)[number]['key'], project: BenchmarkProject): string {
+function metricText(key: (typeof METRICS)[number]['key'], project: BenchmarkProjectRow): string {
   if (key === 'msptP95') return `${project.msptP95.toFixed(1)} ms`
   if (key === 'functional' || key === 'detection') return formatPercent(project[key], 1)
   return formatInt(project[key])
 }
 
-function isBest(key: (typeof METRICS)[number]['key'], project: BenchmarkProject): boolean {
-  if (key === 'msptP95') return project.msptP95 === Math.min(...PROJECTS.map((item) => item.msptP95))
-  if (key === 'functional' || key === 'detection') {
-    return project[key] === Math.max(...PROJECTS.map((item) => item[key]))
+function isBest(
+  key: (typeof METRICS)[number]['key'],
+  project: BenchmarkProjectRow,
+  projects: BenchmarkProjectRow[],
+): boolean {
+  if (key === 'msptP95') {
+    return project.msptP95 === Math.min(...projects.map((item) => item.msptP95))
   }
-  return project[key] === Math.max(...PROJECTS.map((item) => item[key]))
+  if (key === 'functional' || key === 'detection') {
+    return project[key] === Math.max(...projects.map((item) => item[key]))
+  }
+  return project[key] === Math.max(...projects.map((item) => item[key]))
 }
 
 export default function BenchmarkScreen() {
+  const { data, state } = useConsoleData()
+  const projects = useMemo(() => data?.benchmarkProjects ?? [], [data])
+  const ranked = useMemo(
+    () => [...projects].sort((left, right) => scoreOf(right) - scoreOf(left)),
+    [projects],
+  )
+  const best = ranked[0]
+  const average = averageMspt(projects)
+
+  if (!data || state === 'loading') {
+    return (
+      <Glass level="panel" className={styles.loading}>
+        <span className={styles.loadingBar} aria-hidden="true" />
+        <p>正在载入多项目基准…</p>
+      </Glass>
+    )
+  }
+
+  if (!best) {
+    return (
+      <Glass level="panel" className={styles.loading}>
+        <p>暂无多项目基准数据</p>
+      </Glass>
+    )
+  }
+
   return (
     <div className={styles.page}>
       <div className={styles.summary}>
         <MetricCard
           hero
           label="最高综合分"
-          value={formatPercent(scoreOf(BEST), 1)}
-          caption={`${BEST.name} · ${BEST.kind} ${BEST.version}`}
+          value={formatPercent(scoreOf(best), 1)}
+          caption={`${best.name} · ${best.kind} ${best.version}`}
           icon={Trophy}
           tone="accent"
           delay={0}
-          ratio={{ value: scoreOf(BEST), label: '功能 40 · 检出 30 · 性能 20 · 回归 10' }}
+          ratio={{ value: scoreOf(best), label: '功能 40 · 检出 30 · 性能 20 · 回归 10' }}
         />
         <MetricCard
           label="参与项目"
-          value={String(PROJECTS.length)}
+          value={String(projects.length)}
           unit="个"
           caption="模组 / 插件 / 整合包同一口径"
           icon={Boxes}
@@ -131,11 +105,11 @@ export default function BenchmarkScreen() {
         />
         <MetricCard
           label="平均 P95 MSPT"
-          value={AVERAGE_MSPT.toFixed(1)}
+          value={average.toFixed(1)}
           unit="ms"
           caption="越低越好 · 门禁上限 50ms"
           icon={FlaskConical}
-          tone={AVERAGE_MSPT > 50 ? 'danger' : 'warn'}
+          tone={average > 50 ? 'danger' : 'warn'}
           delay={140}
         />
       </div>
@@ -147,7 +121,7 @@ export default function BenchmarkScreen() {
         className={styles.spanFull}
       >
         <ol className={styles.rankList}>
-          {RANKED.map((project, index) => {
+          {ranked.map((project, index) => {
             const score = scoreOf(project)
             return (
               <Glass
@@ -239,7 +213,7 @@ export default function BenchmarkScreen() {
               </tr>
             </thead>
             <tbody>
-              {RANKED.map((project, index) => (
+              {ranked.map((project, index) => (
                 <tr
                   key={project.id}
                   className={cx(index === 0 && styles.bestRow)}
@@ -252,7 +226,7 @@ export default function BenchmarkScreen() {
                   {METRICS.map((metric) => (
                     <td
                       key={metric.key}
-                      className={cx('tabular', isBest(metric.key, project) && styles.bestCell)}
+                      className={cx('tabular', isBest(metric.key, project, projects) && styles.bestCell)}
                     >
                       {metricText(metric.key, project)}
                     </td>

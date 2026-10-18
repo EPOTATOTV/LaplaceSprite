@@ -12,6 +12,7 @@ import io.laplace.sprite.core.model.TestRun;
 import io.laplace.sprite.core.model.Thresholds;
 import io.laplace.sprite.core.model.Violation;
 import io.laplace.sprite.report.RegressionHealth;
+import io.laplace.sprite.report.RegressionLedger;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -70,14 +71,18 @@ final class GateCommand implements Callable<Integer> {
     @Option(names = "--require-regression-health", description = "回归库健康度不达标时门禁失败")
     boolean requireRegressionHealth;
 
+    @Option(names = "--min-regression-cases", defaultValue = "0",
+            description = "回归用例规模下限（默认只上报不拦截）")
+    int minRegressionCases;
+
     @Spec
     CommandSpec spec;
 
     @Override
     public Integer call() {
-        if (requireRegressionHealth && regression == null) {
+        if (requireRegressionHealth && !Files.isRegularFile(regressionFile())) {
             throw new CommandLine.ParameterException(spec.commandLine(),
-                    "--require-regression-health 必须同时提供 --regression");
+                    "--require-regression-health 需要回归台账或 --regression 文件");
         }
         Path source = report != null ? report
                 : Support.workspace(workspace).resolve("report").resolve("report.json");
@@ -104,7 +109,7 @@ final class GateCommand implements Callable<Integer> {
                 total.resourceAndAssemblyOk() ? "通过" : "未通过");
 
         boolean regressionOk = true;
-        if (regression != null) {
+        if (regression != null || Files.isRegularFile(regressionFile())) {
             RegressionHealth.Health health = evaluateRegression();
             out.printf("  回归库 %d 条 · 绕过报告 %d 条（已转化 %d，%.2f%%）· 误报复现 %d/%d（%.2f%%）%n",
                     health.caseCount(), health.bypassReports(), health.convertedBypasses(),
@@ -113,7 +118,9 @@ final class GateCommand implements Callable<Integer> {
             out.println("  回归库健康度：" + (health.healthy() ? "通过" : "未通过")
                     + (health.overdueBypasses() > 0 ? "（超期 " + health.overdueBypasses() + " 条）" : ""));
             health.violations().forEach(line -> out.println("    - " + line));
-            regressionOk = health.healthy();
+            // 自动发现台账只做展示；显式 --regression 或 --require-regression-health 才改变门禁结论。
+            boolean enforce = regression != null || requireRegressionHealth;
+            regressionOk = !enforce || health.healthy();
         }
 
         if (gate.passed() && regressionOk) {
@@ -131,13 +138,30 @@ final class GateCommand implements Callable<Integer> {
     }
 
     private RegressionHealth.Health evaluateRegression() {
-        List<RegressionCase> cases = readArray(regression, RegressionCase[].class);
-        List<FlagEvent> flags = regressionFlags == null ? List.of()
-                : readArray(regressionFlags, FlagEvent[].class);
-        List<RegressionHealth.BypassReport> bypasses = bypassReports == null ? List.of()
-                : readArray(bypassReports, RegressionHealth.BypassReport[].class);
+        Path casesFile = regressionFile();
+        Path parent = casesFile.toAbsolutePath().getParent();
+        List<RegressionCase> cases = readArray(casesFile, RegressionCase[].class);
+        Path flagsFile = regressionFlags != null ? regressionFlags
+                : parent.resolve(RegressionLedger.FLAGS_FILE);
+        Path bypassFile = bypassReports != null ? bypassReports
+                : parent.resolve(RegressionLedger.BYPASS_FILE);
+        List<FlagEvent> flags = Files.isRegularFile(flagsFile)
+                ? readArray(flagsFile, FlagEvent[].class) : List.of();
+        List<RegressionHealth.BypassReport> bypasses = Files.isRegularFile(bypassFile)
+                ? readArray(bypassFile, RegressionHealth.BypassReport[].class) : List.of();
+        RegressionHealth.Thresholds defaults = RegressionHealth.Thresholds.defaults();
         return RegressionHealth.evaluate(cases, flags, bypasses,
-                RegressionHealth.Thresholds.defaults(), java.time.Instant.now());
+                new RegressionHealth.Thresholds(minRegressionCases, defaults.minBypassConversion(),
+                        defaults.minFalsePositiveCoverage(), defaults.bypassWindow()),
+                java.time.Instant.now());
+    }
+
+    /** 显式 --regression 优先，否则读工作区的回归台账。 */
+    private Path regressionFile() {
+        if (regression != null) {
+            return regression;
+        }
+        return Support.workspace(workspace).resolve("regression").resolve(RegressionLedger.LIBRARY_FILE);
     }
 
     private static <T> List<T> readArray(Path file, Class<T[]> type) {
