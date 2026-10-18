@@ -9,15 +9,15 @@
 ### 新增
 
 - **26.x 版本矩阵**：四个加载器快照加入 26.1 / 26.2，`PackFormatTable` 支持 26.2 的 86 与 26.1 的 85，渲染矩阵默认版本切到 26.2 / 26.1 / 1.21.1，CI 冒烟清单同步。
-- **GameTest 生态全覆盖**：`GameTestLoader` 登记 Fabric / Quilt / Forge / NeoForge 四个入口；`PackTestConvention` 扫描 `data/<ns>/test/*.mcfunction`；样本类别新增 `DATAPACK` 与对应注入器。
-- **回归库健康度**：`RegressionHealth` 计算用例规模、绕过报告转化率、误报复现覆盖率与超期报告；`gate` 增加 `--regression` / `--bypass-reports` / `--require-regression-health`。
-- **26.x 压测剧本**：新增 `ENTITY_LOAD` / `CHUNK_LOAD` 动作与实体、区块负载剧本。
+- **GameTest 生态全覆盖**：`GameTestLoader` 登记 Fabric / Quilt / Forge / NeoForge 四个入口；`GameTestRunner` 真正调用项目 Gradle 任务并按日志判定，`laplace gametest` 可直接执行；`PackTestConvention` 扫描并静态校验 `data/<ns>/test/*.mcfunction`；样本类别新增 `DATAPACK` 与对应注入器。
+- **回归库健康度**：`RegressionHealth` 计算用例规模、绕过报告转化率、误报复现覆盖率与超期报告；`laplace run` 写入回归台账（用例 / 误报 flag / 绕过报告 / health.md），`gate` 自动读取台账并支持 `--require-regression-health`。
+- **26.x 压测剧本**：新增 `ENTITY_LOAD` / `CHUNK_LOAD` 动作，Carpet 轨下发真实的 `/summon` 与 `/forceload` 命令；实体、区块负载剧本随模块内置。
 - **矩阵健康度写回**：`laplace test --health` 把每格冒烟结果写入 `MatrixHealthRegistry`，每周门禁归档健康度文件。
-- **26.2 渲染金标准库**：`RenderGoldenLibrary` 覆盖硫磺洞穴、新维度、新效果；26.x 容差收紧到 0.5%。
-- **分布式压测**：`DistributedLoadPlan` 把峰值并发拆到 SSH / Docker 节点并聚合判定；`laplace loadtest --nodes` 输出拆分计划。
-- **样本市场**：`SamplePackage` + HMAC 签名、`SampleMarket` 安装 / 回滚 / 历史；`laplace market` 支持安装、回滚、校验并写入证据链。
-- **评测报告门户**：控制台新增多项目基准排行与指标横评页（`/benchmark`）。
-- **PACC 夜间基准**：`DetectionTrend` 产出误报 / 检出趋势 SVG 与 Markdown；`laplace pacc` 支撑 `--baseline` 或 `report.json` 两种输入；nightly 增加合法基线 + 作弊矩阵步骤。
+- **26.2 渲染金标准库**：`RenderGoldenLibrary` 覆盖硫磺洞穴、新维度、新效果；`RenderSuiteRunner` 批量比对 golden / actual 目录并输出 Markdown，26.x 容差 0.5%。
+- **分布式压测**：`DistributedLoadPlan` 把峰值并发拆到 SSH / Docker 节点，`DistributedLoadOrchestrator` 下发命令并聚合判定；`laplace loadtest --nodes` 输出计划，`--execute` 实际执行。
+- **样本市场**：`SamplePackage` + HMAC 签名、`SampleMarket` 安装 / 回滚 / 历史；`laplace market` 支持安装、回滚、校验并写入证据链；`laplace run --market` 把已安装样本并入 `CheatCatalog`。
+- **评测报告门户**：控制台新增多项目基准排行与指标横评页（`/benchmark`），数据走 `ConsoleData.benchmarkProjects` 契约而不是页面内常量。
+- **PACC 夜间基准**：`DetectionTrend` 产出误报 / 检出趋势 SVG 与 Markdown；`TrendHistory` 持久化历史并判定回归，`laplace pacc --history --fail-on-regression` 支撑 nightly 累积与回归拦截。
 
 ### 变更
 

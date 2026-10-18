@@ -91,7 +91,7 @@ public final class ModrinthClient implements ArtifactResolver {
     }
 
     private Optional<Artifact> fetchVersion(String slug, String version, ArtifactRole role) {
-        Optional<String> body = http.get(versionsUri(slug));
+        Optional<String> body = http.get(versionsUri(slug), requestHeaders());
         if (body.isEmpty()) {
             return Optional.empty();
         }
@@ -129,7 +129,7 @@ public final class ModrinthClient implements ArtifactResolver {
     private Optional<List<ArtifactDependency>> fetchDependencies(Artifact artifact) {
         String projectId = artifact.metadata().get("projectId");
         String slug = projectId == null ? artifact.name() : projectId;
-        Optional<String> body = http.get(versionsUri(slug));
+        Optional<String> body = http.get(versionsUri(slug), requestHeaders());
         if (body.isEmpty()) {
             return Optional.empty();
         }
@@ -138,6 +138,11 @@ public final class ModrinthClient implements ArtifactResolver {
         } catch (RuntimeException ex) {
             return Optional.empty();
         }
+    }
+
+    /** Bearer 头只在显式配置 API key 时发送；匿名请求保持无凭据。 */
+    private Map<String, String> requestHeaders() {
+        return apiKey == null || apiKey.isBlank() ? Map.of() : Map.of("Authorization", "Bearer " + apiKey);
     }
 
     /** 项目标识可能是带空格的展示名，路径段必须转义。 */

@@ -22,6 +22,12 @@ jobs:
         run: docker compose -f docker/docker-compose.testservers.yml up -d
       - name: 全量基准（10000 合法 + 全作弊矩阵）
         run: ./cli/build/install/laplace/bin/laplace run --suite mixed --players 10000 --ticks 1200 --seed 20261013 --workspace build/laplace
+      - name: 恢复 PACC 趋势历史
+        uses: actions/cache@v4
+        with:
+          path: build/laplace/pacc/trend-history.json
+          key: pacc-trend-${{ github.run_id }}
+          restore-keys: pacc-trend-
       - name: PACC 夜间基准（合法基线 + 作弊矩阵）
         run: |
           ./cli/build/install/laplace/bin/laplace run --suite legit --players 10000 --ticks 1200 --seed 20261018 --workspace build/laplace/pacc
@@ -29,6 +35,8 @@ jobs:
           ./cli/build/install/laplace/bin/laplace pacc \
             --report build/laplace/pacc/report/report.json \
             --version "$(git describe --tags --always)" \
+            --history build/laplace/pacc/trend-history.json \
+            --fail-on-regression \
             --out build/laplace/pacc/trend.svg \
             --markdown build/laplace/pacc/trend.md
       - name: 门禁判定

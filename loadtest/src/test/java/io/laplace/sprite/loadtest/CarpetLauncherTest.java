@@ -60,6 +60,25 @@ class CarpetLauncherTest {
         assertTrue(CarpetLauncher.carpetAction(BotAction.IDLE).isEmpty());
     }
 
+    @Test
+    void entityAndChunkLoadsRenderRealServerCommands() {
+        CarpetLauncher launcher = new CarpetLauncher(new RecordingChannel());
+        LoadScenario scenario = new LoadScenario("load-26.2", BotBackend.CARPET,
+                List.of(BotAction.JOIN, BotAction.ENTITY_LOAD, BotAction.CHUNK_LOAD), 600,
+                RampCurve.single(2), "");
+
+        List<String> commands = launcher.commands(scenario);
+
+        assertEquals(2, commands.stream().filter(command -> command.contains("summon minecraft:armor_stand"))
+                .count());
+        assertEquals(2, commands.stream().filter(command -> command.contains("forceload add"))
+                .count());
+        assertTrue(commands.stream().anyMatch(command -> command.contains("Tags:[\"laplace-load\"]")));
+        assertTrue(commands.stream().anyMatch(command -> command.contains("forceload add ~-2 ~-2 ~2 ~2")));
+        assertTrue(CarpetLauncher.carpetAction(BotAction.ENTITY_LOAD).isEmpty());
+        assertTrue(CarpetLauncher.carpetAction(BotAction.CHUNK_LOAD).isEmpty());
+    }
+
     private static final class RecordingChannel implements CommandChannel {
 
         private final List<String> commands = new ArrayList<>();

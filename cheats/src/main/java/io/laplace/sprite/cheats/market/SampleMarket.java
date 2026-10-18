@@ -1,6 +1,7 @@
 package io.laplace.sprite.cheats.market;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.laplace.sprite.cheats.SampleSpec;
 import io.laplace.sprite.core.io.Json;
 
 import java.io.IOException;
@@ -128,6 +129,11 @@ public final class SampleMarket {
             current(id).ifPresent(packages::add);
         }
         return List.copyOf(packages);
+    }
+
+    /** 已安装包里的全部样本，供 {@code CheatCatalog} 合并。 */
+    public synchronized List<SampleSpec> installedSamples() {
+        return all().stream().flatMap(pkg -> pkg.samples().stream()).toList();
     }
 
     public boolean verify(SamplePackage pkg) {

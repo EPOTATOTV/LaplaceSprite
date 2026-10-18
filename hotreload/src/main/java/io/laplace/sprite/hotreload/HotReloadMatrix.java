@@ -49,7 +49,7 @@ public final class HotReloadMatrix {
             markdown.append(' ').append(kind.displayName()).append(" |");
         }
         markdown.append('\n').append("| --- |");
-        for (ChangeKind ignored : changes()) {
+        for (int i = 0; i < changes().size(); i++) {
             markdown.append(" --- |");
         }
         markdown.append('\n');

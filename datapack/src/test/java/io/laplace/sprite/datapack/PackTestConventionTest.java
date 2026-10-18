@@ -42,6 +42,34 @@ class PackTestConventionTest {
     }
 
     @Test
+    void validationAcceptsAWellFormedPack() throws IOException {
+        Path pack = Files.createDirectories(tempDir.resolve("valid-pack"));
+        Files.writeString(pack.resolve("pack.mcmeta"),
+                "{\"pack\":{\"pack_format\":86,\"description\":\"26.2\"}}");
+        Files.createDirectories(pack.resolve("data/alpha/test"));
+        Files.writeString(pack.resolve("data/alpha/test/smoke.mcfunction"), "say ok");
+
+        PackTestConvention.Validation validation = new PackTestConvention(pack).validate();
+
+        assertTrue(validation.valid(), validation.issues().toString());
+        assertEquals(1, validation.testFunctions());
+        assertEquals("alpha:smoke", validation.cases().get(0).functionReference());
+    }
+
+    @Test
+    void validationReportsMissingMetaEmptyFunctionsAndNoTests() throws IOException {
+        Path pack = Files.createDirectories(tempDir.resolve("broken-pack"));
+        Files.createDirectories(pack.resolve("data/alpha/test"));
+        Files.writeString(pack.resolve("data/alpha/test/empty.mcfunction"), "  \n");
+
+        PackTestConvention.Validation validation = new PackTestConvention(pack).validate();
+
+        assertFalse(validation.valid());
+        assertTrue(validation.issues().stream().anyMatch(issue -> issue.contains("pack.mcmeta")));
+        assertTrue(validation.issues().stream().anyMatch(issue -> issue.contains("测试函数为空")));
+    }
+
+    @Test
     void packWithoutTestFunctionsYieldsEmptySuite() throws IOException {
         Path pack = Files.createDirectories(tempDir.resolve("empty-pack"));
         Files.createDirectories(pack.resolve("data/alpha/function"));

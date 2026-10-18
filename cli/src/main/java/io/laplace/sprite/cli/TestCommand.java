@@ -19,7 +19,6 @@ import io.laplace.sprite.core.model.RunTarget;
 import io.laplace.sprite.core.model.ServerPluginConfig;
 import io.laplace.sprite.core.spi.AdapterRegistry;
 import io.laplace.sprite.core.spi.InstallContext;
-import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;

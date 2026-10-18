@@ -82,4 +82,56 @@ public final class PackTestConvention {
                 && path.getParent().getFileName() != null
                 && TEST_DIR.equals(path.getParent().getFileName().toString());
     }
+
+    /**
+     * 静态校验：pack.mcmeta、data 目录、测试函数是否为空。
+     *
+     * @param testFunctions 发现的测试函数数
+     * @param cases         解析出的用例
+     * @param issues        发现的问题；为空即通过
+     */
+    public record Validation(int testFunctions, List<DatapackCase> cases, List<String> issues) {
+
+        public Validation {
+            cases = cases == null ? List.of() : List.copyOf(cases);
+            issues = issues == null ? List.of() : List.copyOf(issues);
+        }
+
+        public boolean valid() {
+            return issues.isEmpty();
+        }
+    }
+
+    /** 校验数据包是否满足 PackTest 的最小约定，不做任何执行。 */
+    public Validation validate() {
+        DatapackSuite suite = scan();
+        List<String> issues = new ArrayList<>();
+        Path metaFile = packRoot.resolve("pack.mcmeta");
+        if (!Files.isRegularFile(metaFile)) {
+            issues.add("缺少 pack.mcmeta");
+        } else {
+            PackMetaResult meta = new PackMetaParser().parseFile(metaFile);
+            if (!meta.ok()) {
+                issues.add("pack.mcmeta 解析失败：" + meta.error().describe());
+            }
+        }
+        if (!Files.isDirectory(packRoot.resolve(DATA_DIR))) {
+            issues.add("缺少 data/ 目录");
+        }
+        if (suite.cases().isEmpty()) {
+            issues.add("没有 data/<namespace>/test/*.mcfunction");
+        }
+        for (DatapackCase testCase : suite.cases()) {
+            Path function = packRoot.resolve(DATA_DIR).resolve(testCase.namespace())
+                    .resolve(TEST_DIR).resolve(testCase.functionName() + FUNCTION_SUFFIX);
+            try {
+                if (Files.isRegularFile(function) && Files.readString(function).isBlank()) {
+                    issues.add("测试函数为空：" + testCase.functionReference());
+                }
+            } catch (IOException ex) {
+                issues.add("测试函数不可读：" + testCase.functionReference() + "（" + ex.getMessage() + "）");
+            }
+        }
+        return new Validation(suite.cases().size(), suite.cases(), issues);
+    }
 }

@@ -34,7 +34,6 @@ public final class ReportGenerator {
     private static final String PASS = "#1f9d6b";
     private static final String INFO = "#2f6fed";
     private static final String FAIL = "#d64545";
-    private static final String WARN = "#c98a12";
     private static final String SAMPLE = "#7a5af0";
 
     public String toJson(List<TestRun> runs) {

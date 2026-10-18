@@ -59,10 +59,11 @@ laplace console                              # 导出前端控制台数据契约
 | `laplace mixin` | Mixin 生态适配轨：注入计数启动参数、启动日志失败扫描、冲突归因图 |
 | `laplace render` | 渲染级测试轨：金标准截图与实拍截图的像素 diff（默认 0.5% 容差） |
 | `laplace market` | 样本市场：签名校验、安装、回滚与证据归档 |
-| `laplace pacc` | PACC 夜间基准：误报 / 检出趋势图 |
+| `laplace pacc` | PACC 夜间基准：误报 / 检出趋势图，支持历史累积与回归拦截 |
+| `laplace gametest` | 四加载器 GameTest：调用项目 Gradle 任务并解析日志 |
 | `laplace replay --mcpr` | 世界快照回放轨：ReplayMod 录像抽成可重放剧本 |
 
-`laplace test --health <file>` 会把每格冒烟结果写进矩阵健康度文件；`laplace gate --regression <json>` 增加回归库健康度门禁。
+`laplace test --health <file>` 写矩阵健康度；`laplace run --market <dir>` 并入市场样本；`laplace render --suite` 批量比对 golden / actual；`laplace loadtest --execute` 实际下发节点命令；`laplace gate --regression <json>` 增加回归库健康度门禁。
 
 ## 控制台（前端）
 

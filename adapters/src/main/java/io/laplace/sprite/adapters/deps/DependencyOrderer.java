@@ -2,7 +2,6 @@ package io.laplace.sprite.adapters.deps;
 
 import io.laplace.sprite.core.model.Artifact;
 import io.laplace.sprite.core.model.ArtifactDependency;
-import io.laplace.sprite.core.model.DependencySemantics;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;

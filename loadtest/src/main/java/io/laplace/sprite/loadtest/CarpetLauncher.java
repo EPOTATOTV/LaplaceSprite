@@ -56,6 +56,14 @@ public final class CarpetLauncher {
             commands.add("/player " + name(index) + " spawn");
         }
         for (BotAction action : scenario.actions()) {
+            if (action == BotAction.ENTITY_LOAD) {
+                commands.addAll(entityLoadCommands(count));
+                continue;
+            }
+            if (action == BotAction.CHUNK_LOAD) {
+                commands.addAll(chunkLoadCommands(count));
+                continue;
+            }
             Optional<String> subcommand = carpetAction(action);
             if (subcommand.isEmpty()) {
                 continue;
@@ -82,11 +90,30 @@ public final class CarpetLauncher {
     /** 单个动作对应的 Carpet 子命令；不支持的动作为空。 */
     public static Optional<String> carpetAction(BotAction action) {
         return switch (action) {
-            case JOIN, CHAT, IDLE -> Optional.empty();
-            case WALK, CHUNK_LOAD -> Optional.of("move forward");
-            case MINE, ATTACK, ENTITY_LOAD -> Optional.of("attack continuous");
+            case JOIN, CHAT, IDLE, ENTITY_LOAD, CHUNK_LOAD -> Optional.empty();
+            case WALK -> Optional.of("move forward");
+            case MINE, ATTACK -> Optional.of("attack continuous");
             case PLACE -> Optional.of("use continuous");
         };
+    }
+
+    /** 实体负载：在每个假人脚下生成带标签的盔甲架，供世界实体 tick 压测。 */
+    List<String> entityLoadCommands(int count) {
+        List<String> commands = new ArrayList<>(count);
+        for (int index = 1; index <= count; index++) {
+            commands.add("/execute at " + name(index)
+                    + " run summon minecraft:armor_stand ~ ~ ~ {Tags:[\"laplace-load\"],NoGravity:1b}");
+        }
+        return List.copyOf(commands);
+    }
+
+    /** 区块负载：以假人为中心 forceload 5×5 区块，避免绕圈时区块反复卸载。 */
+    List<String> chunkLoadCommands(int count) {
+        List<String> commands = new ArrayList<>(count);
+        for (int index = 1; index <= count; index++) {
+            commands.add("/execute at " + name(index) + " run forceload add ~-2 ~-2 ~2 ~2");
+        }
+        return List.copyOf(commands);
     }
 
     private String name(int index) {

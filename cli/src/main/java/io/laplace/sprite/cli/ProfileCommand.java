@@ -5,7 +5,6 @@ import io.laplace.sprite.profile.ProfileCollector;
 import io.laplace.sprite.profile.ProfileReport;
 import io.laplace.sprite.profile.ProfileView;
 import io.laplace.sprite.profile.ProfileViewpoint;
-import io.laplace.sprite.profile.TpsRating;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;

@@ -398,10 +398,25 @@ export interface PerfOverlay {
   recordingTriggered: boolean
 }
 
+/** 11.9 评测报告门户：一个项目的基准读数 */
+export interface BenchmarkProjectRow {
+  id: string
+  name: string
+  kind: '模组' | '插件' | '整合包'
+  version: string
+  functional: number
+  detection: number
+  msptP95: number
+  regressionCases: number
+  evidenceLinks: number
+}
+
 /** 控制台一次性载荷（GET /api/console） */
 export interface ConsoleData {
   cards: MetricCards
   runs: TestRunRow[]
+  /** 11.9 多项目基准排行 */
+  benchmarkProjects: BenchmarkProjectRow[]
   /** 11.2 v1.3 样本类型 × 档位断言结果 */
   sampleTypeBreakdown: SampleTypeBreakdown
   /** 11.2 v1.3 全类型目标矩阵 */

@@ -1,4 +1,5 @@
 import type {
+  BenchmarkProjectRow,
   SampleTier,
   ClientSettings,
   ConsoleData,
@@ -1564,6 +1565,55 @@ const targetTypes: TargetTypeRow[] = [
   },
 ]
 
+/* ---------------- 评测报告门户 ---------------- */
+
+const benchmarkProjects: BenchmarkProjectRow[] = [
+  {
+    id: 'cobblemon',
+    name: 'Cobblemon',
+    kind: '模组',
+    version: '1.7.2',
+    functional: 0.982,
+    detection: 0.961,
+    msptP95: 38.4,
+    regressionCases: 42,
+    evidenceLinks: 386,
+  },
+  {
+    id: 'create',
+    name: 'Create',
+    kind: '模组',
+    version: '6.0.9',
+    functional: 0.974,
+    detection: 0.948,
+    msptP95: 41.9,
+    regressionCases: 37,
+    evidenceLinks: 341,
+  },
+  {
+    id: 'essentialsx',
+    name: 'EssentialsX Suite',
+    kind: '插件',
+    version: '2.21.0',
+    functional: 0.991,
+    detection: 0.972,
+    msptP95: 31.2,
+    regressionCases: 55,
+    evidenceLinks: 512,
+  },
+  {
+    id: 'fabulously-optimized',
+    name: 'Fabulously Optimized',
+    kind: '整合包',
+    version: '6.2.0',
+    functional: 0.996,
+    detection: 0.955,
+    msptP95: 27.8,
+    regressionCases: 48,
+    evidenceLinks: 468,
+  },
+]
+
 /* ---------------- 汇总 ---------------- */
 
 export const consoleData: ConsoleData = {
@@ -1581,6 +1631,7 @@ export const consoleData: ConsoleData = {
     detectionRate: aggregateDetectionRate,
   },
   runs,
+  benchmarkProjects,
   sampleTypeBreakdown,
   targetTypes,
   detectionByCheckTier: CHECK_TIER_RATE,

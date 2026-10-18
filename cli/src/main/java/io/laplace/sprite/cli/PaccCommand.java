@@ -3,6 +3,7 @@ package io.laplace.sprite.cli;
 import io.laplace.sprite.core.io.Json;
 import io.laplace.sprite.core.model.TestRun;
 import io.laplace.sprite.report.DetectionTrend;
+import io.laplace.sprite.report.TrendHistory;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -43,6 +44,12 @@ final class PaccCommand implements Callable<Integer> {
     @Option(names = "--markdown", description = "可选：同时写一份 Markdown 表")
     Path markdown;
 
+    @Option(names = "--history", description = "趋势历史 JSON；提供后追加本次结果并画完整历史")
+    Path history;
+
+    @Option(names = "--fail-on-regression", description = "相对上一条记录出现回归时返回非 0")
+    boolean failOnRegression;
+
     @Option(names = "--width", defaultValue = "720", description = "SVG 宽度")
     int width;
 
@@ -58,17 +65,34 @@ final class PaccCommand implements Callable<Integer> {
             throw new CommandLine.ParameterException(spec.commandLine(),
                     "需要 --baseline <json>，或 --report <report.json> + --version <版本>");
         }
-        DetectionTrend trend = DetectionTrend.from(baseline != null ? readBaseline() : aggregateReport());
-        trend.writeSvg(out, width, height);
+        DetectionTrend current = DetectionTrend.from(baseline != null ? readBaseline() : aggregateReport());
+        TrendHistory store = history == null ? null : new TrendHistory(history);
+        if (store != null) {
+            current.points().forEach(store::append);
+            store.save();
+        }
+        DetectionTrend output = store == null ? current : store.trend();
+        output.writeSvg(out, width, height);
         if (markdown != null) {
-            writeMarkdown(trend, markdown);
+            writeMarkdown(output, markdown);
         }
 
         var writer = spec.commandLine().getOut();
         writer.println("PACC 夜间基准趋势");
-        trend.points().forEach(point -> writer.printf(Locale.ROOT, "  %s — 误报率 %.4f%% · 检出率 %.2f%%%n",
+        output.points().forEach(point -> writer.printf(Locale.ROOT, "  %s — 误报率 %.4f%% · 检出率 %.2f%%%n",
                 point.version(), point.falsePositiveRate() * 100, point.detectionRate() * 100));
-        writer.printf("  趋势图 %s%n", out.toAbsolutePath());
+        if (store != null) {
+            TrendHistory.Regression regression = store.compareToPrevious(TrendHistory.Thresholds.defaults());
+            writer.printf("  历史 %d 条 · 回归判定 %s%n", store.entries().size(),
+                    regression.regressed() ? "命中" : "未命中");
+            regression.reasons().forEach(reason -> writer.println("  - " + reason));
+            writer.printf("  趋势图 %s · 历史 %s%n", out.toAbsolutePath(), history.toAbsolutePath());
+            if (regression.regressed() && failOnRegression) {
+                return 1;
+            }
+        } else {
+            writer.printf("  趋势图 %s%n", out.toAbsolutePath());
+        }
         return 0;
     }
 
