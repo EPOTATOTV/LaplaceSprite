@@ -21,7 +21,9 @@ public final class SandboxAuditor {
             ".pem", ".key", ".p12", ".pfx", ".jks", ".p8");
 
     private static final List<String> SYSTEM_PATHS = List.of(
-            "/var/run/docker.sock", "/var/lib/docker", "/proc", "/sys", "/boot", "/root");
+            "/var/run/docker.sock", "/var/lib/docker", "/proc", "/sys", "/boot", "/root",
+            "/usr", "/bin", "/sbin",
+            "c:/windows", "c:/program files", "c:/program files (x86)");
 
     /** 逐条审计挂载点与可写数据目录，命中与否都返回，报告里能看出审了什么。 */
     public List<SandboxAudit> audit(SandboxSpec spec) {

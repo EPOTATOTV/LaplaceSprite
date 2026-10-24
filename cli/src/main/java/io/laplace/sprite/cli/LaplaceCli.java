@@ -21,7 +21,7 @@ import java.util.Optional;
  * {@code render}（客户端渲染级测试轨）、{@code market}（样本市场）、
  * {@code pacc}（PACC 夜间基准）、{@code gametest}（四加载器 GameTest）、
  * {@code plugin}（业务插件列表）、{@code game}（全版本游戏内核管理）、
- * {@code i18n}（界面语言与文案）。</p>
+ * {@code i18n}（界面语言与文案）、{@code audit}（全局证据审计）。</p>
  */
 @Command(
         name = "laplace",
@@ -50,7 +50,8 @@ import java.util.Optional;
                 GameTestCommand.class,
                 PluginCommand.class,
                 GameCommand.class,
-                I18nCommand.class
+                I18nCommand.class,
+                AuditCommand.class
         })
 public final class LaplaceCli implements Runnable {
 

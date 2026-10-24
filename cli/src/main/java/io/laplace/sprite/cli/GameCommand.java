@@ -12,6 +12,9 @@ import io.laplace.sprite.game.HashAlgorithm;
 import io.laplace.sprite.game.HttpGameDownloader;
 import io.laplace.sprite.game.VersionManifest;
 import io.laplace.sprite.game.VersionManifestClient;
+import io.laplace.sprite.report.AuditEvent;
+import io.laplace.sprite.report.AuditType;
+import io.laplace.sprite.report.EvidenceAuditTrail;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -26,6 +29,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -49,6 +53,7 @@ import java.util.concurrent.Callable;
 final class GameCommand implements Runnable {
 
     static final String DEFAULT_CACHE = "build/laplace/game";
+    static final String AUDIT_WORKSPACE = "build/laplace/audit";
 
     @Override
     public void run() {
@@ -150,6 +155,9 @@ final class GameCommand implements Runnable {
                 if (server) {
                     ok &= download(out, err, downloader, metadata.server(),
                             gameCache.serverJar(version.id()), "server.jar");
+                }
+                if (ok) {
+                    recordDownload(err, version.id(), metadata);
                 }
                 return ok ? 0 : 1;
             } catch (IOException | IllegalArgumentException ex) {
@@ -255,6 +263,34 @@ final class GameCommand implements Runnable {
                 return 1;
             }
         }
+    }
+
+    /** 下载成功后写一条全局审计；审计本身失败只告警，不推翻已完成的下载。 */
+    private static void recordDownload(PrintWriter err, String versionId, GameVersionMetadata metadata) {
+        Map<String, String> attributes = new LinkedHashMap<>();
+        StringBuilder detail = new StringBuilder();
+        appendDownload(detail, attributes, "client", metadata.client());
+        appendDownload(detail, attributes, "server", metadata.server());
+        AuditEvent event = new AuditEvent(AuditType.DOWNLOAD, versionId, detail.toString(),
+                Instant.now(), attributes);
+        try {
+            new EvidenceAuditTrail(Path.of(AUDIT_WORKSPACE)).record(event);
+        } catch (RuntimeException ex) {
+            err.println("  [审计] 下载事件写入失败：" + ex.getMessage());
+        }
+    }
+
+    private static void appendDownload(StringBuilder detail, Map<String, String> attributes,
+                                       String name, GameVersionMetadata.DownloadInfo info) {
+        if (info == null) {
+            return;
+        }
+        if (!detail.isEmpty()) {
+            detail.append("; ");
+        }
+        detail.append(name).append('=').append(info.url()).append(" sha1=").append(info.sha1());
+        attributes.put(name + "Url", info.url());
+        attributes.put(name + "Sha1", info.sha1());
     }
 
     private static void printMetadata(PrintWriter out, GameVersionMetadata metadata) {
