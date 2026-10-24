@@ -25,6 +25,7 @@ import io.laplace.sprite.core.model.Scenario;
 import io.laplace.sprite.core.model.TestRun;
 import io.laplace.sprite.core.model.Thresholds;
 import io.laplace.sprite.core.model.Violation;
+import io.laplace.sprite.core.plugin.PluginRuntime;
 import io.laplace.sprite.report.EvidenceVault;
 import io.laplace.sprite.report.RegressionHealth;
 import io.laplace.sprite.report.RegressionLedger;
@@ -52,6 +53,8 @@ import java.util.concurrent.Callable;
 @Command(name = "run", description = "运行基准（合法模拟 / 作弊矩阵 / 边界样本），产出报告与证据",
         mixinStandardHelpOptions = true)
 final class RunCommand implements Callable<Integer> {
+
+    private static final List<String> KNOWN_SUITES = List.of("legit", "cheat", "boundary", "mixed", "all");
 
     @Option(names = "--platform", defaultValue = "in-process",
             description = "目标平台；in-process 表示进程内仿真轨")
@@ -120,6 +123,18 @@ final class RunCommand implements Callable<Integer> {
 
     @Override
     public Integer call() {
+        String suiteId = suite.toLowerCase(java.util.Locale.ROOT);
+        if (!KNOWN_SUITES.contains(suiteId)) {
+            throw new CommandLine.ParameterException(spec.commandLine(),
+                    "未知套件: " + suite + "（可选: legit, cheat, boundary, mixed）");
+        }
+        // all 是 mixed 的历史别名，门控按 mixed 判断，避免把别名当成插件套件。
+        String gatedSuite = "all".equals(suiteId) ? "mixed" : suiteId;
+        if (!PluginRuntime.supportsSuite(gatedSuite)) {
+            spec.commandLine().getOut().printf("套件 %s 由 PACC 插件提供，当前未加载（可用 %s 排除）%n",
+                    suiteId, PluginRuntime.EXCLUDE_PROPERTY);
+            return 2;
+        }
         CheatCatalog catalog = catalogForRun();
         SuiteFactory factory = new SuiteFactory(catalog);
         if (!factory.scenarioExists(scenarioId)) {

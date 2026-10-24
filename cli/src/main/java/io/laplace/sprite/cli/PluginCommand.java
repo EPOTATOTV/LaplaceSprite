@@ -25,7 +25,7 @@ final class PluginCommand implements Runnable {
         CommandLine.usage(this, System.out);
     }
 
-    @Command(name = "list", description = "列出发现的插件：id / 版本 / 能力 / 是否激活",
+    @Command(name = "list", description = "列出发现的插件：id / 版本 / 能力 / 套件 / 是否激活",
             mixinStandardHelpOptions = true)
     static final class ListCommand implements Callable<Integer> {
 
@@ -46,10 +46,12 @@ final class PluginCommand implements Runnable {
             for (PluginDescriptor descriptor : descriptors) {
                 String capabilities = descriptor.capabilities().isEmpty()
                         ? "-" : String.join(",", descriptor.capabilities());
+                List<String> declaredSuites = registry.suiteIds(descriptor.id());
+                String suites = declaredSuites.isEmpty() ? "-" : String.join(",", declaredSuites);
                 String state = registry.isActive(descriptor.id())
                         ? i18n.t("plugin.list.active") : i18n.t("plugin.list.inactive");
                 writer.println("  " + i18n.t("plugin.list.row", descriptor.id(), descriptor.version(),
-                        capabilities, state));
+                        capabilities, suites, state));
             }
             return 0;
         }

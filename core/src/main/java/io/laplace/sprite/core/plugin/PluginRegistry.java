@@ -22,6 +22,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public final class PluginRegistry {
 
+    /** 进程内仿真的自带套件，不经过任何插件；boundary 依赖 PACC 样本，必须由插件声明。 */
+    public static final Set<String> BUILT_IN_SUITES = Set.of("legit");
+
     private final KernelEventBus events;
     private final AdapterRegistry adapters;
     private final Map<String, String> settings;
@@ -93,6 +96,30 @@ public final class PluginRegistry {
                 .map(plugins::get)
                 .filter(plugin -> plugin.descriptor().capabilities().contains(capability))
                 .toList();
+    }
+
+    /** 套件是否可跑：自带套件恒可用，其余看已激活的 {@link TestSuiteProvider}。 */
+    public synchronized boolean supportsSuite(String suiteId) {
+        if (suiteId == null || suiteId.isBlank()) {
+            return false;
+        }
+        if (BUILT_IN_SUITES.contains(suiteId)) {
+            return true;
+        }
+        return active.stream()
+                .map(plugins::get)
+                .filter(TestSuiteProvider.class::isInstance)
+                .map(TestSuiteProvider.class::cast)
+                .anyMatch(provider -> provider.supports(suiteId));
+    }
+
+    /** 插件声明的套件；未登记或不是套件提供者返回空列表。 */
+    public synchronized List<String> suiteIds(String pluginId) {
+        BusinessPlugin plugin = plugins.get(pluginId);
+        if (plugin instanceof TestSuiteProvider provider) {
+            return List.copyOf(provider.suiteIds());
+        }
+        return List.of();
     }
 
     /** 卸载并注销插件；未激活时静默返回。 */

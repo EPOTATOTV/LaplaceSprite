@@ -4,17 +4,18 @@ import io.laplace.sprite.core.plugin.BusinessPlugin;
 import io.laplace.sprite.core.plugin.KernelHook;
 import io.laplace.sprite.core.plugin.PluginContext;
 import io.laplace.sprite.core.plugin.PluginDescriptor;
+import io.laplace.sprite.core.plugin.TestSuiteProvider;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * PACC 业务插件（v3.0 L3-01 最小闭环）。
+ * PACC 业务插件（v3.0 L3-05）。
  *
- * <p>只订阅测试生命周期钩子并计数，真正的回归编排在 L3-05 展开。插件身份让 CLI 能通过
- * {@code laplace.plugins.exclude} 关掉 PACC 而不影响其他业务。</p>
+ * <p>除订阅测试生命周期外，还声明 PACC 独有的 cheat / mixed / boundary 套件，CLI 据此在插件被排除时
+ * 拒绝这些套件，而 legit 走内核自带仿真不受影响。</p>
  */
-public final class PaccBusinessPlugin implements BusinessPlugin {
+public final class PaccBusinessPlugin implements BusinessPlugin, TestSuiteProvider {
 
     public static final String PLUGIN_ID = "pacc";
 
@@ -23,7 +24,13 @@ public final class PaccBusinessPlugin implements BusinessPlugin {
 
     @Override
     public PluginDescriptor descriptor() {
-        return new PluginDescriptor(PLUGIN_ID, "PACC 夜间基准", "1.5.0", List.of(), List.of(PLUGIN_ID));
+        return new PluginDescriptor(PLUGIN_ID, "PACC 夜间基准", "1.5.0", List.of(),
+                List.of(PLUGIN_ID, "test-suites"));
+    }
+
+    @Override
+    public List<String> suiteIds() {
+        return List.of("cheat", "mixed", "boundary");
     }
 
     @Override

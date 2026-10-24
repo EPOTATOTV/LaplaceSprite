@@ -50,6 +50,11 @@ public final class PluginRuntime {
         return registry().isActive(id);
     }
 
+    /** 套件是否可跑；自带套件不受插件排除影响。 */
+    public static boolean supportsSuite(String suiteId) {
+        return registry().supportsSuite(suiteId);
+    }
+
     /** 只从 ServiceLoader 收集插件并应用排除项，不激活。 */
     public static PluginRegistry discover() {
         List<BusinessPlugin> discovered = new ArrayList<>();

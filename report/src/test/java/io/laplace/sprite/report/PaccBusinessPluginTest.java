@@ -9,13 +9,14 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** PACC 业务插件：ServiceLoader 发现、生命周期订阅、排除开关。 */
+/** PACC 业务插件：ServiceLoader 发现、生命周期订阅、套件声明与排除开关。 */
 class PaccBusinessPluginTest {
 
     @AfterEach
@@ -30,7 +31,18 @@ class PaccBusinessPluginTest {
         assertEquals("pacc", descriptor.id());
         assertEquals("1.5.0", descriptor.version());
         assertTrue(descriptor.capabilities().contains("pacc"));
+        assertTrue(descriptor.capabilities().contains("test-suites"));
         assertTrue(descriptor.requires().isEmpty());
+    }
+
+    @Test
+    void declaresPaccSuites() {
+        PaccBusinessPlugin plugin = new PaccBusinessPlugin();
+
+        assertEquals(List.of("cheat", "mixed", "boundary"), plugin.suiteIds());
+        assertTrue(plugin.supports("cheat"));
+        assertTrue(plugin.supports("boundary"));
+        assertFalse(plugin.supports("legit"));
     }
 
     @Test
