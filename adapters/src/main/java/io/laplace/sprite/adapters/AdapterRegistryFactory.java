@@ -13,6 +13,7 @@ import io.laplace.sprite.adapters.bukkit.SpigotAdapter;
 import io.laplace.sprite.adapters.hybrid.ArclightAdapter;
 import io.laplace.sprite.adapters.hybrid.CardboardAdapter;
 import io.laplace.sprite.adapters.hybrid.MagmaNeoAdapter;
+import io.laplace.sprite.adapters.hybrid.MohistAdapter;
 import io.laplace.sprite.adapters.hybrid.YouerAdapter;
 import io.laplace.sprite.adapters.modloader.FabricAdapter;
 import io.laplace.sprite.adapters.modloader.ForgeAdapter;
@@ -31,7 +32,7 @@ import java.util.List;
 /**
  * 适配器注册表工厂（14.2 / 14.3 / 14.9 全量接入矩阵）。
  *
- * <p>Bukkit 家族 6 + 代理 3 + 基岩 4 + 模组加载器 4 + Sponge 系 3 + 混合端 4，共 24 个一次登记完；
+ * <p>Bukkit 家族 6 + 代理 3 + 基岩 4 + 模组加载器 4 + Sponge 系 3 + 混合端 5，共 25 个一次登记完；
  * 矩阵不匹配时由 {@link AdapterRegistry} 走兼容链回退并输出告警。</p>
  */
 public final class AdapterRegistryFactory {
@@ -64,6 +65,7 @@ public final class AdapterRegistryFactory {
                 new SpongeForgeAdapter(),
                 new ArclightAdapter(),
                 new YouerAdapter(),
+                new MohistAdapter(),
                 new MagmaNeoAdapter(),
                 new CardboardAdapter());
     }

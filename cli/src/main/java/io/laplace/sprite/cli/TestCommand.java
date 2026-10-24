@@ -3,6 +3,7 @@ package io.laplace.sprite.cli;
 import io.laplace.sprite.adapters.AbstractLaplaceAdapter;
 import io.laplace.sprite.adapters.AdapterRegistryFactory;
 import io.laplace.sprite.adapters.SmokeScenarios;
+import io.laplace.sprite.adapters.ecosystem.MatrixAlertNotifier;
 import io.laplace.sprite.adapters.ecosystem.MatrixHealthRegistry;
 import io.laplace.sprite.adapters.matrix.AffectedFamilySelector;
 import io.laplace.sprite.adapters.matrix.MatrixPlan;
@@ -25,9 +26,13 @@ import picocli.CommandLine.Spec;
 import picocli.CommandLine.Model.CommandSpec;
 
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 /**
@@ -69,6 +74,12 @@ final class TestCommand implements Callable<Integer> {
 
     @Option(names = "--health", description = "矩阵健康度文件；提供后把本次冒烟结果写回")
     Path health;
+
+    @Option(names = "--alert-webhook", description = "矩阵告警 Webhook；健康度下降 / 版本过期 / 样本过期时发送")
+    String alertWebhook;
+
+    @Option(names = "--alert-sample-ttl-days", defaultValue = "180", description = "样本核对时限（天）")
+    long alertSampleTtlDays;
 
     @Spec
     CommandSpec spec;
@@ -157,8 +168,37 @@ final class TestCommand implements Callable<Integer> {
             out.printf("矩阵健康度：%s（%d 格）%n", health.toAbsolutePath(), healthRegistry.health().size());
             healthRegistry.health().forEach(cell -> out.printf("  %s — 连续通过 %d / 连续失败 %d / %s%n",
                     cell.cellId(), cell.consecutivePasses(), cell.consecutiveFailures(), cell.mode()));
+            sendAlerts(out, healthRegistry);
         }
         return failed == 0 ? 0 : 1;
+    }
+
+    private void sendAlerts(java.io.PrintWriter out, MatrixHealthRegistry healthRegistry) {
+        if (alertWebhook == null || alertWebhook.isBlank()) {
+            return;
+        }
+        List<MatrixAlertNotifier.Alert> alerts = MatrixAlertNotifier.evaluate(healthRegistry,
+                activeMinecraftVersions(), Instant.now(), Duration.ofDays(alertSampleTtlDays));
+        if (alerts.isEmpty()) {
+            out.println("矩阵告警：无");
+            return;
+        }
+        try {
+            MatrixAlertNotifier.dispatch(alertWebhook, alerts);
+            out.printf("矩阵告警：%d 项已发送%n", alerts.size());
+        } catch (RuntimeException ex) {
+            out.println("矩阵告警发送失败：" + ex.getMessage());
+        }
+    }
+
+    /** 当前矩阵仍在维护的 MC 版本，取自四个加载器的离线快照。 */
+    private static Set<String> activeMinecraftVersions() {
+        VersionMatrixRegistry registry = VersionMatrixRegistry.defaults(false);
+        Set<String> versions = new HashSet<>();
+        for (PlatformFamily family : PlatformFamily.values()) {
+            registry.snapshot(family).forEach(entry -> versions.add(entry.minecraftVersion()));
+        }
+        return versions;
     }
 
     private static void recordHealth(MatrixHealthRegistry registry, PlatformKey key, boolean passed) {

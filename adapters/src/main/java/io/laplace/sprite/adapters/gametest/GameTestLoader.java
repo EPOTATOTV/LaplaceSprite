@@ -1,6 +1,7 @@
 package io.laplace.sprite.adapters.gametest;
 
 import io.laplace.sprite.core.model.PlatformFamily;
+import io.laplace.sprite.core.spi.VersionOrder;
 
 /**
  * 官方 GameTest 在四个模组加载器上的入口（升级实施文档 L-02）。
@@ -18,6 +19,9 @@ public enum GameTestLoader {
 
     /** 四个加载器共用同一条原生命令。 */
     public static final String NATIVE_COMMAND = "/test runall";
+
+    /** GameTest 原生命令进入稳定版的起始版本；26.3 沿用同一条命令。 */
+    public static final String MIN_MINECRAFT = "1.21.5";
 
     private final PlatformFamily family;
     private final String suite;
@@ -61,5 +65,19 @@ public enum GameTestLoader {
     /** 覆盖验收要求的四个加载器。 */
     public static boolean coversAllLoaders() {
         return values().length == 4;
+    }
+
+    /**
+     * 该版本是否走同一条 GameTest 入口。
+     *
+     * <p>1.21.5 起 {@code /test} 命令稳定，26.1–26.4 没有改动入口格式；1.22+ / 2.x 尚未发布，
+     * 不因为版本号更大就默认支持。</p>
+     */
+    public static boolean supportsMinecraft(String mcVersion) {
+        if (mcVersion == null || mcVersion.isBlank()) {
+            return false;
+        }
+        boolean releasedLine = mcVersion.startsWith("26.") || mcVersion.startsWith("1.21.");
+        return releasedLine && VersionOrder.compare(mcVersion, MIN_MINECRAFT) >= 0;
     }
 }

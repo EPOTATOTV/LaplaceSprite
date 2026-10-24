@@ -61,7 +61,7 @@
 
 .rankRow {
   display: grid;
-  grid-template-columns: 46px minmax(150px, 1.1fr) minmax(110px, 0.72fr) minmax(180px, 1.25fr) auto;
+  grid-template-columns: 46px minmax(150px, 1.1fr) minmax(110px, 0.72fr) minmax(180px, 1.25fr) 104px auto;
   align-items: center;
   gap: var(--s-4);
   padding: var(--s-3) var(--s-4);
@@ -189,6 +189,52 @@
   background: linear-gradient(90deg, var(--warn-600), var(--warn-500));
 }
 
+.trend {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.spark {
+  display: block;
+  width: 88px;
+  height: 24px;
+}
+
+.sparkLine {
+  fill: none;
+  stroke: var(--space-500);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.75;
+  animation: bench-fade var(--d-4) var(--ease-out) 160ms backwards;
+}
+
+.sparkDot {
+  fill: var(--accent);
+  animation: bench-fade var(--d-3) var(--ease-out) 260ms backwards;
+}
+
+.drift {
+  padding: 1px 7px;
+  border: 1px solid var(--warn-line);
+  border-radius: var(--r-pill);
+  background-color: var(--warn-soft);
+  font-size: var(--fs-micro);
+  color: var(--warn-600);
+  white-space: nowrap;
+}
+
+.steady,
+.trendEmpty {
+  font-size: var(--fs-micro);
+  letter-spacing: 0.04em;
+  color: var(--ink-300);
+  white-space: nowrap;
+}
+
 .trail {
   font-size: var(--fs-micro);
   color: var(--muted-500);
@@ -275,7 +321,7 @@
 
 @media (max-width: 1180px) {
   .rankRow {
-    grid-template-columns: 36px minmax(120px, 1fr) minmax(100px, 0.7fr) auto;
+    grid-template-columns: 36px minmax(120px, 1fr) minmax(100px, 0.7fr) 96px auto;
   }
 
   .bars {
@@ -289,7 +335,8 @@
     gap: var(--s-3);
   }
 
-  .trail {
+  .trail,
+  .trend {
     display: none;
   }
 }
@@ -333,6 +380,8 @@
   .rankRow,
   .scoreFill,
   .barFill,
+  .sparkLine,
+  .sparkDot,
   .table tbody tr {
     animation: none;
   }

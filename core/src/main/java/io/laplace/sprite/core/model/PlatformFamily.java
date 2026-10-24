@@ -13,7 +13,7 @@ public enum PlatformFamily {
     // 模组加载器家族
     FORGE, NEOFORGE, FABRIC, QUILT, SPONGE_VANILLA, SPONGE_NEO, SPONGE_FORGE,
     // 混合端（Bukkit × 模组加载器组合适配器）
-    ARCLIGHT, YOUER, MAGMA_NEO, CARDBOARD,
+    ARCLIGHT, YOUER, MOHIST, MAGMA_NEO, CARDBOARD,
     // 非加载器产物
     VANILLA_DATAPACK, MODPACK;
 
@@ -48,7 +48,8 @@ public enum PlatformFamily {
 
     /** 混合端：Bukkit 家族 × 模组加载器的组合适配器，双目录双事件总线。 */
     public boolean isHybrid() {
-        return this == ARCLIGHT || this == YOUER || this == MAGMA_NEO || this == CARDBOARD;
+        return this == ARCLIGHT || this == YOUER || this == MOHIST || this == MAGMA_NEO
+                || this == CARDBOARD;
     }
 
     /**
@@ -71,6 +72,7 @@ public enum PlatformFamily {
             case SPONGE_NEO -> new PlatformFamily[]{NEOFORGE};
             case SPONGE_VANILLA -> new PlatformFamily[]{};
             case ARCLIGHT, YOUER -> new PlatformFamily[]{PAPER, FORGE, NEOFORGE, FABRIC};
+            case MOHIST -> new PlatformFamily[]{PAPER, FORGE};
             case MAGMA_NEO -> new PlatformFamily[]{NEOFORGE};
             case CARDBOARD -> new PlatformFamily[]{FABRIC, PAPER};
             default -> new PlatformFamily[0];

@@ -2,6 +2,28 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循语义化版本。
 
+## [1.5.0] - 2026-10-23
+
+下一步升级实施 v2（L2-01 ~ L2-10）。
+
+### 新增
+
+- **26.3 / 26.4 版本矩阵**：Fabric / Quilt / NeoForge / Forge 快照与离线生态快照加入 26.3 稳定线与 26.4 快照；`PackFormatTable` 支持 87 / 88；渲染矩阵默认版本扩到 26.4 / 26.3 / 26.2 / 26.1 / 1.21.1；CI 适配器矩阵同步。
+- **Vulkan 管线分档**：`RenderPipeline` 区分 OpenGL 与 Vulkan，VulkanMod 在 26.4 起进入像素 diff，容差 0.8%，OpenGL 保持 0.5%；金标准库新增 26.4 OIT 深度 bin 与地形用例、26.3 基线。
+- **分布式压测韧性**：下发前做节点健康检查，掉线节点的并发重新分摊给存活节点；节点执行异常按次数重试，仍失败则降级跳过并标记 degraded，聚合结论区分性能破线与基础设施故障。
+- **2026 Q4 检测目标样本**：新增 TruthfulAC、Boar、GrimAC 2.3.74 对应的 8 条绕过样本，样本库达到 62 条；绕过说明标注来源与待复核项。
+- **GameTest 统一报告**：`GameTestLoader` 明确 26.x 沿用 1.21.5+ 的 `/test runall` 入口，`laplace gametest --mc` 校验版本；`gametest` 与 `datapack` 通过 `TestTrackReport` 输出同一份 JSON 报告。
+- **PACC 回归联动**：`PaccRegressionSync` 把 PACC 误报按轨迹去重写入回归库，`laplace pacc --sync-regression` 与 nightly 缓存一起把误报用例纳入回归健康度。
+- **样本市场治理**：样本包新增签名的来源可信度与来源引用；市场支持吊销、搜索排序与安装前沙箱校验，被吊销版本不可安装或回滚。
+- **评测门户趋势**：`/benchmark` 增加历史综合分折线与基线漂移标注，四项目各有四个历史点。
+- **矩阵健康度告警**：`MatrixAlertNotifier` 覆盖健康度下降、版本过期、样本过期，`laplace test --alert-webhook` 发送 Webhook；适配器矩阵 CI 持久化每格健康度。
+- **混合端扩充**：新增 Mohist 适配器（Bukkit × Forge，1.21.1–26.4），适配器总数 25。
+
+### 变更
+
+- 版本号升至 1.5.0。
+- `laplace datapack --versions` 默认清单加入 26.3 / 26.4。
+
 ## [1.4.0] - 2026-10-18
 
 下一步升级实施（L-01 ~ L-10）。

@@ -44,7 +44,7 @@ class SampleMarketTest {
         SampleMarket market = new SampleMarket(tempDir, KEY);
         SamplePackage signed = signed("1.0.0");
         SamplePackage tampered = new SamplePackage(signed.id(), signed.version(), "attacker",
-                signed.samples(), signed.signature());
+                signed.samples(), signed.signature(), signed.trustScore(), signed.sourceRef());
 
         assertFalse(market.verify(tampered));
         assertThrows(SecurityException.class, () -> market.install(tampered));
@@ -109,11 +109,64 @@ class SampleMarketTest {
         assertTrue(catalog.totalSpecs() > new CheatCatalog().totalSpecs());
     }
 
-    private static SamplePackage signed(String version) {
-        SampleSpec sample = new SampleSpec("sample.a", "样本 A", SampleCategory.DATAPACK,
+    @Test
+    void trustScoreIsCoveredByTheSignature() {
+        SamplePackage signed = signed("1.0.0");
+        SamplePackage inflated = new SamplePackage(signed.id(), signed.version(), signed.publisher(),
+                signed.samples(), signed.signature(), 1.0, signed.sourceRef());
+
+        assertFalse(new SampleMarket(tempDir, KEY).verify(inflated), "可信度被改动后签名必须失效");
+    }
+
+    @Test
+    void revokedVersionCannotBeInstalledOrRolledBackTo() {
+        SampleMarket market = new SampleMarket(tempDir, KEY);
+        market.install(signed("1.0.0"));
+        market.install(signed("1.1.0"));
+
+        market.revoke("community-pack", "1.0.0", "来源不可信");
+
+        assertTrue(market.isRevoked("community-pack", "1.0.0"));
+        assertThrows(IllegalStateException.class, () -> market.rollback("community-pack"));
+        assertThrows(SecurityException.class, () -> market.install(signed("1.0.0")));
+    }
+
+    @Test
+    void searchRanksByRelevanceThenTrust() {
+        SampleMarket market = new SampleMarket(tempDir, KEY);
+        market.install(signed("1.0.0"));
+        SamplePackage other = SamplePackageSigner.sign(new SamplePackage("other-pack", "2.0.0",
+                "laplace-community", List.of(sample("community.sample")), "", 0.4,
+                "https://example.invalid/other"), KEY);
+        market.install(other);
+
+        List<SampleMarket.SearchHit> hits = market.search("community");
+
+        assertEquals("community-pack", hits.get(0).pkg().id(), "精确匹配的 id 相关度更高");
+        assertEquals(0.9, hits.get(0).trustScore());
+        assertFalse(hits.get(0).revoked());
+    }
+
+    @Test
+    void sandboxRejectsDuplicateOrMalformedSamplesBeforeWriting() {
+        SampleMarket market = new SampleMarket(tempDir, KEY);
+        SampleSpec duplicated = sample("Bad Id");
+        SamplePackage invalid = SamplePackageSigner.sign(new SamplePackage("bad-pack", "1.0.0",
+                "laplace-community", List.of(duplicated, duplicated), "", 0.5, ""), KEY);
+
+        assertThrows(IllegalArgumentException.class, () -> market.install(invalid));
+        assertTrue(market.current("bad-pack").isEmpty());
+        assertFalse(java.nio.file.Files.exists(tempDir.resolve("bad-pack")));
+    }
+
+    private static SampleSpec sample(String id) {
+        return new SampleSpec(id, "样本 A", SampleCategory.DATAPACK,
                 "PACK_FORMAT_MISMATCH", null, "datapack-runtime", List.<SampleTier>of(),
                 "baseline:walk", "datapack", "社区", "");
+    }
+
+    private static SamplePackage signed(String version) {
         return SamplePackageSigner.sign(new SamplePackage("community-pack", version, "laplace-community",
-                List.of(sample), ""), KEY);
+                List.of(sample("sample.a")), "", 0.9, "https://example.invalid/community-pack"), KEY);
     }
 }

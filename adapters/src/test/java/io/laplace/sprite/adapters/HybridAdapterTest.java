@@ -10,6 +10,7 @@ import io.laplace.sprite.adapters.hybrid.HybridEventDeduplicator;
 import io.laplace.sprite.adapters.hybrid.HybridInstallLayout;
 import io.laplace.sprite.adapters.hybrid.HybridPitfalls;
 import io.laplace.sprite.adapters.hybrid.MagmaNeoAdapter;
+import io.laplace.sprite.adapters.hybrid.MohistAdapter;
 import io.laplace.sprite.adapters.hybrid.YouerAdapter;
 import io.laplace.sprite.core.event.Event;
 import io.laplace.sprite.core.event.EventStream;
@@ -36,7 +37,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class HybridAdapterTest {
 
     private static final List<AbstractHybridAdapter> HYBRIDS = List.of(
-            new ArclightAdapter(), new YouerAdapter(), new MagmaNeoAdapter(), new CardboardAdapter());
+            new ArclightAdapter(), new YouerAdapter(), new MohistAdapter(), new MagmaNeoAdapter(),
+            new CardboardAdapter());
 
     private static final PlatformKey ARCLIGHT_KEY = PlatformKey.of(PlatformFamily.ARCLIGHT, "1.21.1");
 
@@ -147,6 +149,18 @@ class HybridAdapterTest {
         assertFallback(PlatformKey.of(PlatformFamily.ARCLIGHT, "1.19.4"), "paper");
         // Magma-Neo 版本不在区间 → 回退纯模组端（NeoForge）。
         assertFallback(PlatformKey.of(PlatformFamily.MAGMA_NEO, "1.20.4"), "neoforge");
+    }
+
+    @Test
+    void mohistFollowsTheYouerPatternOnTheForgeHost() {
+        MohistAdapter mohist = new MohistAdapter();
+
+        assertEquals(PlatformFamily.MOHIST, mohist.family());
+        assertTrue(PlatformFamily.MOHIST.isHybrid());
+        assertEquals(PlatformFamily.FORGE, mohist.loaderFamily());
+        assertEquals(PlatformFamily.SPIGOT, mohist.bukkitFamily());
+        assertTrue(mohist.supportRange().supports(PlatformKey.of(PlatformFamily.MOHIST, "26.3")));
+        assertTrue(mohist.supportRange().supports(PlatformKey.of(PlatformFamily.MOHIST, "26.4")));
     }
 
     @Test

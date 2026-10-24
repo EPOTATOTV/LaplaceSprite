@@ -56,14 +56,14 @@ class MatrixCellGeneratorTest {
     }
 
     @Test
-    void minecraft261CellsRequireJava25() {
+    void twentySixCellsRequireJava25() {
         GenerationResult result = generator.generate(GateTier.DAILY);
 
-        CellDefinition fabric = cell("fabric/26.1/0.20.0", result.cells());
-        assertEquals(25, fabric.jdk(), "26.1 起强制 Java 25");
-        CellDefinition paper = cell("paper/26.1", result.cells());
+        CellDefinition fabric = cell("fabric/26.3/0.22.0", result.cells());
+        assertEquals(25, fabric.jdk(), "26.x 强制 Java 25");
+        CellDefinition paper = cell("paper/26.3", result.cells());
         assertEquals(25, paper.jdk());
-        assertEquals(21, cell("fabric/1.21.11/0.19.5", result.cells()).jdk());
+        assertEquals(25, cell("fabric/26.1/0.20.0", result.cells()).jdk());
     }
 
     @Test

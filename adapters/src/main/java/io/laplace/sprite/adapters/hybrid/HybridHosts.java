@@ -16,7 +16,7 @@ public final class HybridHosts {
     /** 混合端默认挂载的模组加载器。 */
     public static PlatformFamily loaderFor(PlatformFamily hybrid) {
         return switch (hybrid) {
-            case ARCLIGHT -> PlatformFamily.FORGE;
+            case ARCLIGHT, MOHIST -> PlatformFamily.FORGE;
             case YOUER, MAGMA_NEO -> PlatformFamily.NEOFORGE;
             case CARDBOARD -> PlatformFamily.FABRIC;
             default -> throw new IllegalArgumentException("非混合端家族: " + hybrid);

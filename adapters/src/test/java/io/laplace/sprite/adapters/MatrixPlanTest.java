@@ -37,6 +37,7 @@ class MatrixPlanTest {
         assertEquals(FamilyTier.TIER2, FamilyTier.of(PlatformFamily.FORGE));
         assertEquals(FamilyTier.TIER2, FamilyTier.of(PlatformFamily.MAGMA_NEO));
         assertEquals(FamilyTier.TIER2, FamilyTier.of(PlatformFamily.CARDBOARD));
+        assertEquals(FamilyTier.TIER2, FamilyTier.of(PlatformFamily.MOHIST));
         assertEquals(FamilyTier.EXCLUDED, FamilyTier.of(PlatformFamily.WATERFALL));
         assertFalse(FamilyTier.of(PlatformFamily.WATERFALL).gatesPullRequest());
         assertTrue(FamilyTier.of(PlatformFamily.PAPER).gatesPullRequest());

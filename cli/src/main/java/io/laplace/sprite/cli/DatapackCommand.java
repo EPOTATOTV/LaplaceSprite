@@ -6,6 +6,8 @@ import io.laplace.sprite.datapack.PackMetaError;
 import io.laplace.sprite.datapack.PackMetaParser;
 import io.laplace.sprite.datapack.PackMetaResult;
 import io.laplace.sprite.datapack.PackTestConvention;
+import io.laplace.sprite.core.io.Json;
+import io.laplace.sprite.core.model.TestTrackReport;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -15,6 +17,7 @@ import picocli.CommandLine.Model.CommandSpec;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.OptionalInt;
@@ -37,12 +40,15 @@ final class DatapackCommand implements Callable<Integer> {
     @Option(names = "--pack-meta", description = "直接指定 pack.mcmeta 文件，覆盖 --pack")
     Path packMeta;
 
-    @Option(names = "--versions", defaultValue = "1.20.6,1.21,1.21.4,1.21.5,1.21.7,26.1,26.2",
+    @Option(names = "--versions", defaultValue = "1.20.6,1.21,1.21.4,1.21.5,1.21.7,26.1,26.2,26.3,26.4",
             description = "待判定兼容性的服务端版本，逗号分隔")
     String versions;
 
     @Option(names = "--tests", description = "扫描并校验 PackTest 约定（data/<ns>/test/*.mcfunction）")
     boolean tests;
+
+    @Option(names = "--report", description = "可选：与 gametest 轨共用的 JSON 报告路径")
+    Path reportFile;
 
     @Spec
     CommandSpec spec;
@@ -74,6 +80,7 @@ final class DatapackCommand implements Callable<Integer> {
                 .toList();
         writer.println("  版本兼容矩阵（不兼容即加载阶段失败）");
         int failed = 0;
+        List<String> issues = new ArrayList<>();
         for (String version : targets) {
             boolean compatible = formats.compatible(version, meta);
             OptionalInt expected = formats.formatFor(version);
@@ -81,13 +88,24 @@ final class DatapackCommand implements Callable<Integer> {
                     expected.isPresent() ? expected.getAsInt() : "未知");
             if (!compatible) {
                 failed++;
+                issues.add("版本 " + version + " 不兼容，期望 pack_format="
+                        + (expected.isPresent() ? expected.getAsInt() : "未知"));
             }
         }
         writer.printf("  版本列 %d 个，不兼容 %d 个%n", targets.size(), failed);
         if (!Files.isDirectory(pack) && packMeta == null) {
             writer.println("  提示：--pack 指向的目录不存在");
         }
-        return failed == 0 && (validation == null || validation.valid()) ? 0 : 1;
+        boolean passed = failed == 0 && (validation == null || validation.valid());
+        if (reportFile != null) {
+            if (validation != null) {
+                issues.addAll(validation.issues());
+            }
+            int total = validation != null ? validation.testFunctions() : targets.size();
+            int failedCount = failed + (validation == null ? 0 : validation.issues().size());
+            Json.writeFile(reportFile, TestTrackReport.datapack(versions, passed, total, failedCount, issues));
+        }
+        return passed ? 0 : 1;
     }
 
     private PackTestConvention.Validation validatePackTests(PrintWriter writer) {

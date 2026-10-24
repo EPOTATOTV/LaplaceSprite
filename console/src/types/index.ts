@@ -2,6 +2,7 @@ export type {
   BatchPattern,
   BehaviorProfile,
   BenchmarkProjectRow,
+  BenchmarkTrendPoint,
   SampleTier,
   CheatType,
   ClientSettings,

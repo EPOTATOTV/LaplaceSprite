@@ -79,6 +79,7 @@ final class Support {
         map.put("spongeforge", PlatformFamily.SPONGE_FORGE);
         map.put("arclight", PlatformFamily.ARCLIGHT);
         map.put("youer", PlatformFamily.YOUER);
+        map.put("mohist", PlatformFamily.MOHIST);
         map.put("magmaneo", PlatformFamily.MAGMA_NEO);
         map.put("cardboard", PlatformFamily.CARDBOARD);
         map.put("datapack", PlatformFamily.VANILLA_DATAPACK);

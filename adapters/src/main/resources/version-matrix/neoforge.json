@@ -1,6 +1,8 @@
 {
   "source": "neoforge-projects",
   "entries": [
+    { "minecraftVersion": "26.4", "loaderVersion": "26.4.0" },
+    { "minecraftVersion": "26.3", "loaderVersion": "26.3.0" },
     { "minecraftVersion": "26.2", "loaderVersion": "26.2.0" },
     { "minecraftVersion": "26.1", "loaderVersion": "26.1.0" },
     { "minecraftVersion": "1.21.11", "loaderVersion": "21.11.0" },

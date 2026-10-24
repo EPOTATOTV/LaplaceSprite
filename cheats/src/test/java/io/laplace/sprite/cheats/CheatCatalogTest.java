@@ -41,8 +41,8 @@ class CheatCatalogTest {
     @Test
     void libraryCoversCheatAndNonCheatCategories() {
         CheatCatalog catalog = new CheatCatalog();
-        assertTrue(catalog.totalSpecs() >= 48, "全量样本不足: " + catalog.totalSpecs());
-        assertEquals(36, catalog.cheatSamples().size());
+        assertTrue(catalog.totalSpecs() >= 60, "全量样本不足: " + catalog.totalSpecs());
+        assertTrue(catalog.cheatSamples().size() >= 40, "作弊样本不足: " + catalog.cheatSamples().size());
         assertTrue(catalog.allSamples().stream().allMatch(spec -> spec.sampleType() != null
                 && !spec.sampleType().isBlank()));
         assertTrue(catalog.cheatSamples().stream().allMatch(spec -> spec.cheatType() != null));
@@ -68,6 +68,18 @@ class CheatCatalogTest {
         assertTrue(nonCheat >= 12, "通用异常样本不足: " + nonCheat);
         assertTrue(catalog.sampleById("anomaly.nan-coordinates.default").isPresent());
         assertTrue(catalog.byId("anomaly.nan-coordinates.default").isEmpty());
+    }
+
+    @Test
+    void coversTwentyTwentySixQ4DetectionTargets() {
+        CheatCatalog catalog = new CheatCatalog();
+
+        for (String source : List.of("TruthfulAC", "Boar", "GrimAC")) {
+            assertFalse(catalog.bySource(source).isEmpty(), source + " 缺少绕过样本");
+        }
+        assertTrue(catalog.allSamples().stream()
+                .filter(spec -> spec.id().contains(".bypass"))
+                .allMatch(spec -> spec.notes() != null && !spec.notes().isBlank()), "绕过样本必须写明来源与修复项");
     }
 
     @Test

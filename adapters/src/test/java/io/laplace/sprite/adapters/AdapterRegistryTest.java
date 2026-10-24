@@ -19,10 +19,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AdapterRegistryTest {
 
     @Test
-    void registersAllTwentyFourAdapters() {
+    void registersAllTwentyFiveAdapters() {
         AdapterRegistry registry = AdapterRegistryFactory.defaultRegistry();
-        assertEquals(24, registry.size());
-        assertEquals(24, AdapterRegistryFactory.allAdapters().size());
+        assertEquals(25, registry.size());
+        assertEquals(25, AdapterRegistryFactory.allAdapters().size());
         assertTrue(registry.byId("folia").isPresent());
         assertTrue(registry.byId("velocity").isPresent());
         assertTrue(registry.byId("quilt").isPresent());
@@ -104,7 +104,7 @@ class AdapterRegistryTest {
         List<SmokeScenarios.SmokeResult> results = AdapterRegistryFactory.allAdapters().stream()
                 .flatMap(adapter -> smoke.run(adapter, AdapterTestSupport.keyFor(adapter)).stream())
                 .toList();
-        assertEquals(24 * 3, results.size());
+        assertEquals(25 * 3, results.size());
         List<SmokeScenarios.SmokeResult> failures = results.stream()
                 .filter(result -> !result.passed())
                 .toList();

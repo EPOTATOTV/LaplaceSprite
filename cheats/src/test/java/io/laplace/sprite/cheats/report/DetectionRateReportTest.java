@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class DetectionRateReportTest {
 
     private static final double DELTA = 1e-9;
-    private static final int CHEAT_SPECS = 36;
+    private static final int CHEAT_SPECS = 44;
     private static final int NON_CHEAT_SPECS = 18;
 
     @Test
@@ -35,7 +35,7 @@ class DetectionRateReportTest {
                 ReportFixtures.CATALOG);
 
         assertEquals("run-rate", report.runId());
-        assertEquals(144, report.totalSamples());
+        assertEquals(176, report.totalSamples());
         assertEquals(3, report.totalHits());
 
         // 按目标：一次运行只有一个目标桶
@@ -43,16 +43,16 @@ class DetectionRateReportTest {
         RateRow target = report.byTarget().get(0);
         assertEquals("detection-engine", target.label());
         assertEquals(3, target.hits());
-        assertEquals(144, target.samples());
+        assertEquals(176, target.samples());
 
-        // 按样本类型：SPEED 在样本库里有 4 条样本，故每档样本数 4
+        // 按样本类型：SPEED 在样本库里有 5 条样本，故每档样本数 5
         RateRow speed = ReportFixtures.rowOf(report.bySampleType(), "SPEED");
         assertEquals(1, ReportFixtures.tierOf(speed, SampleTierName.MIN).hits());
-        assertEquals(4, ReportFixtures.tierOf(speed, SampleTierName.MIN).samples());
+        assertEquals(5, ReportFixtures.tierOf(speed, SampleTierName.MIN).samples());
         assertEquals(0, ReportFixtures.tierOf(speed, SampleTierName.DEFAULT).hits());
         assertEquals(3, speed.hits());
-        assertEquals(16, speed.samples());
-        assertEquals(3.0 / 16.0, speed.rate(), DELTA);
+        assertEquals(20, speed.samples());
+        assertEquals(3.0 / 20.0, speed.rate(), DELTA);
 
         // 按档位
         assertEquals(4, report.byTier().size());
@@ -123,7 +123,7 @@ class DetectionRateReportTest {
         assertEquals(0, registry.hits());
 
         RateRow cheat = ReportFixtures.rowOf(report.bySampleType(), "SPEED");
-        assertEquals(16, cheat.samples());
+        assertEquals(20, cheat.samples());
         assertTrue(cheat.hits() > 0);
     }
 
@@ -166,8 +166,8 @@ class DetectionRateReportTest {
         assertEquals(15 + NON_CHEAT_SPECS, report.bySampleType().size());
         assertEquals(1, report.byTarget().size());
         assertEquals(4, report.byTier().size());
-        assertEquals(144, report.totalSamples());
-        assertEquals(144, report.totalHits());
+        assertEquals(176, report.totalSamples());
+        assertEquals(176, report.totalHits());
         assertEquals(1.0, report.overallRate(), DELTA);
 
         String markdown = report.toMarkdown();
@@ -231,12 +231,12 @@ class DetectionRateReportTest {
 
         String markdown = report.toMarkdown();
         assertTrue(markdown.contains("## 检出率报告（运行 run-md）"));
-        assertTrue(markdown.contains("总样本 144，命中 3"));
+        assertTrue(markdown.contains("总样本 176，命中 3"));
         assertTrue(markdown.contains("### 按目标"));
         assertTrue(markdown.contains("### 按样本类型"));
         assertTrue(markdown.contains("### 按档位"));
-        assertTrue(markdown.contains("3/16"));
-        assertTrue(markdown.contains("18.8%"));
+        assertTrue(markdown.contains("3/20"));
+        assertTrue(markdown.contains("15.0%"));
     }
 
     private static EnumMap<SampleTierName, Integer> tierCounts(int min, int def, int max, int hidden) {

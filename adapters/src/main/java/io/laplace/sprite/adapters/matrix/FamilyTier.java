@@ -43,7 +43,7 @@ public enum FamilyTier {
                  FABRIC, NEOFORGE, QUILT,
                  SPONGE_VANILLA, SPONGE_NEO, SPONGE_FORGE,
                  ARCLIGHT, YOUER -> TIER1;
-            case FORGE, MAGMA_NEO, CARDBOARD -> TIER2;
+            case FORGE, MAGMA_NEO, MOHIST, CARDBOARD -> TIER2;
             case WATERFALL, VANILLA_DATAPACK, MODPACK -> EXCLUDED;
         };
     }

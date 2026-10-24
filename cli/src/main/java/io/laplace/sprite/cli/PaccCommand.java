@@ -3,6 +3,7 @@ package io.laplace.sprite.cli;
 import io.laplace.sprite.core.io.Json;
 import io.laplace.sprite.core.model.TestRun;
 import io.laplace.sprite.report.DetectionTrend;
+import io.laplace.sprite.report.PaccRegressionSync;
 import io.laplace.sprite.report.TrendHistory;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -50,6 +51,9 @@ final class PaccCommand implements Callable<Integer> {
     @Option(names = "--fail-on-regression", description = "相对上一条记录出现回归时返回非 0")
     boolean failOnRegression;
 
+    @Option(names = "--sync-regression", description = "把误报用例同步到该工作区的回归库（需 --report）")
+    Path regressionWorkspace;
+
     @Option(names = "--width", defaultValue = "720", description = "SVG 宽度")
     int width;
 
@@ -65,7 +69,12 @@ final class PaccCommand implements Callable<Integer> {
             throw new CommandLine.ParameterException(spec.commandLine(),
                     "需要 --baseline <json>，或 --report <report.json> + --version <版本>");
         }
-        DetectionTrend current = DetectionTrend.from(baseline != null ? readBaseline() : aggregateReport());
+        if (regressionWorkspace != null && report == null) {
+            throw new CommandLine.ParameterException(spec.commandLine(),
+                    "--sync-regression 需要 --report 提供误报明细");
+        }
+        List<TestRun> reportRuns = report == null ? List.of() : GateCommand.readRuns(report);
+        DetectionTrend current = DetectionTrend.from(baseline != null ? readBaseline() : aggregateReport(reportRuns));
         TrendHistory store = history == null ? null : new TrendHistory(history);
         if (store != null) {
             current.points().forEach(store::append);
@@ -79,6 +88,11 @@ final class PaccCommand implements Callable<Integer> {
 
         var writer = spec.commandLine().getOut();
         writer.println("PACC 夜间基准趋势");
+        if (regressionWorkspace != null) {
+            PaccRegressionSync.Summary sync = new PaccRegressionSync(regressionWorkspace).sync(reportRuns);
+            writer.printf("  回归同步：误报 %d · 新增用例 %d · 缺轨迹 %d%n",
+                    sync.falsePositives(), sync.addedCases(), sync.skippedWithoutTrajectory());
+        }
         output.points().forEach(point -> writer.printf(Locale.ROOT, "  %s — 误报率 %.4f%% · 检出率 %.2f%%%n",
                 point.version(), point.falsePositiveRate() * 100, point.detectionRate() * 100));
         if (store != null) {
@@ -110,12 +124,7 @@ final class PaccCommand implements Callable<Integer> {
     }
 
     /** 把同一工作区累积的多条 TestRun 汇总成一条基线。 */
-    private List<DetectionTrend.BaselineRun> aggregateReport() {
-        if (!Files.isRegularFile(report)) {
-            throw new CommandLine.ParameterException(spec.commandLine(),
-                    "运行结果不存在: " + report.toAbsolutePath());
-        }
-        List<TestRun> runs = GateCommand.readRuns(report);
+    private List<DetectionTrend.BaselineRun> aggregateReport(List<TestRun> runs) {
         int legit = runs.stream().mapToInt(run -> run.metrics().legitPlayers()).sum();
         int falsePositives = runs.stream().mapToInt(run -> run.metrics().falsePositives()).sum();
         int cheats = runs.stream().mapToInt(run -> run.metrics().cheatSamples()).sum();

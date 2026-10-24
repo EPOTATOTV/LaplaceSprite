@@ -1,6 +1,7 @@
 {
   "source": "forge-promotions",
   "entries": [
+    { "minecraftVersion": "26.4", "loaderVersion": "66.0.12" },
     { "minecraftVersion": "26.3", "loaderVersion": "66.0.11" },
     { "minecraftVersion": "26.2", "loaderVersion": "66.0.10" },
     { "minecraftVersion": "26.1", "loaderVersion": "66.0.8" },

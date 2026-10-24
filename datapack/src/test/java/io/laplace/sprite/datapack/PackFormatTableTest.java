@@ -23,12 +23,15 @@ class PackFormatTableTest {
         assertEquals(81, table.formatFor("1.21.8").orElseThrow());
         assertEquals(85, table.formatFor("26.1").orElseThrow());
         assertEquals(86, table.formatFor("26.2").orElseThrow());
+        assertEquals(87, table.formatFor("26.3").orElseThrow());
+        assertEquals(88, table.formatFor("26.4").orElseThrow());
     }
 
     @Test
     void versionsOutsideTheTableAreUnknown() {
         assertTrue(table.formatFor("1.12.2").isEmpty());
         assertTrue(table.formatFor("1.30").isEmpty());
+        assertTrue(table.formatFor("26.5").isEmpty(), "超过表内最高版本不猜数值");
     }
 
     @Test
