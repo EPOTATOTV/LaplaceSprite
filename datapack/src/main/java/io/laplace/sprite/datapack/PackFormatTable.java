@@ -10,7 +10,7 @@ import java.util.OptionalInt;
  *
  * <p>数据来自 Minecraft Wiki 的「Data pack version」历史表：每个条目记该版本起生效的 pack_format，
  * 快照号跳过不记，因此 1.19.3 → 10、1.19.4 → 12 这类断号是原版本身的取值。表覆盖 1.13 到
- * 26.2；26.x 的数值来自升级实施文档给出的 86.2 口径（26.2 为 86，26.1 为上一档 85），
+ * 26.4；26.x 的数值来自升级实施文档 v2 给出的口径（26.2 为 86、26.3 为 87、26.4 为 88），
  * 更远的版本没有核实过的数值，宁可判为未知也不猜。</p>
  */
 public final class PackFormatTable {
@@ -44,10 +44,12 @@ public final class PackFormatTable {
             new Entry("1.21.6", 80),
             new Entry("1.21.7", 81),
             new Entry("26.1", 85),
-            new Entry("26.2", 86));
+            new Entry("26.2", 86),
+            new Entry("26.3", 87),
+            new Entry("26.4", 88));
 
     /** 表内最高版本：更新版本的数值没有核实过，超过它就返回未知。 */
-    private static final String MAX_VERSION = "26.2";
+    private static final String MAX_VERSION = "26.4";
 
     public List<Entry> entries() {
         return ENTRIES;
@@ -73,7 +75,7 @@ public final class PackFormatTable {
     }
 
     /**
-     * 只认 1.13–1.21.8 与 26.1–26.2 两条已发布线。1.22+ / 2.x 从未发布，
+     * 只认 1.13–1.21.8 与 26.1–26.4 两条已发布线。1.22+ / 2.x 从未发布，
      * 不能因为「比表尾大」就被当作已覆盖。
      */
     private static boolean inCoveredLines(String version) {

@@ -69,9 +69,32 @@ class RenderSuiteRunnerTest {
         assertTrue(report.cases().get(0).reason().contains("缺少实拍截图"));
     }
 
+    @Test
+    void twentySixFourVulkanCaseJoinsTheSuite() throws IOException {
+        RenderGoldenLibrary.GoldenCase oit =
+                new RenderGoldenLibrary.GoldenCase("oit-depth-bins", "26.4", "Vulkan OIT");
+        Path goldenRoot = tempDir.resolve("golden");
+        Path actualRoot = tempDir.resolve("actual");
+        writePng(goldenRoot, "26.4", RenderBackend.VULKANMOD, oit.id(), 0xFFAA5500);
+        writePng(actualRoot, "26.4", RenderBackend.VULKANMOD, oit.id(), 0xFFAA5500);
+
+        RenderSuiteRunner.Report report = new RenderSuiteRunner()
+                .run(goldenRoot, actualRoot, List.of(oit));
+
+        assertEquals(3, report.cases().size(), "26.4 起 VulkanMod 参与 diff");
+        assertTrue(report.cases().stream()
+                .filter(c -> c.backend() == RenderBackend.VULKANMOD)
+                .allMatch(c -> c.status() == RenderSuiteRunner.Status.PASSED));
+    }
+
     private void writePng(Path root, RenderBackend backend, int argb) throws IOException {
-        RenderMatrixCell cell = new RenderMatrixCell("26.2", backend, null, true, 0.5);
-        Path file = new GoldenPathResolver(root).goldenPng(cell, CASE.id());
+        writePng(root, "26.2", backend, CASE.id(), argb);
+    }
+
+    private void writePng(Path root, String mcVersion, RenderBackend backend, String caseId, int argb)
+            throws IOException {
+        RenderMatrixCell cell = new RenderMatrixCell(mcVersion, backend, null, true, 0.5);
+        Path file = new GoldenPathResolver(root).goldenPng(cell, caseId);
         Files.createDirectories(file.getParent());
         BufferedImage image = new BufferedImage(4, 4, BufferedImage.TYPE_INT_ARGB);
         for (int y = 0; y < 4; y++) {

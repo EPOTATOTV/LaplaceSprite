@@ -2,15 +2,19 @@ package io.laplace.sprite.loadtest;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
- * 分布式压测调度（升级实施文档 L-07）：把拆分后的节点命令真正下发，并汇总各节点判定。
+ * 分布式压测调度（升级实施文档 L-07 / v2 L2-03）：把拆分后的节点命令真正下发，并汇总各节点判定。
  *
  * <p>本类不绑定 SSH / Docker 实现：命令只描述「在节点上跑哪个剧本、分到多少假人」，
- * 由 {@link NodeExecutor} 决定是走 SSH、Docker 还是测试替身。任一节点失败即整体失败。</p>
+ * 由 {@link NodeExecutor} 决定是走 SSH、Docker 还是测试替身。下发前先做节点健康检查，
+ * 不可用节点被剔除并把并发重排给存活节点；执行期间抛异常的节点按 {@code maxAttempts}
+ * 重试，仍失败则降级跳过，聚合结论标记 degraded，不会把基础设施抖动算成性能破线。</p>
  */
 public final class DistributedLoadOrchestrator {
 
@@ -18,6 +22,12 @@ public final class DistributedLoadOrchestrator {
     @FunctionalInterface
     public interface NodeExecutor {
         Execution execute(DistributedLoadPlan.Node node, String command);
+    }
+
+    /** 节点健康检查接缝；返回 false 的节点不参与本轮压测。 */
+    @FunctionalInterface
+    public interface NodeHealthCheck {
+        boolean healthy(DistributedLoadPlan.Node node);
     }
 
     /**
@@ -47,11 +57,14 @@ public final class DistributedLoadOrchestrator {
     /**
      * 一个节点的执行记录。
      *
-     * @param node    节点
-     * @param command 实际下发的命令
-     * @param execution 执行结果
+     * @param node       节点
+     * @param command    实际下发的命令；健康检查阶段被跳过时为空
+     * @param execution  执行结果
+     * @param attempts   实际尝试次数
+     * @param skipped    是否因健康检查或重试耗尽而跳过
      */
-    public record NodeOutcome(DistributedLoadPlan.Node node, String command, Execution execution) {
+    public record NodeOutcome(DistributedLoadPlan.Node node, String command, Execution execution,
+                              int attempts, boolean skipped) {
     }
 
     /**
@@ -69,29 +82,92 @@ public final class DistributedLoadOrchestrator {
         public boolean passed() {
             return aggregate != null && aggregate.passed();
         }
+
+        /** 是否有节点被降级跳过。 */
+        public boolean degraded() {
+            return aggregate != null && aggregate.degraded();
+        }
+
+        public List<String> skippedNodes() {
+            return aggregate == null ? List.of() : aggregate.skippedNodes();
+        }
     }
 
+    /** 默认重试次数：节点命令抛异常时多给一次机会。 */
+    private static final int DEFAULT_MAX_ATTEMPTS = 2;
+
     private final NodeExecutor executor;
+    private final NodeHealthCheck healthCheck;
+    private final int maxAttempts;
 
     public DistributedLoadOrchestrator(NodeExecutor executor) {
+        this(executor, node -> true, DEFAULT_MAX_ATTEMPTS);
+    }
+
+    public DistributedLoadOrchestrator(NodeExecutor executor, NodeHealthCheck healthCheck, int maxAttempts) {
         this.executor = Objects.requireNonNull(executor, "executor");
+        this.healthCheck = Objects.requireNonNull(healthCheck, "healthCheck");
+        if (maxAttempts < 1) {
+            throw new IllegalArgumentException("重试次数必须至少为 1: " + maxAttempts);
+        }
+        this.maxAttempts = maxAttempts;
     }
 
     public Dispatch dispatch(DistributedLoadPlan plan, LoadScenario scenario) {
         Objects.requireNonNull(plan, "plan");
         Objects.requireNonNull(scenario, "scenario");
         List<NodeOutcome> outcomes = new ArrayList<>();
-        Map<String, LoadVerdict> verdicts = new LinkedHashMap<>();
+        Set<String> skipped = new LinkedHashSet<>();
 
         for (DistributedLoadPlan.Node node : plan.nodes()) {
+            if (healthCheck.healthy(node)) {
+                continue;
+            }
+            skipped.add(node.id());
+            outcomes.add(new NodeOutcome(node, "",
+                    Execution.fromExitCode(-2, "健康检查失败，节点已跳过"), 1, true));
+        }
+
+        DistributedLoadPlan effective;
+        try {
+            effective = plan.redistribute(skipped);
+        } catch (IllegalArgumentException ex) {
+            return new Dispatch(outcomes, DistributedLoadPlan.aggregate(Map.of(), skipped));
+        }
+
+        Map<String, LoadVerdict> verdicts = new LinkedHashMap<>();
+        for (DistributedLoadPlan.Node node : effective.nodes()) {
             String command = command(node, scenario.id());
-            Execution execution = executor.execute(node, command);
+            Attempt attempt = execute(node, command);
+            if (attempt.execution() == null) {
+                skipped.add(node.id());
+                outcomes.add(new NodeOutcome(node, command,
+                        Execution.fromExitCode(-2, "重试 " + maxAttempts + " 次仍失败：" + attempt.failure()),
+                        maxAttempts, true));
+                continue;
+            }
+            Execution execution = attempt.execution();
             LoadVerdict verdict = execution.verdict() != null ? execution.verdict()
                     : Execution.fromExitCode(execution.exitCode(), execution.output()).verdict();
-            outcomes.add(new NodeOutcome(node, command, execution));
+            outcomes.add(new NodeOutcome(node, command, execution, attempt.attempts(), false));
             verdicts.put(node.id(), verdict);
         }
-        return new Dispatch(outcomes, DistributedLoadPlan.aggregate(verdicts));
+        return new Dispatch(outcomes, DistributedLoadPlan.aggregate(verdicts, skipped));
+    }
+
+    private Attempt execute(DistributedLoadPlan.Node node, String command) {
+        String failure = "";
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                return new Attempt(executor.execute(node, command), attempt, null);
+            } catch (RuntimeException ex) {
+                failure = ex.getMessage() == null ? ex.getClass().getSimpleName() : ex.getMessage();
+            }
+        }
+        return new Attempt(null, maxAttempts, failure);
+    }
+
+    private record Attempt(Execution execution, int attempts, String failure) {
     }
 
     /**

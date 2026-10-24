@@ -44,6 +44,43 @@ class DistributedLoadPlanTest {
     }
 
     @Test
+    void redistributeKeepsTotalBotsOnSurvivingNodes() {
+        DistributedLoadPlan plan = DistributedLoadPlan.split(scenario, List.of(
+                new DistributedLoadPlan.Node("node-a", DistributedLoadPlan.NodeTransport.SSH, "10.0.0.1", 1),
+                new DistributedLoadPlan.Node("node-b", DistributedLoadPlan.NodeTransport.DOCKER, "10.0.0.2", 1),
+                new DistributedLoadPlan.Node("node-c", DistributedLoadPlan.NodeTransport.SSH, "10.0.0.3", 1)));
+
+        DistributedLoadPlan degraded = plan.redistribute(java.util.Set.of("node-b"));
+
+        assertEquals(List.of("node-a", "node-c"), degraded.nodes().stream()
+                .map(DistributedLoadPlan.Node::id).toList());
+        assertEquals(100, degraded.botsByNode().values().stream().mapToInt(Integer::intValue).sum());
+        assertEquals(100, degraded.totalBots());
+    }
+
+    @Test
+    void allNodesUnavailableCannotBeRedistributed() {
+        DistributedLoadPlan plan = DistributedLoadPlan.split(scenario, List.of(
+                new DistributedLoadPlan.Node("node-a", DistributedLoadPlan.NodeTransport.SSH, "10.0.0.1", 1)));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> plan.redistribute(java.util.Set.of("node-a")));
+    }
+
+    @Test
+    void skippedNodesAreReportedAsDegradedButDoNotFailPassingNodes() {
+        Map<String, LoadVerdict> verdicts = Map.of("node-a", pass());
+
+        DistributedLoadPlan.AggregatedVerdict aggregate =
+                DistributedLoadPlan.aggregate(verdicts, java.util.Set.of("node-b"));
+
+        assertTrue(aggregate.passed());
+        assertTrue(aggregate.degraded());
+        assertEquals(List.of("node-b"), aggregate.skippedNodes());
+        assertEquals(1, aggregate.nodes());
+    }
+
+    @Test
     void anyFailingNodeFailsTheAggregate() {
         Map<String, LoadVerdict> verdicts = new LinkedHashMap<>();
         verdicts.put("node-a", pass());

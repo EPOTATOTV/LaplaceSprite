@@ -11,7 +11,8 @@ import java.util.Objects;
  *
  * <p>目录布局沿用 {@link GoldenPathResolver}：{@code <root>/<mc>/<backend>/<case>.png}。
  * golden 或 actual 缺失记为 MISSING，不拿空白图凑数；尺寸不一致由 {@link PixelDiff} 直接判失败。
- * 26.2 的容差由 {@link RenderMatrix#toleranceFor(String)} 统一给出。</p>
+ * 容差由 {@link RenderMatrix#toleranceFor(String, RenderBackend)} 按版本与管线给出；26.4 起
+ * VulkanMod 也进 diff，之前仍只跑冒烟。</p>
  */
 public final class RenderSuiteRunner {
 
@@ -96,11 +97,11 @@ public final class RenderSuiteRunner {
 
         for (RenderGoldenLibrary.GoldenCase goldenCase : goldenCases) {
             for (RenderBackend backend : RenderBackend.values()) {
-                if (!backend.diffAllowed()) {
+                if (!backend.diffAllowed(goldenCase.mcVersion())) {
                     continue;
                 }
                 RenderMatrixCell cell = new RenderMatrixCell(goldenCase.mcVersion(), backend, null, true,
-                        RenderMatrix.toleranceFor(goldenCase.mcVersion()));
+                        RenderMatrix.toleranceFor(goldenCase.mcVersion(), backend));
                 Path golden = goldenResolver.goldenPng(cell, goldenCase.id());
                 Path actual = actualResolver.goldenPng(cell, goldenCase.id());
                 results.add(compare(goldenCase, backend, golden, actual, cell.tolerancePercent()));

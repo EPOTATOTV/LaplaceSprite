@@ -8,7 +8,7 @@ import { MetricCard } from '../dashboard/MetricCard'
 import { useConsoleData } from '../../data/useConsoleData'
 import { cx } from '../../lib/cx'
 import { formatInt, formatPercent } from '../../lib/format'
-import type { BenchmarkProjectRow } from '../../types'
+import type { BenchmarkProjectRow, BenchmarkTrendPoint } from '../../types'
 import styles from './BenchmarkScreen.module.css'
 
 const METRICS = [
@@ -23,11 +23,71 @@ function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value))
 }
 
+type ScoreInput = Pick<
+  BenchmarkProjectRow,
+  'functional' | 'detection' | 'msptP95' | 'regressionCases'
+>
+
 /** 综合分：功能 40% + 检出 30% + 性能 20% + 回归规模 10%。 */
-function scoreOf(project: BenchmarkProjectRow): number {
+function scoreOf(project: ScoreInput): number {
   const perf = clamp01((60 - project.msptP95) / 35)
   const regression = clamp01(project.regressionCases / 60)
   return project.functional * 0.4 + project.detection * 0.3 + perf * 0.2 + regression * 0.1
+}
+
+interface Drift {
+  regressed: boolean
+  scoreDelta: number
+  msptDelta: number
+  from: string
+}
+
+/** 最近两点综合分下滑 ≥1pt 或 P95 MSPT 上涨 ≥5% 即标记基线漂移。 */
+function driftOf(project: BenchmarkProjectRow): Drift | null {
+  const history = project.history
+  if (!history || history.length < 2) return null
+  const previous = history[history.length - 2]
+  const latest = history[history.length - 1]
+  const scoreDelta = scoreOf(latest) - scoreOf(previous)
+  const msptDelta = previous.msptP95 === 0 ? 0 : (latest.msptP95 - previous.msptP95) / previous.msptP95
+  return {
+    regressed: scoreDelta <= -0.01 || msptDelta >= 0.05,
+    scoreDelta,
+    msptDelta,
+    from: previous.label,
+  }
+}
+
+/** 综合分历史折线；历史点不足 3 个时不画。 */
+function Sparkline({ history }: { history: BenchmarkTrendPoint[] }) {
+  const values = history.map(scoreOf)
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  const range = max - min || 1
+  const width = 88
+  const height = 24
+  const pad = 3
+  const points = values.map((value, index) => {
+    const x = pad + (index * (width - pad * 2)) / (values.length - 1)
+    const y = height - pad - ((value - min) / range) * (height - pad * 2)
+    return [Number(x.toFixed(2)), Number(y.toFixed(2))] as const
+  })
+  const last = points[points.length - 1]
+
+  return (
+    <svg
+      className={styles.spark}
+      viewBox={`0 0 ${width} ${height}`}
+      role="img"
+      aria-label={`综合分走势 ${history.map((point) => point.label).join(' → ')}`}
+    >
+      <polyline
+        className={styles.sparkLine}
+        points={points.map((point) => point.join(',')).join(' ')}
+      />
+      <circle className={styles.sparkDot} cx={last[0]} cy={last[1]} r="2.4" />
+    </svg>
+  )
 }
 
 function averageMspt(projects: BenchmarkProjectRow[]): number {
@@ -116,13 +176,14 @@ export default function BenchmarkScreen() {
 
       <Section
         title="多项目基准排行"
-        note="功能 / 检出 / 性能 / 回归四条线加权 · 同一套样本与门禁口径"
+        note="功能 / 检出 / 性能 / 回归四条线加权 · 折线为历史综合分，最近两点下滑自动标注漂移"
         delay={0}
         className={styles.spanFull}
       >
         <ol className={styles.rankList}>
           {ranked.map((project, index) => {
             const score = scoreOf(project)
+            const drift = driftOf(project)
             return (
               <Glass
                 key={project.id}
@@ -180,6 +241,26 @@ export default function BenchmarkScreen() {
                       />
                     </span>
                   </span>
+                </div>
+
+                <div className={styles.trend}>
+                  {project.history && project.history.length >= 3 ? (
+                    <>
+                      <Sparkline history={project.history} />
+                      {drift?.regressed ? (
+                        <span
+                          className={styles.drift}
+                          title={`${drift.from} 起综合分 ${formatPercent(drift.scoreDelta, 1)}，P95 MSPT ${drift.msptDelta >= 0 ? '+' : ''}${(drift.msptDelta * 100).toFixed(1)}%`}
+                        >
+                          漂移 {formatPercent(drift.scoreDelta, 1)}
+                        </span>
+                      ) : (
+                        <span className={styles.steady}>基线稳定</span>
+                      )}
+                    </>
+                  ) : (
+                    <span className={styles.trendEmpty}>历史不足</span>
+                  )}
                 </div>
 
                 <span className={styles.trail}>

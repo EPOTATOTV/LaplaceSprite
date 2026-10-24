@@ -1,6 +1,8 @@
 {
   "source": "fabric-meta",
   "entries": [
+    { "minecraftVersion": "26.4", "loaderVersion": "0.23.0" },
+    { "minecraftVersion": "26.3", "loaderVersion": "0.22.0" },
     { "minecraftVersion": "26.2", "loaderVersion": "0.21.0" },
     { "minecraftVersion": "26.1", "loaderVersion": "0.20.0" },
     { "minecraftVersion": "1.21.11", "loaderVersion": "0.19.5" },

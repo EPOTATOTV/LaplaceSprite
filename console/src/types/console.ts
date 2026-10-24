@@ -398,6 +398,16 @@ export interface PerfOverlay {
   recordingTriggered: boolean
 }
 
+/** 11.9 评测报告门户：一个历史点的基准读数 */
+export interface BenchmarkTrendPoint {
+  /** 版本或月份标签 */
+  label: string
+  functional: number
+  detection: number
+  msptP95: number
+  regressionCases: number
+}
+
 /** 11.9 评测报告门户：一个项目的基准读数 */
 export interface BenchmarkProjectRow {
   id: string
@@ -409,6 +419,8 @@ export interface BenchmarkProjectRow {
   msptP95: number
   regressionCases: number
   evidenceLinks: number
+  /** 按时间升序的历史点；至少 3 个才画趋势 */
+  history?: BenchmarkTrendPoint[]
 }
 
 /** 控制台一次性载荷（GET /api/console） */

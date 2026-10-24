@@ -13,6 +13,7 @@ import picocli.CommandLine.Model.CommandSpec;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 /**
@@ -45,6 +46,15 @@ final class MarketCommand implements Callable<Integer> {
     @Option(names = "--list", description = "列出当前已安装的样本包")
     boolean list;
 
+    @Option(names = "--search", description = "按关键词搜索已安装样本包（相关度 + 可信度排序）")
+    String search;
+
+    @Option(names = "--revoke", description = "吊销样本包版本，格式 <包 id>@<版本>")
+    String revoke;
+
+    @Option(names = "--reason", description = "吊销原因")
+    String reason;
+
     @Option(names = "--evidence", description = "证据库目录；提供后把安装记录写入证据链")
     Path evidence;
 
@@ -65,19 +75,49 @@ final class MarketCommand implements Callable<Integer> {
         }
         if (install != null) {
             SamplePackage pkg = Json.readFile(install, SamplePackage.class);
-            return record(market.install(pkg), out);
+            try {
+                return record(market.install(pkg), out);
+            } catch (SecurityException | IllegalArgumentException ex) {
+                out.println("安装被拒绝：" + ex.getMessage());
+                return 1;
+            }
         }
         if (rollback != null) {
-            return record(market.rollback(rollback), out);
+            try {
+                return record(market.rollback(rollback), out);
+            } catch (SecurityException | IllegalStateException ex) {
+                out.println("回滚被拒绝：" + ex.getMessage());
+                return 1;
+            }
+        }
+        if (revoke != null) {
+            int split = revoke.lastIndexOf('@');
+            if (split <= 0 || split == revoke.length() - 1) {
+                throw new CommandLine.ParameterException(spec.commandLine(),
+                        "--revoke 格式应为 <包 id>@<版本>");
+            }
+            SampleMarket.Revocation revocation = market.revoke(revoke.substring(0, split),
+                    revoke.substring(split + 1), reason);
+            out.printf("已吊销 %s@%s（%s）%n", revocation.packageId(), revocation.version(),
+                    revocation.reason().isBlank() ? "未注明原因" : revocation.reason());
+            return 0;
+        }
+        if (search != null) {
+            List<SampleMarket.SearchHit> hits = market.search(search);
+            hits.forEach(hit -> out.printf("  %s@%s — %s · 相关度 %.1f · 可信度 %.2f%s%n",
+                    hit.pkg().id(), hit.pkg().version(), hit.pkg().publisher(), hit.relevance(),
+                    hit.trustScore(), hit.revoked() ? " · 已吊销" : ""));
+            out.printf("共 %d 个结果%n", hits.size());
+            return 0;
         }
         if (list) {
-            market.all().forEach(pkg -> out.printf("  %s@%s — %s（%d 个样本）%n",
-                    pkg.id(), pkg.version(), pkg.publisher(), pkg.samples().size()));
+            market.all().forEach(pkg -> out.printf("  %s@%s — %s（%d 个样本，可信度 %.2f）%n",
+                    pkg.id(), pkg.version(), pkg.publisher(), pkg.samples().size(), pkg.trustScore()));
             out.printf("共 %d 个包%n", market.all().size());
             return 0;
         }
         throw new CommandLine.ParameterException(spec.commandLine(),
-                "至少指定 --install / --rollback / --verify / --list 之一");
+                "至少指定 --install / --rollback / --verify / --list / --search / --revoke 之一");
     }
 
     private int record(SampleMarket.InstallRecord record, java.io.PrintWriter out) {

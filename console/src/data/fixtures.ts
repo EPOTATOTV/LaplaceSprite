@@ -1578,6 +1578,12 @@ const benchmarkProjects: BenchmarkProjectRow[] = [
     msptP95: 38.4,
     regressionCases: 42,
     evidenceLinks: 386,
+    history: [
+      { label: '2026.08', functional: 0.962, detection: 0.94, msptP95: 41.2, regressionCases: 34 },
+      { label: '2026.09', functional: 0.97, detection: 0.95, msptP95: 39.8, regressionCases: 37 },
+      { label: '2026.10', functional: 0.978, detection: 0.957, msptP95: 38.9, regressionCases: 40 },
+      { label: '2026.11', functional: 0.982, detection: 0.961, msptP95: 38.4, regressionCases: 42 },
+    ],
   },
   {
     id: 'create',
@@ -1589,6 +1595,12 @@ const benchmarkProjects: BenchmarkProjectRow[] = [
     msptP95: 41.9,
     regressionCases: 37,
     evidenceLinks: 341,
+    history: [
+      { label: '2026.08', functional: 0.951, detection: 0.96, msptP95: 43.8, regressionCases: 30 },
+      { label: '2026.09', functional: 0.962, detection: 0.958, msptP95: 42.5, regressionCases: 33 },
+      { label: '2026.10', functional: 0.97, detection: 0.965, msptP95: 39.5, regressionCases: 35 },
+      { label: '2026.11', functional: 0.974, detection: 0.948, msptP95: 41.9, regressionCases: 37 },
+    ],
   },
   {
     id: 'essentialsx',
@@ -1600,6 +1612,12 @@ const benchmarkProjects: BenchmarkProjectRow[] = [
     msptP95: 31.2,
     regressionCases: 55,
     evidenceLinks: 512,
+    history: [
+      { label: '2026.08', functional: 0.988, detection: 0.965, msptP95: 33.5, regressionCases: 50 },
+      { label: '2026.09', functional: 0.99, detection: 0.969, msptP95: 32.4, regressionCases: 52 },
+      { label: '2026.10', functional: 0.992, detection: 0.97, msptP95: 31.8, regressionCases: 54 },
+      { label: '2026.11', functional: 0.991, detection: 0.972, msptP95: 31.2, regressionCases: 55 },
+    ],
   },
   {
     id: 'fabulously-optimized',
@@ -1611,6 +1629,12 @@ const benchmarkProjects: BenchmarkProjectRow[] = [
     msptP95: 27.8,
     regressionCases: 48,
     evidenceLinks: 468,
+    history: [
+      { label: '2026.08', functional: 0.99, detection: 0.94, msptP95: 30.2, regressionCases: 42 },
+      { label: '2026.09', functional: 0.994, detection: 0.948, msptP95: 28.9, regressionCases: 44 },
+      { label: '2026.10', functional: 0.996, detection: 0.951, msptP95: 28.2, regressionCases: 46 },
+      { label: '2026.11', functional: 0.996, detection: 0.955, msptP95: 27.8, regressionCases: 48 },
+    ],
   },
 ]
 

@@ -8,6 +8,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - { platform: fabric,       mc: "26.4",    loader: "0.23.0" }      # 26.4 快照，无 Paper 构建
+          - { platform: neoforge,     mc: "26.4",    loader: "26.4.0" }
+          - { platform: forge,        mc: "26.4",    loader: "66.0.12" }
+          - { platform: paper,        mc: "26.3",    adapter: paper-v2 }     # 26.3 稳定线
+          - { platform: fabric,       mc: "26.3",    loader: "0.22.0" }
+          - { platform: neoforge,     mc: "26.3",    loader: "26.3.0" }
+          - { platform: forge,        mc: "26.3",    loader: "66.0.11" }
+          - { platform: quilt,        mc: "26.3",    loader: "0.32.0" }
           - { platform: paper,        mc: "26.2",    adapter: paper-v2 }     # 26.x 版本矩阵
           - { platform: fabric,       mc: "26.2",    loader: "0.21.0" }
           - { platform: neoforge,     mc: "26.2",    loader: "26.2.0" }
@@ -26,15 +34,22 @@ jobs:
           - { platform: spongeneo,    mc: "1.21.10", adapter: "17.0.0" }    # Sponge 系，loader 取 Sponge API 版本
           - { platform: arclight,     mc: "1.21.1",  adapter: arclight-v1 }  # 混合端
           - { platform: youer,        mc: "1.21.1",  adapter: youer-v1 }
+          - { platform: mohist,       mc: "26.3",    adapter: mohist-v1 }    # 2026 Q4 新增混合端
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 21 }
       - uses: gradle/actions/setup-gradle@v4
+      - name: 恢复矩阵健康度
+        uses: actions/cache@v4
+        with:
+          path: build/laplace-health
+          key: matrix-health-${{ matrix.platform }}-${{ matrix.mc }}-${{ github.run_id }}
+          restore-keys: matrix-health-${{ matrix.platform }}-${{ matrix.mc }}-
       - run: ./gradlew --no-daemon build
       - run: ./gradlew --no-daemon :cli:installDist
-      - run: ./cli/build/install/laplace/bin/laplace test --platform ${{ matrix.platform }} --mc ${{ matrix.mc }} --adapter ${{ matrix.adapter || matrix.loader }}
+      - run: ./cli/build/install/laplace/bin/laplace test --platform ${{ matrix.platform }} --mc ${{ matrix.mc }} --adapter ${{ matrix.adapter || matrix.loader }} --health build/laplace-health/${{ matrix.platform }}-${{ matrix.mc }}.json --alert-webhook "${{ secrets.LAPLACE_ALERT_WEBHOOK }}"
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

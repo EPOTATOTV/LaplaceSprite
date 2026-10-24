@@ -55,6 +55,84 @@ class DistributedLoadOrchestratorTest {
     }
 
     @Test
+    void unhealthyNodeIsSkippedAndItsBotsAreRedistributed() {
+        List<String> commands = new ArrayList<>();
+        DistributedLoadOrchestrator orchestrator = new DistributedLoadOrchestrator(
+                (node, command) -> {
+                    commands.add(command);
+                    return DistributedLoadOrchestrator.Execution.fromExitCode(0, "ok");
+                },
+                node -> !node.id().equals("node-b"),
+                2);
+
+        DistributedLoadOrchestrator.Dispatch dispatch = orchestrator.dispatch(plan, scenario);
+
+        assertTrue(dispatch.passed());
+        assertTrue(dispatch.degraded());
+        assertEquals(List.of("node-b"), dispatch.skippedNodes());
+        assertEquals(1, commands.size(), "只向存活节点下发");
+        assertTrue(commands.get(0).contains("--bots 100"), "存活节点接管全部并发");
+        assertTrue(dispatch.outcomes().stream()
+                .anyMatch(outcome -> outcome.node().id().equals("node-b") && outcome.skipped()));
+    }
+
+    @Test
+    void transientExecutionFailureIsRetried() {
+        List<Integer> attempts = new ArrayList<>();
+        DistributedLoadOrchestrator orchestrator = new DistributedLoadOrchestrator(
+                (node, command) -> {
+                    attempts.add(1);
+                    if (attempts.size() == 1) {
+                        throw new IllegalStateException("connection reset");
+                    }
+                    return DistributedLoadOrchestrator.Execution.fromExitCode(0, "ok");
+                },
+                node -> true,
+                2);
+
+        DistributedLoadOrchestrator.Dispatch dispatch = orchestrator.dispatch(plan, scenario);
+
+        assertTrue(dispatch.passed());
+        assertFalse(dispatch.degraded());
+        assertEquals(2, dispatch.outcomes().get(0).attempts());
+    }
+
+    @Test
+    void nodeThatKeepsThrowingIsDegradedInsteadOfFailingTheRun() {
+        DistributedLoadOrchestrator orchestrator = new DistributedLoadOrchestrator(
+                (node, command) -> {
+                    if (node.id().equals("node-b")) {
+                        throw new IllegalStateException("ssh timeout");
+                    }
+                    return DistributedLoadOrchestrator.Execution.fromExitCode(0, "ok");
+                },
+                node -> true,
+                2);
+
+        DistributedLoadOrchestrator.Dispatch dispatch = orchestrator.dispatch(plan, scenario);
+
+        assertTrue(dispatch.passed(), "单节点故障不应把整体判成性能破线");
+        assertTrue(dispatch.degraded());
+        assertEquals(List.of("node-b"), dispatch.skippedNodes());
+        assertTrue(dispatch.outcomes().stream()
+                .anyMatch(outcome -> outcome.node().id().equals("node-b") && outcome.skipped()));
+    }
+
+    @Test
+    void allNodesUnhealthyNeverPretendsToPass() {
+        DistributedLoadOrchestrator orchestrator = new DistributedLoadOrchestrator(
+                (node, command) -> DistributedLoadOrchestrator.Execution.fromExitCode(0, "ok"),
+                node -> false,
+                2);
+
+        DistributedLoadOrchestrator.Dispatch dispatch = orchestrator.dispatch(plan, scenario);
+
+        assertFalse(dispatch.passed());
+        assertTrue(dispatch.degraded());
+        assertEquals(2, dispatch.skippedNodes().size());
+    }
+
+    @Test
     void explicitVerdictFromANodeWinsOverExitCode() {
         LoadVerdict failing = new LoadVerdict(false, 50, List.of("并发 50：稳态 TPS 19.00 < 19.5"), List.of());
         DistributedLoadOrchestrator orchestrator = new DistributedLoadOrchestrator((node, command) ->

@@ -21,11 +21,9 @@ public record RenderMatrixCell(String mcVersion, RenderBackend backend, String s
         if (tolerancePercent < 0 || tolerancePercent > 100) {
             throw new IllegalArgumentException("像素容差必须在 0–100 之间: " + tolerancePercent);
         }
-        // VulkanMod 是完整渲染器重写且官方标注实验性：只跑启动 + 渲染一帧的冒烟，
-        // 不参与视觉 diff。这里强制归一化，避免调用方误开 diff 门禁。
-        if (backend == RenderBackend.VULKANMOD) {
-            diffEnabled = false;
-        }
+        // 26.4 之前 VulkanMod 仍是实验性渲染器重写，只做启动 + 渲染一帧冒烟；
+        // 26.4 起 Vulkan 默认化才允许进 diff。这里统一归一化，避免调用方误开门禁。
+        diffEnabled = diffEnabled && backend.diffAllowed(mcVersion);
     }
 
     /** 是否只做冒烟（不比对像素）。 */

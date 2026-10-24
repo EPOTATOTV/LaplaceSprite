@@ -8,6 +8,7 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -52,6 +53,15 @@ public final class MatrixHealthRegistry {
         }
     }
 
+    /**
+     * 样本新鲜度记录。
+     *
+     * @param sampleId  样本 id
+     * @param updatedAt 最近一次核对时间
+     */
+    public record SampleHealth(String sampleId, Instant updatedAt) {
+    }
+
     private static final class State {
         private int passes;
         private int failures;
@@ -61,6 +71,7 @@ public final class MatrixHealthRegistry {
 
     private final Path file;
     private final Map<String, State> cells = new LinkedHashMap<>();
+    private final Map<String, Instant> samples = new LinkedHashMap<>();
 
     public MatrixHealthRegistry() {
         this(null);
@@ -150,6 +161,20 @@ public final class MatrixHealthRegistry {
                 .toList();
     }
 
+    /** 登记样本最近一次核对时间；版本过期告警据此判断。 */
+    public synchronized void registerSample(String sampleId, Instant updatedAt) {
+        Objects.requireNonNull(sampleId, "sampleId");
+        Objects.requireNonNull(updatedAt, "updatedAt");
+        samples.put(sampleId, updatedAt);
+        persist();
+    }
+
+    public synchronized List<SampleHealth> samples() {
+        return samples.entrySet().stream()
+                .map(entry -> new SampleHealth(entry.getKey(), entry.getValue()))
+                .toList();
+    }
+
     public Path file() {
         return file;
     }
@@ -182,6 +207,12 @@ public final class MatrixHealthRegistry {
             var coordinates = node.putArray("coordinates");
             state.coordinates.forEach(coordinates::add);
         }
+        var sampleArray = root.putArray("samples");
+        for (Map.Entry<String, Instant> entry : samples.entrySet()) {
+            var node = sampleArray.addObject();
+            node.put("sampleId", entry.getKey());
+            node.put("updatedAt", entry.getValue().toString());
+        }
         return root;
     }
 
@@ -195,6 +226,13 @@ public final class MatrixHealthRegistry {
                 state.mode = Mode.valueOf(node.path("mode").asText(Mode.EVERY_RUN.name()));
                 node.path("coordinates").forEach(coordinate -> state.coordinates.add(coordinate.asText()));
                 cells.put(node.path("cellId").asText(), state);
+            }
+            for (JsonNode node : root.path("samples")) {
+                String sampleId = node.path("sampleId").asText();
+                String updatedAt = node.path("updatedAt").asText();
+                if (!sampleId.isBlank() && !updatedAt.isBlank()) {
+                    samples.put(sampleId, Instant.parse(updatedAt));
+                }
             }
         } catch (IOException ex) {
             throw new UncheckedIOException("读取矩阵健康度失败: " + source, ex);

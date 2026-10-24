@@ -1,0 +1,183 @@
+- id: speed.truthfulac.bypass
+  name: TruthfulAC 移动包时序绕过样本
+  category: CHEAT
+  type: SPEED
+  target: detection-engine
+  source: TruthfulAC
+  injector: speed
+  baseline: baseline:sprint
+  notes: 2026 Q4 目标 TruthfulAC（PacketEvents 2.14+，覆盖 1.20.4–26.3）：模拟 sprint 状态与移动包不同步时的 Speed 绕过；阈值锚点参数不变，绕过假设待实测复核
+  tiers:
+    - tier: MIN
+      params: {speed: 1.11, sprint: true}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {speed: 1.35, sprint: true}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {speed: 1.89, sprint: true}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {speed: 1.2, sprint: true, spoofBrand: true, brand: fabric, modId: truthfulac}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: fly.truthfulac.bypass
+  name: TruthfulAC 垂直位移绕过样本
+  category: CHEAT
+  type: FLY
+  target: detection-engine
+  source: TruthfulAC
+  injector: fly
+  baseline: baseline:walk
+  notes: 2026 Q4 目标 TruthfulAC：模拟 PacketEvents 2.14+ 下垂直位移包的延迟上报，检验 Fly 检出是否依赖即时包序；绕过假设待实测复核
+  tiers:
+    - tier: MIN
+      params: {verticalSpeed: 0.1375}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {verticalSpeed: 0.1875}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {verticalSpeed: 0.25}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {verticalSpeed: 0.15, spoofBrand: true, brand: fabric, modId: truthfulac}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: reach.grimac-2.3.74.bypass
+  name: GrimAC 2.3.74 修复前 Reach 绕过样本
+  category: CHEAT
+  type: REACH
+  target: detection-engine
+  source: GrimAC
+  injector: reach
+  baseline: baseline:pvp
+  notes: 2026 Q4 目标 GrimAC 2.3.74：复现攻击包序列预测修复前的 Reach 绕过；具体修复项以 GrimAC 发布说明为准，绕过假设待实测复核
+  tiers:
+    - tier: MIN
+      params: {reach: 3.3, clicksPerSecond: 10}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {reach: 4.5, clicksPerSecond: 12}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {reach: 6.0, clicksPerSecond: 14}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {reach: 3.6, clicksPerSecond: 10, spoofBrand: true, brand: forge, modId: grimac}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: killaura.grimac-2.3.74.bypass
+  name: GrimAC 2.3.74 修复前 KillAura 绕过样本
+  category: CHEAT
+  type: KILL_AURA
+  target: detection-engine
+  source: GrimAC
+  injector: killaura
+  baseline: baseline:pvp
+  notes: 2026 Q4 目标 GrimAC 2.3.74：多目标攻击包与视角更新的交错顺序模拟；与 reach.grimac-2.3.74.bypass 共用同一修复项，便于对照修复前后检出率
+  tiers:
+    - tier: MIN
+      params: {reach: 4.5, targets: 3.3}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {reach: 4.5, targets: 4.5}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {reach: 4.5, targets: 6.0}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {reach: 4.5, targets: 3.6, spoofBrand: true, brand: forge, modId: grimac}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: nofall.boar-geyser.bypass
+  name: Boar 26.2 Geyser 预测 NoFall 绕过样本
+  category: CHEAT
+  type: NO_FALL
+  target: detection-engine
+  source: Boar
+  injector: nofall
+  baseline: baseline:walk
+  notes: 2026 Q4 目标 Boar（26.2 Geyser 预测）：模拟基岩端移动预测未覆盖的地面伪装；绕过假设待实测复核
+  tiers:
+    - tier: MIN
+      params: {fallSpeed: 0.11, spoofGround: true}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {fallSpeed: 0.15, spoofGround: true}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {fallSpeed: 0.2, spoofGround: true}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {fallSpeed: 0.12, spoofGround: true, spoofBrand: true, brand: bedrock, modId: boar}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: phase.boar-geyser.bypass
+  name: Boar 26.2 Geyser 预测 Phase 绕过样本
+  category: CHEAT
+  type: PHASE
+  target: detection-engine
+  source: Boar
+  injector: phase
+  baseline: baseline:walk
+  notes: 2026 Q4 目标 Boar：基岩端碰撞预测与 Java 端方块更新不同步时的穿墙；与 nofall.boar-geyser.bypass 对应同一预测缺口
+  tiers:
+    - tier: MIN
+      params: {block: stone, depth: 1.1}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {block: deepslate, depth: 1.5}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {block: obsidian, depth: 2.0}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {block: stone, depth: 1.2, spoofBrand: true, brand: bedrock, modId: boar}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: timer.grimac-2.3.74.bypass
+  name: GrimAC 2.3.74 修复前 Timer 绕过样本
+  category: CHEAT
+  type: TIMER
+  target: detection-engine
+  source: GrimAC
+  injector: timer
+  baseline: baseline:sprint
+  notes: 2026 Q4 目标 GrimAC 2.3.74：利用交易/移动包时间戳抖动稀释加速比；修复项以发布说明为准，绕过假设待实测复核
+  tiers:
+    - tier: MIN
+      params: {speedup: 1.1}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {speedup: 1.5}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {speedup: 2.0}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {speedup: 1.25, spoofBrand: true, brand: forge, modId: grimac}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}
+
+- id: scaffold.boar-geyser.bypass
+  name: Boar 26.2 Geyser 预测 Scaffold 绕过样本
+  category: CHEAT
+  type: SCAFFOLD
+  target: detection-engine
+  source: Boar
+  injector: scaffold
+  baseline: baseline:bridge-sprint
+  notes: 2026 Q4 目标 Boar：基岩端放置预测与 Java 端确认包交错时的快速搭桥；与 phase.boar-geyser.bypass 共用预测缺口
+  tiers:
+    - tier: MIN
+      params: {block: dirt, blocksPerTick: 1.0}
+      expected: {expectedDetected: true, minConfidence: 0.5, boundary: true, note: 阈值边界样本}
+    - tier: DEFAULT
+      params: {block: netherrack, blocksPerTick: 2.0}
+      expected: {expectedDetected: true, minConfidence: 0.9, boundary: false}
+    - tier: MAX
+      params: {block: end_stone, blocksPerTick: 3.0}
+      expected: {expectedDetected: true, minConfidence: 0.97, boundary: false}
+    - tier: HIDDEN
+      params: {block: obsidian, blocksPerTick: 1.0, spoofBrand: true, brand: bedrock, modId: boar}
+      expected: {expectedDetected: true, minConfidence: 0.7, boundary: false}

@@ -21,14 +21,14 @@ class BypassAnalyzerTest {
         detected.get(CheatType.SPEED).put(SampleTierName.DEFAULT, 0);
 
         BypassList list = new BypassAnalyzer().analyze(
-                ReportFixtures.run("run-bypass", detected, ReportFixtures.samplesPerTier(36)),
+                ReportFixtures.run("run-bypass", detected, ReportFixtures.samplesPerTier(44)),
                 ReportFixtures.CATALOG);
 
         assertEquals(1, list.size());
         BypassEntry entry = list.entries().get(0);
         assertEquals(CheatType.SPEED, entry.cheatType());
         assertEquals(SampleTierName.DEFAULT, entry.tier());
-        assertEquals(4, entry.samples());
+        assertEquals(5, entry.samples());
         assertEquals(0, entry.hits());
         assertFalse(entry.neverDetected());
         assertEquals("部分档位漏检", entry.severity());
@@ -58,7 +58,7 @@ class BypassAnalyzerTest {
         }
 
         BypassList list = new BypassAnalyzer().analyze(
-                ReportFixtures.run("run-multi-flag", detected, ReportFixtures.samplesPerTier(36)),
+                ReportFixtures.run("run-multi-flag", detected, ReportFixtures.samplesPerTier(44)),
                 ReportFixtures.CATALOG);
 
         assertTrue(list.entries().isEmpty());
@@ -73,7 +73,7 @@ class BypassAnalyzerTest {
         detected.get(CheatType.FLY).put(SampleTierName.DEFAULT, 0);
 
         BypassList list = new BypassAnalyzer().analyze(
-                ReportFixtures.run("run-severity", detected, ReportFixtures.samplesPerTier(36)),
+                ReportFixtures.run("run-severity", detected, ReportFixtures.samplesPerTier(44)),
                 ReportFixtures.CATALOG);
 
         assertEquals(5, list.size());
@@ -96,7 +96,7 @@ class BypassAnalyzerTest {
         }
 
         BypassList list = new BypassAnalyzer(type -> type == CheatType.XRAY).analyze(
-                ReportFixtures.run("run-undetectable", detected, ReportFixtures.samplesPerTier(36)),
+                ReportFixtures.run("run-undetectable", detected, ReportFixtures.samplesPerTier(44)),
                 ReportFixtures.CATALOG);
 
         assertTrue(list.entries().isEmpty());
@@ -114,14 +114,14 @@ class BypassAnalyzerTest {
         detected.get(CheatType.SPEED).put(SampleTierName.DEFAULT, 0);
 
         BypassList list = new BypassAnalyzer().analyze(
-                ReportFixtures.run("run-md", detected, ReportFixtures.samplesPerTier(36)),
+                ReportFixtures.run("run-md", detected, ReportFixtures.samplesPerTier(44)),
                 ReportFixtures.CATALOG);
 
         String markdown = list.toMarkdown();
         assertTrue(markdown.contains("### 绕过清单（已实现但被绕过）"));
         assertTrue(markdown.contains("| 作弊类型 | 出处 | 档位 | 命中/样本 | 严重度 | 建议 |"));
         assertTrue(markdown.contains("| SPEED |"));
-        assertTrue(markdown.contains("0/4"));
+        assertTrue(markdown.contains("0/5"));
         assertTrue(markdown.contains("部分档位漏检"));
         assertTrue(markdown.contains("### 引擎尚未实现该检测项"));
     }
@@ -130,7 +130,7 @@ class BypassAnalyzerTest {
     void nonCheatSamplesNeverEnterBypass() {
         // 全 0 检出：作弊类型每档都该进绕过清单，通用异常样本一条都不该出现
         BypassList list = new BypassAnalyzer().analyze(
-                ReportFixtures.run("run-all-miss", Map.of(), ReportFixtures.samplesPerTier(36)),
+                ReportFixtures.run("run-all-miss", Map.of(), ReportFixtures.samplesPerTier(44)),
                 ReportFixtures.CATALOG);
 
         assertEquals(15 * 4, list.size());
@@ -144,7 +144,7 @@ class BypassAnalyzerTest {
     void fullyDetectedRunHasNoBypass() {
         BypassList list = new BypassAnalyzer().analyze(
                 ReportFixtures.run("run-clean", ReportFixtures.fullyDetected(),
-                        ReportFixtures.samplesPerTier(36)),
+                        ReportFixtures.samplesPerTier(44)),
                 ReportFixtures.CATALOG);
 
         assertEquals(0, list.size());

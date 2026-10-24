@@ -26,19 +26,20 @@ public final class SamplePackageSigner {
 
     public static SamplePackage sign(SamplePackage pkg, byte[] key) {
         return new SamplePackage(pkg.id(), pkg.version(), pkg.publisher(), pkg.samples(),
-                signature(pkg.unsigned(), key));
+                signature(pkg.unsigned(), key), pkg.trustScore(), pkg.sourceRef());
     }
 
     public static boolean verify(SamplePackage pkg, byte[] key) {
         return pkg.signed() && pkg.signature().equalsIgnoreCase(signature(pkg.unsigned(), key));
     }
 
-    /** 规范串：四个字段 + 排序后的样本 JSON；两边必须逐字复现。 */
+    /** 规范串：id / 版本 / 发布者 / 可信度 / 来源 + 排序后的样本 JSON；两边必须逐字复现。 */
     public static String canonical(SamplePackage pkg) {
         List<SampleSpec> sorted = pkg.samples().stream()
                 .sorted(Comparator.comparing(SampleSpec::id))
                 .toList();
-        return pkg.id() + "\n" + pkg.version() + "\n" + pkg.publisher() + "\n" + Json.write(sorted);
+        return pkg.id() + "\n" + pkg.version() + "\n" + pkg.publisher() + "\n"
+                + pkg.trustScore() + "\n" + pkg.sourceRef() + "\n" + Json.write(sorted);
     }
 
     public static String signature(SamplePackage pkg, byte[] key) {

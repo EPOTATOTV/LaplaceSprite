@@ -38,6 +38,8 @@ class AnomalyMatrixTest {
         assertEquals(matrix.samples().size(), matrix.byCategory().values().stream()
                 .mapToInt(List::size).sum());
 
+        assertTrue(matrix.samples().size() >= 60, "样本库规模不足: " + matrix.samples().size());
+
         long nonCheat = matrix.samples().stream().filter(spec -> !spec.isCheat()).count();
         assertTrue(nonCheat >= 12, "通用异常样本不足: " + nonCheat);
         assertEquals(matrix.specs().size(), matrix.samples().stream()

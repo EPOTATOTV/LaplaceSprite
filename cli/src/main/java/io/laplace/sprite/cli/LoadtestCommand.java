@@ -81,15 +81,20 @@ final class LoadtestCommand implements Callable<Integer> {
             writer.printf("  分布式拆分：%d 个假人分到 %d 个节点%n", plan.totalBots(), plan.nodes().size());
             plan.nodes().forEach(node -> writer.printf("    %s（%s %s）— %d%n",
                     node.id(), node.transport(), node.host(), node.bots()));
-            writer.println("  聚合口径：任一节点失败即整体失败，破线并发取失败节点中的最小值");
+            writer.println("  聚合口径：存活节点任一失败即整体失败；节点故障降级跳过，不计入破线");
             if (execute) {
                 DistributedLoadOrchestrator.Dispatch dispatch = new DistributedLoadOrchestrator(
                         (node, command) -> runNode(node, command)).dispatch(plan, parsed);
-                dispatch.outcomes().forEach(outcome -> writer.printf("  [%s] %s — 退出码 %d%n",
-                        outcome.execution().exitCode() == 0 ? "PASS" : "FAIL",
-                        outcome.node().id(), outcome.execution().exitCode()));
+                dispatch.outcomes().forEach(outcome -> writer.printf("  [%s] %s — 退出码 %d · 尝试 %d 次%n",
+                        outcome.skipped() ? "SKIP" : outcome.execution().exitCode() == 0 ? "PASS" : "FAIL",
+                        outcome.node().id(), outcome.execution().exitCode(), outcome.attempts()));
+                if (dispatch.degraded()) {
+                    writer.println("  降级节点：" + String.join(", ", dispatch.skippedNodes()));
+                }
                 dispatch.aggregate().violations().forEach(line -> writer.println("  - " + line));
-                writer.println("  分布式结果：" + (dispatch.passed() ? "通过" : "未通过"));
+                writer.println("  分布式结果：" + (dispatch.passed()
+                        ? dispatch.degraded() ? "通过（降级）" : "通过"
+                        : "未通过"));
                 return dispatch.passed() ? 0 : 1;
             }
         }

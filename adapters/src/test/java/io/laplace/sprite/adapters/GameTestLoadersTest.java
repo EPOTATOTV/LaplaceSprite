@@ -6,6 +6,7 @@ import io.laplace.sprite.core.model.PlatformFamily;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -31,6 +32,17 @@ class GameTestLoadersTest {
 
         assertEquals("forge-gametest", forge.suite());
         assertEquals("neoforge-gametest", neoForge.suite());
+    }
+
+    @Test
+    void twentySixVersionsReuseTheNativeGameTestEntry() {
+        assertTrue(GameTestLoader.supportsMinecraft("26.3"));
+        assertTrue(GameTestLoader.supportsMinecraft("26.4"));
+        assertTrue(GameTestLoader.supportsMinecraft("1.21.5"));
+        assertFalse(GameTestLoader.supportsMinecraft("1.21.4"));
+        assertFalse(GameTestLoader.supportsMinecraft("1.22.0"), "未发布线不能默认支持");
+        assertFalse(GameTestLoader.supportsMinecraft(null));
+        assertEquals("/test runall", GameTestLoader.NATIVE_COMMAND);
     }
 
     @Test

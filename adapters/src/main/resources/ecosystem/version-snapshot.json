@@ -1,7 +1,9 @@
 {
-  "generatedAt": "2026-10-18",
-  "note": "离线快照：生产 CI 由 ci/generate-matrix.py 读取同一文件。版本来源依次对应 Fabric meta、PaperMC STABLE 通道、NeoForge/Forge Maven 元数据。",
+  "generatedAt": "2026-10-23",
+  "note": "离线快照：生产 CI 由 ci/generate-matrix.py 读取同一文件。版本来源依次对应 Fabric meta、PaperMC STABLE 通道、NeoForge/Forge Maven 元数据。26.4 为快照版本，加载器与生态构建只登记已发布的部分。",
   "minecraft": [
+    { "version": "26.4", "channel": "snapshot", "lts": false, "java": 25 },
+    { "version": "26.3", "channel": "stable", "lts": false, "java": 25 },
     { "version": "26.2", "channel": "stable", "lts": false, "java": 25 },
     { "version": "26.1", "channel": "stable", "lts": false, "java": 25 },
     { "version": "1.21.11", "channel": "stable", "lts": true, "java": 21 },
@@ -9,6 +11,8 @@
     { "version": "1.20.1", "channel": "stable", "lts": true, "java": 17 }
   ],
   "fabric": [
+    { "minecraft": "26.4", "loaderVersion": "0.23.0", "stable": false },
+    { "minecraft": "26.3", "loaderVersion": "0.22.0", "stable": true },
     { "minecraft": "26.2", "loaderVersion": "0.21.0", "stable": true },
     { "minecraft": "26.1", "loaderVersion": "0.20.0", "stable": true },
     { "minecraft": "1.21.11", "loaderVersion": "0.19.5", "stable": true },
@@ -16,12 +20,16 @@
     { "minecraft": "1.20.1", "loaderVersion": "0.15.11", "stable": true }
   ],
   "neoforge": [
+    { "minecraft": "26.4", "loaderVersion": "26.4.0", "stable": false },
+    { "minecraft": "26.3", "loaderVersion": "26.3.0", "stable": true },
     { "minecraft": "26.2", "loaderVersion": "26.2.0", "stable": true },
     { "minecraft": "26.1", "loaderVersion": "26.1.0", "stable": true },
     { "minecraft": "1.21.11", "loaderVersion": "21.11.0", "stable": true },
     { "minecraft": "1.21.1", "loaderVersion": "21.1.209", "stable": true }
   ],
   "forge": [
+    { "minecraft": "26.4", "loaderVersion": "66.0.12", "stable": false },
+    { "minecraft": "26.3", "loaderVersion": "66.0.11", "stable": true },
     { "minecraft": "26.2", "loaderVersion": "66.0.10", "stable": true },
     { "minecraft": "26.1", "loaderVersion": "66.0.8", "stable": true },
     { "minecraft": "1.21.11", "loaderVersion": "61.2.3", "stable": true },
@@ -29,6 +37,7 @@
     { "minecraft": "1.20.1", "loaderVersion": "47.4.0", "stable": true }
   ],
   "paper": [
+    { "minecraft": "26.3", "build": "1", "channel": "STABLE", "java": 25 },
     { "minecraft": "26.2", "build": "1", "channel": "STABLE", "java": 25 },
     { "minecraft": "26.1", "build": "1", "channel": "STABLE", "java": 25 },
     { "minecraft": "1.21.11", "build": "132", "channel": "STABLE", "java": 21 },
@@ -36,6 +45,44 @@
     { "minecraft": "1.20.1", "build": "196", "channel": "STABLE", "java": 17 }
   ],
   "builds": [
+    { "project": "fabric-api", "minecraft": "26.4", "loader": "fabric" },
+    { "project": "jei", "minecraft": "26.4", "loader": "fabric" },
+    { "project": "sodium", "minecraft": "26.4", "loader": "fabric" },
+    { "project": "lithium", "minecraft": "26.4", "loader": "fabric" },
+    { "project": "iris", "minecraft": "26.4", "loader": "fabric" },
+
+    { "project": "jei", "minecraft": "26.4", "loader": "neoforge" },
+    { "project": "create", "minecraft": "26.4", "loader": "neoforge" },
+
+    { "project": "jei", "minecraft": "26.4", "loader": "forge" },
+    { "project": "create", "minecraft": "26.4", "loader": "forge" },
+
+    { "project": "fabric-api", "minecraft": "26.3", "loader": "fabric" },
+    { "project": "jei", "minecraft": "26.3", "loader": "fabric" },
+    { "project": "sodium", "minecraft": "26.3", "loader": "fabric" },
+    { "project": "lithium", "minecraft": "26.3", "loader": "fabric" },
+    { "project": "iris", "minecraft": "26.3", "loader": "fabric" },
+    { "project": "create-fabric", "minecraft": "26.3", "loader": "fabric" },
+    { "project": "alexs-mobs-continued", "minecraft": "26.3", "loader": "fabric" },
+
+    { "project": "jei", "minecraft": "26.3", "loader": "neoforge" },
+    { "project": "lithium", "minecraft": "26.3", "loader": "neoforge" },
+    { "project": "create", "minecraft": "26.3", "loader": "neoforge" },
+    { "project": "alexs-mobs-continued", "minecraft": "26.3", "loader": "neoforge" },
+
+    { "project": "jei", "minecraft": "26.3", "loader": "forge" },
+    { "project": "lithium", "minecraft": "26.3", "loader": "forge" },
+    { "project": "create", "minecraft": "26.3", "loader": "forge" },
+    { "project": "alexs-mobs-continued", "minecraft": "26.3", "loader": "forge" },
+
+    { "project": "vault", "minecraft": "26.3", "loader": "paper" },
+    { "project": "luckperms", "minecraft": "26.3", "loader": "paper" },
+    { "project": "placeholderapi", "minecraft": "26.3", "loader": "paper" },
+    { "project": "essentialsx", "minecraft": "26.3", "loader": "paper" },
+    { "project": "multiverse-core", "minecraft": "26.3", "loader": "paper" },
+    { "project": "worldedit", "minecraft": "26.3", "loader": "paper" },
+    { "project": "viaversion", "minecraft": "26.3", "loader": "paper" },
+
     { "project": "fabric-api", "minecraft": "26.2", "loader": "fabric" },
     { "project": "jei", "minecraft": "26.2", "loader": "fabric" },
     { "project": "sodium", "minecraft": "26.2", "loader": "fabric" },

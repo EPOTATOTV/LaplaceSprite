@@ -9,32 +9,40 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** 渲染后端矩阵（15.12 P1）：VulkanMod 冒烟免 diff、golden 按 MC × 后端分目录。 */
+/** 渲染后端矩阵（15.12 P1，v2 L2-02）：Vulkan 按版本进 diff、容差按管线分档。 */
 class RenderMatrixTest {
 
     @Test
     void defaultsCoverThreeBackendsForEachMinecraftVersion() {
         RenderMatrix matrix = RenderMatrix.defaults();
 
-        assertEquals(9, matrix.size());
-        assertEquals(9, matrix.cells().size());
-        assertEquals(3, matrix.mcVersions().size());
+        assertEquals(15, matrix.size());
+        assertEquals(15, matrix.cells().size());
+        assertEquals(5, matrix.mcVersions().size());
         assertEquals(3, matrix.backends().size());
+        assertEquals(List.of("26.4", "26.3", "26.2", "26.1", "1.21.1"), matrix.mcVersions());
     }
 
     @Test
-    void vulkanModCellsNeverEnablePixelDiff() {
+    void vulkanModJoinsPixelDiffOnlyFromTwentySixFour() {
         for (RenderMatrixCell cell : RenderMatrix.defaults().cells()) {
             if (cell.backend() == RenderBackend.VULKANMOD) {
-                assertFalse(cell.diffEnabled(), "VulkanMod 只做启动 + 渲染一帧冒烟");
-                assertTrue(cell.smokeOnly());
+                if (RenderPipeline.vulkanDefault(cell.mcVersion())) {
+                    assertTrue(cell.diffEnabled(), "26.4 起 Vulkan 默认化应进入 diff");
+                    assertFalse(cell.smokeOnly());
+                } else {
+                    assertFalse(cell.diffEnabled(), "26.4 之前 VulkanMod 只做启动 + 渲染一帧冒烟");
+                    assertTrue(cell.smokeOnly());
+                }
             } else {
                 assertTrue(cell.diffEnabled());
                 assertFalse(cell.smokeOnly());
             }
         }
-        RenderMatrixCell forced = new RenderMatrixCell("1.21.1", RenderBackend.VULKANMOD, null, true, 0.5);
-        assertFalse(forced.diffEnabled(), "构造器必须把 VulkanMod 的 diff 归一化为 false");
+        assertFalse(new RenderMatrixCell("26.3", RenderBackend.VULKANMOD, null, true, 0.5).diffEnabled(),
+                "构造器必须把 26.3 VulkanMod 的 diff 归一化为 false");
+        assertTrue(new RenderMatrixCell("26.4", RenderBackend.VULKANMOD, null, true, 0.8).diffEnabled(),
+                "26.4 VulkanMod 允许 diff");
     }
 
     @Test
@@ -50,35 +58,46 @@ class RenderMatrixTest {
 
     @Test
     void goldenPathUsesMinecraftVersionAndBackendDirectories() {
-        RenderMatrixCell vulkan = new RenderMatrixCell("1.21.1", RenderBackend.VULKANMOD, null, true, 0.5);
+        RenderMatrixCell vulkan = new RenderMatrixCell("26.4", RenderBackend.VULKANMOD, null, true, 0.8);
         GoldenPathResolver resolver = new GoldenPathResolver(Path.of("golden"));
 
         String directory = resolver.directory(vulkan).toString().replace('\\', '/');
         String png = resolver.goldenPng(vulkan, "world-spawn").toString().replace('\\', '/');
 
-        assertTrue(directory.contains("1.21.1"), directory);
+        assertTrue(directory.contains("26.4"), directory);
         assertTrue(directory.contains("vulkanmod"), directory);
-        assertTrue(png.endsWith("1.21.1/vulkanmod/world-spawn.png"), png);
+        assertTrue(png.endsWith("26.4/vulkanmod/world-spawn.png"), png);
     }
 
     @Test
     void matrixKeepsMinecraftOuterAndBackendInnerOrder() {
         List<RenderMatrixCell> cells = RenderMatrix.defaults().cells();
 
-        assertEquals("26.2", cells.get(0).mcVersion());
+        assertEquals("26.4", cells.get(0).mcVersion());
         assertEquals(RenderBackend.VANILLA_OPENGL, cells.get(0).backend());
         assertEquals(RenderBackend.VULKANMOD, cells.get(2).backend());
-        assertEquals("26.1", cells.get(3).mcVersion());
-        assertEquals("1.21.1", cells.get(6).mcVersion());
+        assertEquals("26.3", cells.get(3).mcVersion());
+        assertEquals("26.2", cells.get(6).mcVersion());
+        assertEquals("26.1", cells.get(9).mcVersion());
+        assertEquals("1.21.1", cells.get(12).mcVersion());
     }
 
     @Test
-    void twentySixVersionsUseTheTighterTolerance() {
+    void toleranceIsTieredByPipeline() {
         List<RenderMatrixCell> cells = RenderMatrix.defaults().cells();
 
-        assertTrue(cells.stream().filter(cell -> cell.mcVersion().startsWith("26."))
+        assertTrue(cells.stream()
+                .filter(cell -> cell.mcVersion().startsWith("26."))
+                .filter(cell -> cell.backend() != RenderBackend.VULKANMOD)
                 .allMatch(cell -> cell.tolerancePercent() == 0.5));
+        assertTrue(cells.stream()
+                .filter(cell -> cell.mcVersion().startsWith("26."))
+                .filter(cell -> cell.backend() == RenderBackend.VULKANMOD)
+                .allMatch(cell -> cell.tolerancePercent() == 0.8));
         assertTrue(cells.stream().filter(cell -> !cell.mcVersion().startsWith("26."))
                 .allMatch(cell -> cell.tolerancePercent() == 1.0));
+
+        assertEquals(RenderPipeline.OPENGL, RenderBackend.VANILLA_OPENGL.pipeline());
+        assertEquals(RenderPipeline.VULKAN, RenderBackend.VULKANMOD.pipeline());
     }
 }
