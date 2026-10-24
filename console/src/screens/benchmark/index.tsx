@@ -6,18 +6,26 @@ import { Glass } from '../../components/glass/Glass'
 import { Section } from '../../components/Section'
 import { MetricCard } from '../dashboard/MetricCard'
 import { useConsoleData } from '../../data/useConsoleData'
+import { useI18n } from '../../i18n/useI18n'
+import type { MessageKey } from '../../i18n/messages'
 import { cx } from '../../lib/cx'
 import { formatInt, formatPercent } from '../../lib/format'
 import type { BenchmarkProjectRow, BenchmarkTrendPoint } from '../../types'
 import styles from './BenchmarkScreen.module.css'
 
-const METRICS = [
-  { key: 'functional', label: '功能通过率', better: 'higher' },
-  { key: 'detection', label: '检出率', better: 'higher' },
-  { key: 'msptP95', label: 'P95 MSPT', better: 'lower' },
-  { key: 'regressionCases', label: '回归用例', better: 'higher' },
-  { key: 'evidenceLinks', label: '证据链', better: 'higher' },
-] as const
+interface MetricColumn {
+  key: 'functional' | 'detection' | 'msptP95' | 'regressionCases' | 'evidenceLinks'
+  labelKey: MessageKey
+  better: 'higher' | 'lower'
+}
+
+const METRICS: readonly MetricColumn[] = [
+  { key: 'functional', labelKey: 'benchmark.metric.functional', better: 'higher' },
+  { key: 'detection', labelKey: 'benchmark.metric.detection', better: 'higher' },
+  { key: 'msptP95', labelKey: 'benchmark.metric.msptP95', better: 'lower' },
+  { key: 'regressionCases', labelKey: 'benchmark.metric.regressionCases', better: 'higher' },
+  { key: 'evidenceLinks', labelKey: 'benchmark.metric.evidenceLinks', better: 'higher' },
+]
 
 function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value))
@@ -60,6 +68,7 @@ function driftOf(project: BenchmarkProjectRow): Drift | null {
 
 /** 综合分历史折线；历史点不足 3 个时不画。 */
 function Sparkline({ history }: { history: BenchmarkTrendPoint[] }) {
+  const { t } = useI18n()
   const values = history.map(scoreOf)
   const min = Math.min(...values)
   const max = Math.max(...values)
@@ -79,7 +88,9 @@ function Sparkline({ history }: { history: BenchmarkTrendPoint[] }) {
       className={styles.spark}
       viewBox={`0 0 ${width} ${height}`}
       role="img"
-      aria-label={`综合分走势 ${history.map((point) => point.label).join(' → ')}`}
+      aria-label={t('benchmark.spark.aria', {
+        labels: history.map((point) => point.label).join(' → '),
+      })}
     >
       <polyline
         className={styles.sparkLine}
@@ -117,6 +128,7 @@ function isBest(
 
 export default function BenchmarkScreen() {
   const { data, state } = useConsoleData()
+  const { t } = useI18n()
   const projects = useMemo(() => data?.benchmarkProjects ?? [], [data])
   const ranked = useMemo(
     () => [...projects].sort((left, right) => scoreOf(right) - scoreOf(left)),
@@ -129,7 +141,7 @@ export default function BenchmarkScreen() {
     return (
       <Glass level="panel" className={styles.loading}>
         <span className={styles.loadingBar} aria-hidden="true" />
-        <p>正在载入多项目基准…</p>
+        <p>{t('benchmark.loading')}</p>
       </Glass>
     )
   }
@@ -137,7 +149,7 @@ export default function BenchmarkScreen() {
   if (!best) {
     return (
       <Glass level="panel" className={styles.loading}>
-        <p>暂无多项目基准数据</p>
+        <p>{t('benchmark.empty')}</p>
       </Glass>
     )
   }
@@ -147,27 +159,27 @@ export default function BenchmarkScreen() {
       <div className={styles.summary}>
         <MetricCard
           hero
-          label="最高综合分"
+          label={t('benchmark.summary.best')}
           value={formatPercent(scoreOf(best), 1)}
           caption={`${best.name} · ${best.kind} ${best.version}`}
           icon={Trophy}
           tone="accent"
           delay={0}
-          ratio={{ value: scoreOf(best), label: '功能 40 · 检出 30 · 性能 20 · 回归 10' }}
+          ratio={{ value: scoreOf(best), label: t('benchmark.caption.best') }}
         />
         <MetricCard
-          label="参与项目"
+          label={t('benchmark.summary.projects')}
           value={String(projects.length)}
-          unit="个"
-          caption="模组 / 插件 / 整合包同一口径"
+          unit={t('benchmark.unit.projects')}
+          caption={t('benchmark.caption.projects')}
           icon={Boxes}
           delay={70}
         />
         <MetricCard
-          label="平均 P95 MSPT"
+          label={t('benchmark.summary.avgMspt')}
           value={average.toFixed(1)}
           unit="ms"
-          caption="越低越好 · 门禁上限 50ms"
+          caption={t('benchmark.caption.avgMspt')}
           icon={FlaskConical}
           tone={average > 50 ? 'danger' : 'warn'}
           delay={140}
@@ -175,8 +187,8 @@ export default function BenchmarkScreen() {
       </div>
 
       <Section
-        title="多项目基准排行"
-        note="功能 / 检出 / 性能 / 回归四条线加权 · 折线为历史综合分，最近两点下滑自动标注漂移"
+        title={t('benchmark.rank.title')}
+        note={t('benchmark.rank.note')}
         delay={0}
         className={styles.spanFull}
       >
@@ -215,7 +227,7 @@ export default function BenchmarkScreen() {
 
                 <div className={styles.bars}>
                   <span className={styles.barItem}>
-                    <span className={styles.barLabel}>功能</span>
+                    <span className={styles.barLabel}>{t('benchmark.bars.functional')}</span>
                     <span className={styles.barTrack}>
                       <span
                         className={styles.barFill}
@@ -224,7 +236,7 @@ export default function BenchmarkScreen() {
                     </span>
                   </span>
                   <span className={styles.barItem}>
-                    <span className={styles.barLabel}>检出</span>
+                    <span className={styles.barLabel}>{t('benchmark.bars.detection')}</span>
                     <span className={styles.barTrack}>
                       <span
                         className={cx(styles.barFill, styles.barAccent)}
@@ -233,7 +245,7 @@ export default function BenchmarkScreen() {
                     </span>
                   </span>
                   <span className={styles.barItem}>
-                    <span className={styles.barLabel}>性能</span>
+                    <span className={styles.barLabel}>{t('benchmark.bars.performance')}</span>
                     <span className={styles.barTrack}>
                       <span
                         className={cx(styles.barFill, styles.barWarn)}
@@ -250,21 +262,30 @@ export default function BenchmarkScreen() {
                       {drift?.regressed ? (
                         <span
                           className={styles.drift}
-                          title={`${drift.from} 起综合分 ${formatPercent(drift.scoreDelta, 1)}，P95 MSPT ${drift.msptDelta >= 0 ? '+' : ''}${(drift.msptDelta * 100).toFixed(1)}%`}
+                          title={t('benchmark.drift.title', {
+                            from: drift.from,
+                            score: formatPercent(drift.scoreDelta, 1),
+                            mspt: `${drift.msptDelta >= 0 ? '+' : ''}${(drift.msptDelta * 100).toFixed(1)}%`,
+                          })}
                         >
-                          漂移 {formatPercent(drift.scoreDelta, 1)}
+                          {t('benchmark.drift', {
+                            value: formatPercent(drift.scoreDelta, 1),
+                          })}
                         </span>
                       ) : (
-                        <span className={styles.steady}>基线稳定</span>
+                        <span className={styles.steady}>{t('benchmark.steady')}</span>
                       )}
                     </>
                   ) : (
-                    <span className={styles.trendEmpty}>历史不足</span>
+                    <span className={styles.trendEmpty}>{t('benchmark.historyShort')}</span>
                   )}
                 </div>
 
                 <span className={styles.trail}>
-                  {project.regressionCases} 条回归 · {project.evidenceLinks} 环证据
+                  {t('benchmark.trail', {
+                    cases: project.regressionCases,
+                    links: project.evidenceLinks,
+                  })}
                 </span>
               </Glass>
             )
@@ -273,8 +294,8 @@ export default function BenchmarkScreen() {
       </Section>
 
       <Section
-        title="指标横评"
-        note="按项目类型分组 · 粗体为该项最优"
+        title={t('benchmark.table.title')}
+        note={t('benchmark.table.note')}
         delay={140}
         className={styles.spanFull}
       >
@@ -282,12 +303,14 @@ export default function BenchmarkScreen() {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th scope="col">项目</th>
+                <th scope="col">{t('benchmark.table.project')}</th>
                 {METRICS.map((metric) => (
                   <th key={metric.key} scope="col">
-                    {metric.label}
+                    {t(metric.labelKey)}
                     <span className={styles.better}>
-                      {metric.better === 'higher' ? '越高越好' : '越低越好'}
+                      {metric.better === 'higher'
+                        ? t('benchmark.better.higher')
+                        : t('benchmark.better.lower')}
                     </span>
                   </th>
                 ))}

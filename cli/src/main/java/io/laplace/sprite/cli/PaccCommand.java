@@ -1,5 +1,6 @@
 package io.laplace.sprite.cli;
 
+import io.laplace.sprite.core.i18n.I18n;
 import io.laplace.sprite.core.io.Json;
 import io.laplace.sprite.core.model.TestRun;
 import io.laplace.sprite.core.plugin.PluginRuntime;
@@ -68,7 +69,7 @@ final class PaccCommand implements Callable<Integer> {
     @Override
     public Integer call() {
         if (!PluginRuntime.isActive(PaccBusinessPlugin.PLUGIN_ID)) {
-            spec.commandLine().getOut().println("PACC 插件未加载（可用 laplace.plugins.exclude 排除）");
+            spec.commandLine().getOut().println(I18n.get().t("pacc.disabled"));
             return 2;
         }
         if (baseline == null && (report == null || version == null)) {

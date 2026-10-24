@@ -1,5 +1,6 @@
 package io.laplace.sprite.cli;
 
+import io.laplace.sprite.core.i18n.I18n;
 import io.laplace.sprite.core.io.Json;
 import io.laplace.sprite.game.DownloadResult;
 import io.laplace.sprite.game.GameCache;
@@ -69,6 +70,7 @@ final class GameCommand implements Runnable {
 
         @Override
         public Integer call() {
+            I18n i18n = I18n.get();
             PrintWriter out = spec.commandLine().getOut();
             PrintWriter err = spec.commandLine().getErr();
             Path cacheFile = cache.resolve("version_manifest_v2.json");
@@ -77,19 +79,19 @@ final class GameCommand implements Runnable {
                 Optional<VersionManifest> loaded = refresh
                         ? Optional.of(client.fetch()) : client.loadCached();
                 if (loaded.isEmpty()) {
-                    err.println("版本清单缓存不存在，先执行 laplace game list --refresh");
-                    err.println("  缓存路径 " + cacheFile.toAbsolutePath());
+                    err.println(i18n.t("game.list.missing"));
+                    err.println("  " + i18n.t("game.list.cache", cacheFile.toAbsolutePath()));
                     return 1;
                 }
                 VersionManifest manifest = loaded.get();
-                out.printf("版本清单：latest release %s · latest snapshot %s · 共 %d 个%n",
-                        manifest.latestRelease(), manifest.latestSnapshot(), manifest.count());
+                out.println(i18n.t("game.list.header", manifest.latestRelease(),
+                        manifest.latestSnapshot(), manifest.count()));
                 manifest.versions().stream().limit(20).forEach(version ->
                         out.printf("  %-24s %-10s %s%n", version.id(), version.type(),
                                 version.releaseTime()));
                 return 0;
             } catch (IOException | IllegalArgumentException ex) {
-                err.println("版本清单读取失败: " + ex.getMessage());
+                err.println(i18n.t("game.list.read.failed", ex.getMessage()));
                 return 1;
             }
         }
@@ -116,6 +118,7 @@ final class GameCommand implements Runnable {
 
         @Override
         public Integer call() {
+            I18n i18n = I18n.get();
             PrintWriter out = spec.commandLine().getOut();
             PrintWriter err = spec.commandLine().getErr();
             GameCache gameCache = new GameCache(cache);
@@ -123,7 +126,7 @@ final class GameCommand implements Runnable {
                 VersionManifest manifest = loadManifest(gameCache);
                 Optional<GameVersion> selected = manifest.find(versionId);
                 if (selected.isEmpty()) {
-                    err.println("版本清单里没有这个版本: " + versionId);
+                    err.println(i18n.t("game.download.version.missing", versionId));
                     return 1;
                 }
                 GameVersion version = selected.get();
@@ -150,7 +153,7 @@ final class GameCommand implements Runnable {
                 }
                 return ok ? 0 : 1;
             } catch (IOException | IllegalArgumentException ex) {
-                err.println("下载失败: " + ex.getMessage());
+                err.println(i18n.t("game.download.failed", ex.getMessage()));
                 return 1;
             }
         }
@@ -165,15 +168,16 @@ final class GameCommand implements Runnable {
         private static boolean download(PrintWriter out, PrintWriter err, GameDownloader downloader,
                                         GameVersionMetadata.DownloadInfo info,
                                         Path target, String name) throws IOException {
+            I18n i18n = I18n.get();
             if (info == null) {
-                err.println("该版本没有 " + name + " 下载项");
+                err.println(i18n.t("game.download.artifact.missing", name));
                 return false;
             }
             DownloadResult result = downloader.download(URI.create(info.url()), target,
                     info.sha1(), HashAlgorithm.SHA1);
-            out.printf("  %s %d 字节 · 尝试 %d 次 · SHA-1 %s · SHA-256 %s%n", name, result.bytes(),
-                    result.attempts(), result.sha1(), result.sha256());
-            out.println("  缓存 " + target.toAbsolutePath());
+            out.println("  " + i18n.t("game.download.ok", name, result.bytes(), result.attempts(),
+                    result.sha1(), result.sha256()));
+            out.println("  " + i18n.t("game.download.cache", target.toAbsolutePath()));
             return result.verified();
         }
     }
@@ -193,14 +197,15 @@ final class GameCommand implements Runnable {
 
         @Override
         public Integer call() {
+            I18n i18n = I18n.get();
             PrintWriter out = spec.commandLine().getOut();
             PrintWriter err = spec.commandLine().getErr();
             GameCache gameCache = new GameCache(cache);
             try {
                 Path versionFile = gameCache.versionFile(versionId);
                 if (!Files.isRegularFile(versionFile)) {
-                    err.println("没有缓存的 version.json: " + versionFile.toAbsolutePath());
-                    err.println("  先执行 laplace game download " + versionId);
+                    err.println(i18n.t("game.metadata.missing", versionFile.toAbsolutePath()));
+                    err.println("  " + i18n.t("game.metadata.hint", versionId));
                     return 1;
                 }
                 String versionJson = Files.readString(versionFile, StandardCharsets.UTF_8);
@@ -209,7 +214,7 @@ final class GameCommand implements Runnable {
                 printMetadata(out, metadata);
                 return 0;
             } catch (IOException | IllegalArgumentException ex) {
-                err.println("元数据解析失败: " + ex.getMessage());
+                err.println(i18n.t("game.metadata.failed", ex.getMessage()));
                 return 1;
             }
         }
@@ -230,39 +235,43 @@ final class GameCommand implements Runnable {
 
         @Override
         public Integer call() {
+            I18n i18n = I18n.get();
             PrintWriter out = spec.commandLine().getOut();
             PrintWriter err = spec.commandLine().getErr();
             GameCache gameCache = new GameCache(cache);
             try {
                 if (versionId == null) {
                     gameCache.cleanAll();
-                    out.println("已清理全部版本缓存: " + gameCache.versionsDir().toAbsolutePath());
+                    out.println(i18n.t("game.cache.clean.all.ok",
+                            gameCache.versionsDir().toAbsolutePath()));
                 } else {
                     gameCache.clean(versionId);
-                    out.println("已清理版本缓存: " + gameCache.versionDir(versionId).toAbsolutePath());
+                    out.println(i18n.t("game.cache.clean.ok",
+                            gameCache.versionDir(versionId).toAbsolutePath()));
                 }
                 return 0;
             } catch (IOException | IllegalArgumentException ex) {
-                err.println("缓存清理失败: " + ex.getMessage());
+                err.println(i18n.t("game.cache.clean.failed", ex.getMessage()));
                 return 1;
             }
         }
     }
 
     private static void printMetadata(PrintWriter out, GameVersionMetadata metadata) {
-        out.printf("元数据 %s · type %s · 发布时间 %s%n", metadata.id(), metadata.type(),
-                metadata.releaseTime());
-        out.printf("  mainClass %s · assets %s%n",
-                metadata.mainClass() == null ? "未知" : metadata.mainClass(),
-                metadata.assets() == null ? "未知" : metadata.assets());
-        out.printf("  pack_format %s · dataVersion %s · protocolVersion %s%n",
-                number(metadata.packFormat()), number(metadata.dataVersion()),
-                number(metadata.protocolVersion()));
-        out.printf("  渲染 API %s · 映射 %s%n", metadata.defaultRenderApi(), metadata.mappings());
+        I18n i18n = I18n.get();
+        out.println(i18n.t("game.metadata.header", metadata.id(), metadata.type(),
+                metadata.releaseTime()));
+        out.println("  " + i18n.t("game.metadata.detail",
+                metadata.mainClass() == null ? i18n.t("game.metadata.unknown") : metadata.mainClass(),
+                metadata.assets() == null ? i18n.t("game.metadata.unknown") : metadata.assets()));
+        out.println("  " + i18n.t("game.metadata.version", number(metadata.packFormat()),
+                number(metadata.dataVersion()), number(metadata.protocolVersion())));
+        out.println("  " + i18n.t("game.metadata.render", metadata.defaultRenderApi(),
+                metadata.mappings()));
     }
 
     private static String number(OptionalInt value) {
-        return value.isPresent() ? Integer.toString(value.getAsInt()) : "未知";
+        return value.isPresent() ? Integer.toString(value.getAsInt()) : I18n.get().t("game.metadata.unknown");
     }
 
     private static void writeMetadata(GameCache cache, GameVersionMetadata metadata) throws IOException {

@@ -4,6 +4,7 @@ import { ChevronsLeft, ChevronsRight } from 'lucide-react'
 
 import { Glass } from '../components/glass/Glass'
 import { useConsoleData } from '../data/useConsoleData'
+import { useI18n } from '../i18n/useI18n'
 import { cx } from '../lib/cx'
 import { NAV_ENTRIES } from './nav'
 import styles from './LeftRail.module.css'
@@ -34,6 +35,7 @@ function BrandMark() {
 export function LeftRail({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const location = useLocation()
   const { source, state } = useConsoleData()
+  const { t } = useI18n()
   const listRef = useRef<HTMLUListElement | null>(null)
   const itemRefs = useRef<Array<HTMLLIElement | null>>([])
   const [marker, setMarker] = useState({ top: 0, height: 46 })
@@ -77,11 +79,11 @@ export function LeftRail({ collapsed, onToggle }: { collapsed: boolean; onToggle
         <BrandMark />
         <div className={styles.brandText}>
           <span className={styles.brandName}>Laplace Console</span>
-          <span className={styles.brandSub}>拉普拉斯精灵 · 测试平台</span>
+          <span className={styles.brandSub}>{t('rail.brand.sub')}</span>
         </div>
       </div>
 
-      <nav aria-label="控制台导航">
+      <nav aria-label={t('rail.nav.aria')}>
         <ul className={styles.navList} ref={listRef}>
           {NAV_ENTRIES.map((entry, index) => {
             const Icon = entry.icon
@@ -97,14 +99,14 @@ export function LeftRail({ collapsed, onToggle }: { collapsed: boolean; onToggle
                   to={entry.path}
                   end={entry.path === '/'}
                   className={({ isActive }) => cx(styles.navItem, isActive && styles.navActive)}
-                  title={collapsed ? `${entry.code} ${entry.label}` : undefined}
+                  title={collapsed ? `${entry.code} ${t(entry.labelKey)}` : undefined}
                 >
                   <span className={styles.navIcon}>
                     <Icon size={17} strokeWidth={1.7} aria-hidden="true" />
                   </span>
                   <span className={styles.navBody}>
-                    <span className={styles.navLabel}>{entry.label}</span>
-                    <span className={styles.navHint}>{entry.hint}</span>
+                    <span className={styles.navLabel}>{t(entry.labelKey)}</span>
+                    <span className={styles.navHint}>{t(entry.hintKey)}</span>
                   </span>
                   <span className={cx(styles.navCode, 'tabular')}>{entry.code}</span>
                   {!entry.ready && <span className={styles.navFlag} aria-hidden="true" />}
@@ -126,16 +128,20 @@ export function LeftRail({ collapsed, onToggle }: { collapsed: boolean; onToggle
         <div className={styles.sourceChip} data-source={source}>
           <span className={styles.sourceDot} aria-hidden="true" />
           <span className={styles.sourceText}>
-            {state === 'loading' ? '同步中' : source === 'api' ? '实时接口' : '样例数据'}
+            {state === 'loading'
+              ? t('rail.source.loading')
+              : source === 'api'
+                ? t('rail.source.api')
+                : t('rail.source.sample')}
           </span>
         </div>
         <button
           type="button"
           className={styles.collapseBtn}
           onClick={onToggle}
-          aria-label={collapsed ? '展开导航栏' : '收起导航栏'}
+          aria-label={collapsed ? t('rail.expand') : t('rail.collapse')}
           aria-expanded={!collapsed}
-          title={collapsed ? '展开导航栏' : '收起导航栏'}
+          title={collapsed ? t('rail.expand') : t('rail.collapse')}
         >
           {collapsed ? (
             <ChevronsRight size={16} strokeWidth={1.8} aria-hidden="true" />

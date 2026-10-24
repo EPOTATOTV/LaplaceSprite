@@ -1,5 +1,6 @@
 package io.laplace.sprite.adapters.ecosystem;
 
+import io.laplace.sprite.core.i18n.I18n;
 import io.laplace.sprite.core.io.Json;
 
 import java.io.IOException;
@@ -76,7 +77,7 @@ public final class MatrixAlertNotifier {
         for (MatrixHealthRegistry.CellHealth cell : registry.health()) {
             if (cell.consecutiveFailures() >= MatrixHealthRegistry.PROMOTE_AFTER_FAILURES) {
                 alerts.add(new Alert(Kind.HEALTH_DROP, cell.cellId(),
-                        "连续失败 %d 次，已升回每次必跑".formatted(cell.consecutiveFailures())));
+                        I18n.get().t("alert.health.dropped", cell.consecutiveFailures())));
             }
         }
 
@@ -85,7 +86,7 @@ public final class MatrixAlertNotifier {
                 String minecraft = minecraftOf(cell.cellId());
                 if (!minecraft.isBlank() && !activeMinecraftVersions.contains(minecraft)) {
                     alerts.add(new Alert(Kind.VERSION_EXPIRED, cell.cellId(),
-                            "版本 " + minecraft + " 已不在维护矩阵内"));
+                            I18n.get().t("alert.version.expired", minecraft)));
                 }
             }
         }
@@ -93,7 +94,7 @@ public final class MatrixAlertNotifier {
         for (MatrixHealthRegistry.SampleHealth sample : registry.samples()) {
             if (sample.updatedAt().plus(sampleTtl).isBefore(now)) {
                 alerts.add(new Alert(Kind.SAMPLE_EXPIRED, sample.sampleId(),
-                        "样本超过 %d 天未核对".formatted(sampleTtl.toDays())));
+                        I18n.get().t("alert.sample.expired", sampleTtl.toDays())));
             }
         }
         return List.copyOf(alerts);
@@ -126,7 +127,7 @@ public final class MatrixAlertNotifier {
                 .toList();
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("source", "laplace-matrix");
-        body.put("text", "拉普拉斯精灵矩阵告警：%d 项".formatted(alerts.size()));
+        body.put("text", I18n.get().t("alert.subject", alerts.size()));
         body.put("alerts", entries);
         return Json.write(body);
     }

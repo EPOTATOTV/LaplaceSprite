@@ -1,5 +1,6 @@
 package io.laplace.sprite.cli;
 
+import io.laplace.sprite.core.i18n.I18n;
 import io.laplace.sprite.core.plugin.PluginDescriptor;
 import io.laplace.sprite.core.plugin.PluginRegistry;
 import io.laplace.sprite.core.plugin.PluginRuntime;
@@ -33,19 +34,22 @@ final class PluginCommand implements Runnable {
 
         @Override
         public Integer call() {
+            I18n i18n = I18n.get();
             PluginRegistry registry = PluginRuntime.registry();
             List<PluginDescriptor> descriptors = registry.descriptors();
             var writer = spec.commandLine().getOut();
             if (descriptors.isEmpty()) {
-                writer.println("未发现业务插件");
+                writer.println(i18n.t("plugin.list.empty"));
                 return 0;
             }
-            writer.printf("业务插件（%d 个）%n", descriptors.size());
+            writer.println(i18n.t("plugin.list.header", descriptors.size()));
             for (PluginDescriptor descriptor : descriptors) {
                 String capabilities = descriptor.capabilities().isEmpty()
                         ? "-" : String.join(",", descriptor.capabilities());
-                writer.printf("  %s · %s · 能力 %s · %s%n", descriptor.id(), descriptor.version(),
-                        capabilities, registry.isActive(descriptor.id()) ? "已激活" : "未激活");
+                String state = registry.isActive(descriptor.id())
+                        ? i18n.t("plugin.list.active") : i18n.t("plugin.list.inactive");
+                writer.println("  " + i18n.t("plugin.list.row", descriptor.id(), descriptor.version(),
+                        capabilities, state));
             }
             return 0;
         }

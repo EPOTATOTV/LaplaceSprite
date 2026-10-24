@@ -1,6 +1,8 @@
 import { Activity, Radio, RefreshCw, ShieldCheck } from 'lucide-react'
 
 import { useConsoleData } from '../data/useConsoleData'
+import { LanguageToggle } from '../i18n/LanguageToggle'
+import { useI18n } from '../i18n/useI18n'
 import { cx } from '../lib/cx'
 import type { NavEntry } from './nav'
 import { ThemeToggle } from './theme/ThemeToggle'
@@ -28,6 +30,7 @@ function TopStat({
 
 export function TopBar({ entry }: { entry: NavEntry }) {
   const { data, state, reload } = useConsoleData()
+  const { t } = useI18n()
 
   const liveCount = data ? data.liveView.sessions.filter((s) => s.share.status === 'LIVE').length : 0
   const brokenModules = data ? data.modules.filter((m) => m.status !== 'PASSED').length : 0
@@ -38,28 +41,34 @@ export function TopBar({ entry }: { entry: NavEntry }) {
       <div className={styles.leading}>
         <span className={cx(styles.code, 'tabular')}>{entry.code}</span>
         <h1 key={entry.path} className={styles.title}>
-          {entry.label}
+          {t(entry.labelKey)}
         </h1>
-        <span className={styles.hint}>{entry.hint}</span>
+        <span className={styles.hint}>{t(entry.hintKey)}</span>
       </div>
 
       <div className={styles.stats} role="status" aria-live="polite">
         <TopStat
           icon={Radio}
-          label="直播"
+          label={t('topbar.live')}
           value={data ? `${liveCount}/${data.liveView.sessions.length}` : '—'}
           tone={liveCount > 0 ? 'accent' : 'neutral'}
         />
         <TopStat
           icon={Activity}
-          label="模块异常"
+          label={t('topbar.modules')}
           value={data ? String(brokenModules) : '—'}
           tone={brokenModules > 0 ? 'danger' : 'ok'}
         />
         <TopStat
           icon={ShieldCheck}
-          label="门禁"
-          value={gate ? (gate.passed ? '通过' : `${gate.failedMetrics.length} 项超限`) : '—'}
+          label={t('topbar.gate')}
+          value={
+            gate
+              ? gate.passed
+                ? t('topbar.gate.passed')
+                : t('topbar.gate.failed', { count: gate.failedMetrics.length })
+              : '—'
+          }
           tone={gate ? (gate.passed ? 'ok' : 'danger') : 'neutral'}
         />
       </div>
@@ -70,11 +79,12 @@ export function TopBar({ entry }: { entry: NavEntry }) {
           className={styles.iconBtn}
           onClick={reload}
           disabled={state === 'loading'}
-          aria-label="重新拉取控制台数据"
-          title="重新拉取控制台数据"
+          aria-label={t('topbar.refresh')}
+          title={t('topbar.refresh')}
         >
           <RefreshCw size={15} strokeWidth={1.9} aria-hidden="true" />
         </button>
+        <LanguageToggle />
         <ThemeToggle />
       </div>
     </header>
