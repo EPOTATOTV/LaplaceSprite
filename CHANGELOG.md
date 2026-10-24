@@ -2,6 +2,16 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循语义化版本。
 
+## [Unreleased] - L3 P0（L3-01 ~ L3-05）
+
+### 新增
+
+- **五层插件化内核**：`KernelEventBus` 提供数据包 / 实体 / 渲染 / 测试生命周期钩子；`BusinessPlugin` + `PluginRegistry` 按依赖激活，`PluginRuntime` 支持 `laplace.plugins.exclude` 故障注入；第三方适配器经 `AdapterProvider` ServiceLoader 注入；新增 `laplace plugin list`。
+- **全版本游戏管理器**：新增 `game` 模块，解析 Mojang 版本清单与版本 JSON，记录 PackFormat / 渲染 API / 映射 / 协议；SHA 校验下载带重试与原子替换；版本缓存与多实例隔离；新增 `laplace game list/download/metadata/cache-clean`。
+- **多语言内核**：`I18n` 支持中英文资源、插件语言包与英文回退；CLI 增加 `--lang` 与 `laplace i18n list`；游戏、插件、PACC 与 Webhook 告警接入；控制台增加语言切换。
+- **沙箱与证据链增强**：`SandboxPathGuard` 限制实例读写与敏感路径；`ArtifactScanner` 只读扫描 jar 逃逸、体积、可执行头与可疑特征；`EvidenceAuditTrail` 把下载 / 实例 / 测试 / 资产 / 沙箱事件写入同一条 HMAC 链；`AssetTrustRegistry` 提供资产可信度；新增 `laplace audit export/verify` 与 `sandbox --scan-artifact`。
+- **PACC 插件化门控**：`TestSuiteProvider` 契约让 PACC 插件声明 `cheat/mixed/boundary` 套件；排除 PACC 后这些套件被拒绝，`legit` 与其余命令不受影响。
+
 ## [1.5.0] - 2026-10-23
 
 下一步升级实施 v2（L2-01 ~ L2-10）。
