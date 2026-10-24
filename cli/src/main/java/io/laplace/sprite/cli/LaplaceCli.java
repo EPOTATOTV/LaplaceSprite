@@ -15,7 +15,7 @@ import picocli.CommandLine.Command;
  * {@code loadtest}（假玩家压测轨）、{@code mixin}（Mixin 生态适配轨）、
  * {@code render}（客户端渲染级测试轨）、{@code market}（样本市场）、
  * {@code pacc}（PACC 夜间基准）、{@code gametest}（四加载器 GameTest）、
- * {@code plugin}（业务插件列表）。</p>
+ * {@code plugin}（业务插件列表）、{@code game}（全版本游戏内核管理）。</p>
  */
 @Command(
         name = "laplace",
@@ -42,7 +42,8 @@ import picocli.CommandLine.Command;
                 MarketCommand.class,
                 PaccCommand.class,
                 GameTestCommand.class,
-                PluginCommand.class
+                PluginCommand.class,
+                GameCommand.class
         })
 public final class LaplaceCli implements Runnable {
 
