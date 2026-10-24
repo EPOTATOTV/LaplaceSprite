@@ -17,6 +17,7 @@ dependencies {
     implementation project(':crashdiag')
     implementation project(':protocol')
     implementation project(':datapack')
+    implementation project(':game')
     implementation project(':loadtest')
     implementation project(':replay')
     implementation project(':mixin')

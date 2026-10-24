@@ -68,6 +68,11 @@ public final class AdapterRegistry {
         return List.copyOf(warnings);
     }
 
+    /** 记录一条非降级类告警，例如第三方注入的适配器 id 与内置冲突。 */
+    public void warning(String message) {
+        warnings.add(message);
+    }
+
     public void clearWarnings() {
         warnings.clear();
     }

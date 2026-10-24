@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useRoutes } from 'react-router-dom'
 
 import { useConsoleData } from '../data/useConsoleData'
+import { useI18n } from '../i18n/useI18n'
 import { cx } from '../lib/cx'
 import { LeftRail } from './LeftRail'
 import { NAV_ENTRIES } from './nav'
@@ -16,7 +17,12 @@ function resolveEntry(pathname: string): NavEntry {
     entry.path === '/' ? pathname === '/' : pathname.startsWith(entry.path),
   )
   if (matched) return matched
-  return { ...(NAV_ENTRIES[0] as NavEntry), code: '—', label: '未匹配路由', hint: '地址不在路由表内' }
+  return {
+    ...(NAV_ENTRIES[0] as NavEntry),
+    code: '—',
+    labelKey: 'nav.fallback.label',
+    hintKey: 'nav.fallback.hint',
+  }
 }
 
 export function AppShell() {
@@ -24,6 +30,7 @@ export function AppShell() {
   const { location: routeLocation, phase } = useRouteTransition(live)
   const element = useRoutes(appRoutes, routeLocation)
   const { state } = useConsoleData()
+  const { t } = useI18n()
   const [collapsed, setCollapsed] = useState(false)
   const scroller = useRef<HTMLElement | null>(null)
 
@@ -41,7 +48,11 @@ export function AppShell() {
         <TopBar entry={entry} />
         {state === 'loading' && <div className={styles.loadingRail} aria-hidden="true" />}
 
-        <main className={styles.content} ref={scroller} aria-label={`${entry.label}内容区`}>
+        <main
+          className={styles.content}
+          ref={scroller}
+          aria-label={t('content.region', { label: t(entry.labelKey) })}
+        >
           <div
             key={routeLocation.key}
             className={cx(styles.stage, phase === 'exit' ? styles.exit : styles.enter)}

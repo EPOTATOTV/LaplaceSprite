@@ -1,10 +1,12 @@
 package io.laplace.sprite.cli;
 
+import io.laplace.sprite.sandbox.ArtifactScanner;
 import io.laplace.sprite.sandbox.OomBackoffPolicy;
 import io.laplace.sprite.sandbox.SandboxAudit;
 import io.laplace.sprite.sandbox.SandboxAuditor;
 import io.laplace.sprite.sandbox.SandboxCaseRunner;
 import io.laplace.sprite.sandbox.SandboxLauncher;
+import io.laplace.sprite.sandbox.SandboxPathGuard;
 import io.laplace.sprite.sandbox.SandboxRunResult;
 import io.laplace.sprite.sandbox.SandboxSpec;
 import io.laplace.sprite.sandbox.SandboxTier;
@@ -15,6 +17,7 @@ import picocli.CommandLine.Spec;
 import picocli.CommandLine.Model.CommandSpec;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -57,6 +60,14 @@ final class SandboxCommand implements Callable<Integer> {
     @Option(names = "--execute", description = "真正拉起容器（默认只渲染）")
     boolean execute;
 
+    @Option(names = "--scan-artifact", paramLabel = "<jar>",
+            description = "只扫描 jar/zip 制品（路径逃逸、体积、可执行头与可疑特征），不渲染沙箱")
+    Path scanArtifact;
+
+    @Option(names = "--allowed-root", paramLabel = "<dir>",
+            description = "扫描制品允许的根目录，可重复；给出时先过路径闸门")
+    List<Path> allowedRoots;
+
     @Option(names = "--out", description = "产物目录，默认 <workspace>/sandbox")
     Path out;
 
@@ -68,9 +79,13 @@ final class SandboxCommand implements Callable<Integer> {
 
     @Override
     public Integer call() {
+        var writer = spec.commandLine().getOut();
+        if (scanArtifact != null) {
+            return scan(writer, scanArtifact, allowedRoots);
+        }
+
         Path ws = Support.workspace(workspace);
         Path dir = out != null ? out : ws.resolve("sandbox");
-        var writer = spec.commandLine().getOut();
 
         var mounts = (readOnlyMounts == null ? List.<String>of() : readOnlyMounts).stream()
                 .map(SandboxCommand::parseMount)
@@ -119,6 +134,26 @@ final class SandboxCommand implements Callable<Integer> {
                 result.oomKilled(), result.restarts(), result.worldRestored());
         result.logs().forEach(line -> writer.println("    | " + line));
         return result.passed() ? 0 : 1;
+    }
+
+    private static int scan(PrintWriter writer, Path artifact, List<Path> allowedRoots) {
+        try {
+            if (allowedRoots != null && !allowedRoots.isEmpty()) {
+                new SandboxPathGuard().checkRead(artifact, allowedRoots);
+            }
+            ArtifactScanner.ScanResult result = new ArtifactScanner().scan(artifact);
+            writer.printf("制品扫描 %s · clean=%s · findings=%d · entries=%d · bytes=%d%n",
+                    artifact.toAbsolutePath(), result.clean(), result.findings().size(),
+                    result.entries(), result.uncompressedBytes());
+            result.findings().forEach(finding -> writer.println("    · " + finding));
+            return result.clean() ? 0 : 1;
+        } catch (SecurityException ex) {
+            writer.println("  [路径闸门] " + ex.getMessage());
+            return 1;
+        } catch (IOException ex) {
+            writer.println("  [扫描失败] " + ex.getMessage());
+            return 1;
+        }
     }
 
     private static io.laplace.sprite.sandbox.SandboxMount parseMount(String raw) {

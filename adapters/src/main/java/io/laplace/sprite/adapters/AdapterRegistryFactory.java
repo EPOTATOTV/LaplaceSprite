@@ -25,15 +25,20 @@ import io.laplace.sprite.adapters.proxy.WaterfallAdapter;
 import io.laplace.sprite.adapters.sponge.SpongeForgeAdapter;
 import io.laplace.sprite.adapters.sponge.SpongeNeoAdapter;
 import io.laplace.sprite.adapters.sponge.SpongeVanillaAdapter;
+import io.laplace.sprite.core.spi.AdapterProvider;
 import io.laplace.sprite.core.spi.AdapterRegistry;
+import io.laplace.sprite.core.spi.LaplaceAdapter;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.ServiceLoader;
 
 /**
  * 适配器注册表工厂（14.2 / 14.3 / 14.9 全量接入矩阵）。
  *
  * <p>Bukkit 家族 6 + 代理 3 + 基岩 4 + 模组加载器 4 + Sponge 系 3 + 混合端 5，共 25 个一次登记完；
- * 矩阵不匹配时由 {@link AdapterRegistry} 走兼容链回退并输出告警。</p>
+ * 矩阵不匹配时由 {@link AdapterRegistry} 走兼容链回退并输出告警。第三方适配器经
+ * {@link AdapterProvider} 注入，id 与内置重复时跳过并记告警，避免静默覆盖。</p>
  */
 public final class AdapterRegistryFactory {
 
@@ -73,6 +78,25 @@ public final class AdapterRegistryFactory {
     public static AdapterRegistry defaultRegistry() {
         AdapterRegistry registry = new AdapterRegistry();
         allAdapters().forEach(registry::register);
+        for (LaplaceAdapter adapter : providerAdapters()) {
+            if (registry.byId(adapter.id()).isPresent()) {
+                registry.warning("第三方适配器 id 与内置重复，已跳过: " + adapter.id());
+                continue;
+            }
+            registry.register(adapter);
+        }
         return registry;
+    }
+
+    /** ServiceLoader 发现到的第三方适配器（去重前），测试与诊断用。 */
+    public static List<LaplaceAdapter> providerAdapters() {
+        List<LaplaceAdapter> provided = new ArrayList<>();
+        for (AdapterProvider provider : ServiceLoader.load(AdapterProvider.class)) {
+            List<LaplaceAdapter> adapters = provider.adapters();
+            if (adapters != null) {
+                provided.addAll(adapters);
+            }
+        }
+        return List.copyOf(provided);
     }
 }
