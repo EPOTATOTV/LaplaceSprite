@@ -2,7 +2,9 @@ package io.laplace.sprite.cli;
 
 import io.laplace.sprite.core.io.Json;
 import io.laplace.sprite.core.model.TestRun;
+import io.laplace.sprite.core.plugin.PluginRuntime;
 import io.laplace.sprite.report.DetectionTrend;
+import io.laplace.sprite.report.PaccBusinessPlugin;
 import io.laplace.sprite.report.PaccRegressionSync;
 import io.laplace.sprite.report.TrendHistory;
 import picocli.CommandLine;
@@ -65,6 +67,10 @@ final class PaccCommand implements Callable<Integer> {
 
     @Override
     public Integer call() {
+        if (!PluginRuntime.isActive(PaccBusinessPlugin.PLUGIN_ID)) {
+            spec.commandLine().getOut().println("PACC 插件未加载（可用 laplace.plugins.exclude 排除）");
+            return 2;
+        }
         if (baseline == null && (report == null || version == null)) {
             throw new CommandLine.ParameterException(spec.commandLine(),
                     "需要 --baseline <json>，或 --report <report.json> + --version <版本>");

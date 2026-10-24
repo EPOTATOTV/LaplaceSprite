@@ -1,5 +1,6 @@
 package io.laplace.sprite.cli;
 
+import io.laplace.sprite.core.plugin.PluginRuntime;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
@@ -13,12 +14,13 @@ import picocli.CommandLine.Command;
  * {@code clienttest}（CI 客户端测试轨）、{@code datapack}（数据包冒烟轨）、
  * {@code loadtest}（假玩家压测轨）、{@code mixin}（Mixin 生态适配轨）、
  * {@code render}（客户端渲染级测试轨）、{@code market}（样本市场）、
- * {@code pacc}（PACC 夜间基准）、{@code gametest}（四加载器 GameTest）。</p>
+ * {@code pacc}（PACC 夜间基准）、{@code gametest}（四加载器 GameTest）、
+ * {@code plugin}（业务插件列表）。</p>
  */
 @Command(
         name = "laplace",
         mixinStandardHelpOptions = true,
-        version = "Laplace Sprite 1.4.0",
+        version = "Laplace Sprite 1.5.0",
         description = "面向全体 Minecraft 开发者的通用测试平台",
         subcommands = {
                 RunCommand.class,
@@ -39,7 +41,8 @@ import picocli.CommandLine.Command;
                 RenderCommand.class,
                 MarketCommand.class,
                 PaccCommand.class,
-                GameTestCommand.class
+                GameTestCommand.class,
+                PluginCommand.class
         })
 public final class LaplaceCli implements Runnable {
 
@@ -49,6 +52,7 @@ public final class LaplaceCli implements Runnable {
     }
 
     public static void main(String[] args) {
+        PluginRuntime.install(PluginRuntime.discover());
         int exitCode = new CommandLine(new LaplaceCli())
                 .setCaseInsensitiveEnumValuesAllowed(true)
                 .execute(args);
