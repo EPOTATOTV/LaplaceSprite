@@ -28,7 +28,7 @@ jobs:
         run: python ci/generate-matrix.py --tier daily --github-output --cell-file build/ci/matrix-cells-daily.json
       - name: 落盘格定义（失败回溯）
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: matrix-cells-daily
           path: build/ci/matrix-cells-daily.json
@@ -62,7 +62,7 @@ jobs:
         run: sh ci/gate.sh daily
       - name: 失败证据
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: evidence-${{ matrix.platform }}-${{ matrix.mc }}
           path: build/laplace
@@ -86,7 +86,7 @@ jobs:
         run: sh ci/gate.sh daily
       - name: 归档
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ecosystem-daily-evidence
           path: build/laplace

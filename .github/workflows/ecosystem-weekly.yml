@@ -29,7 +29,7 @@ jobs:
         run: python ci/generate-matrix.py --tier weekly --github-output --cell-file build/ci/matrix-cells-weekly.json
       - name: 落盘格定义（失败回溯）
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: matrix-cells-weekly
           path: build/ci/matrix-cells-weekly.json
@@ -63,7 +63,7 @@ jobs:
         run: sh ci/gate.sh weekly
       - name: 失败证据
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: evidence-${{ matrix.platform }}-${{ matrix.mc }}
           path: build/laplace
@@ -88,14 +88,14 @@ jobs:
         run: sh ci/gate.sh weekly
       - name: 矩阵健康度归档
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: matrix-health-weekly
           path: build/laplace/matrix-health.json
           if-no-files-found: warn
       - name: 归档
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ecosystem-weekly-evidence
           path: build/laplace
