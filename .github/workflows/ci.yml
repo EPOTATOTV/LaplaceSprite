@@ -22,7 +22,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - name: 单元测试（JUnit 5 + JaCoCo）
         run: ./gradlew --no-daemon test
       - name: 上传覆盖率报告
@@ -43,7 +43,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - name: 安装 CLI
         run: ./gradlew --no-daemon :cli:installDist
       - name: 合法模拟基准（10000 人，误报率门禁）
@@ -69,7 +69,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - run: ./gradlew --no-daemon :cli:installDist
       - name: 阈值边界样本
         run: ./cli/build/install/laplace/bin/laplace run --suite boundary --seed 20261013 --workspace build/laplace-boundary
@@ -88,7 +88,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - run: ./gradlew --no-daemon :cli:installDist
       - name: 全部适配器冒烟（装配 / 事件归一 / 生命周期）
         run: ./cli/build/install/laplace/bin/laplace test --all --mc 1.21.11
@@ -109,7 +109,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - run: ./gradlew --no-daemon :cli:installDist
 
       - name: 调试轨 + 热重载双轨制（15.1 / 15.2）
