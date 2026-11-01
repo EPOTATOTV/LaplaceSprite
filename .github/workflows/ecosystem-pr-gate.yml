@@ -25,7 +25,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - run: ./gradlew --no-daemon :adapters:test
 
   generate-matrix:
@@ -65,7 +65,7 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ matrix.jdk }}
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - run: ./gradlew --no-daemon :cli:installDist
       - name: 单格冒烟
         env:
@@ -93,7 +93,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - run: ./gradlew --no-daemon :cli:installDist
       - name: laplace gate + 冒烟
         env:

@@ -50,7 +50,7 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ matrix.jdk }}
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - run: ./gradlew --no-daemon :cli:installDist
       - name: 单格冒烟
         env:
@@ -78,7 +78,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - run: ./gradlew --no-daemon :cli:installDist
       - name: laplace gate + 三版本冒烟
         env:
@@ -101,7 +101,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - run: ./gradlew --no-daemon :cli:installDist
       - name: 基岩适配器冒烟
         run: ./cli/build/install/laplace/bin/laplace test --platform nukkit --mc 1.21
@@ -115,7 +115,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - run: ./gradlew --no-daemon :cli:installDist
       - name: 代理适配器冒烟
         run: ./cli/build/install/laplace/bin/laplace test --platform velocity --mc 1.21.11
