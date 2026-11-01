@@ -43,7 +43,7 @@ jobs:
         run: python ci/generate-matrix.py --tier pr --github-output --cell-file build/ci/matrix-cells-pr.json
       - name: 落盘格定义（失败回溯）
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: matrix-cells-pr
           path: build/ci/matrix-cells-pr.json
@@ -77,7 +77,7 @@ jobs:
         run: sh ci/gate.sh pr
       - name: 失败证据
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: evidence-${{ matrix.platform }}-${{ matrix.mc }}
           path: build/laplace
@@ -101,7 +101,7 @@ jobs:
         run: sh ci/gate.sh pr
       - name: 归档
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ecosystem-pr-evidence
           path: build/laplace

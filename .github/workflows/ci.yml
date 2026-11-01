@@ -27,7 +27,7 @@ jobs:
         run: ./gradlew --no-daemon test
       - name: 上传覆盖率报告
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: jacoco-reports
           path: "**/build/reports/jacoco/**"
@@ -54,7 +54,7 @@ jobs:
         run: ./cli/build/install/laplace/bin/laplace gate --workspace build/laplace
       - name: 失败归档证据
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: evidence-baseline
           path: build/laplace
@@ -225,7 +225,7 @@ jobs:
 
       - name: 归档工具链产物
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dev-toolchain-evidence
           path: build/laplace

@@ -35,7 +35,7 @@ jobs:
       - run: ./gradlew --no-daemon build
       - run: ./gradlew --no-daemon :cli:installDist
       - run: ./cli/build/install/laplace/bin/laplace test --platform ${{ matrix.platform }} --mc ${{ matrix.mc }} --adapter ${{ matrix.adapter || matrix.loader }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: evidence-${{ matrix.platform }}-${{ matrix.mc }}
